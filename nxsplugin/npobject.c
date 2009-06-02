@@ -19,11 +19,22 @@ static void objDeallocate(NPObject *npobj) {
     free(this);
 }
 
+static bool copyIdentifierName(NPIdentifier ident, char *name, int maxLength) {
+    char *heapStr = NPN_UTF8FromIdentifier(ident);
+    if (!heapStr) return false;
+    int len = strlen(heapStr);
+    if (len+1 >= maxLength) return false;
+    memcpy(name, heapStr, len+1);
+    NPN_MemFree(heapStr);
+    return true;
+}
+
 static bool objHasMethod(NPObject *npobj, NPIdentifier ident) {
     PluginObject *this = (PluginObject*)npobj;
-    char *name = NPN_UTF8FromIdentifier(ident);
+    char name[64];
+    if (!copyIdentifierName(ident, name, sizeof(name)))
+        return false;
     
-    fprintf(stderr, "HasMethod: %s,  type=%d\n", name, this->plugin->type);
     switch (this->plugin->type) {
         case PT_VersionQuerier:
             return !strcmp(name, "GetVersion");
@@ -31,17 +42,16 @@ static bool objHasMethod(NPObject *npobj, NPIdentifier ident) {
         default:
             return false;
     }
-    
-    // TODO free name
 }
 
 static bool objInvoke(NPObject *npobj, NPIdentifier ident,
                       const NPVariant *args, uint32_t argCount,
                       NPVariant *result) {
     PluginObject *this = (PluginObject*)npobj;
-    char *name = NPN_UTF8FromIdentifier(ident);
+    char name[64];
+    if (!copyIdentifierName(ident, name, sizeof(name)))
+        return false;
     
-    fprintf(stderr, "HasMethod: %s(%d),  type=%d\n", name, argCount, this->plugin->type);
     switch (this->plugin->type) {
         case PT_VersionQuerier:
             if (!strcmp(name, "GetVersion") && (argCount == 0)) {
