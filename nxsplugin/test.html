@@ -1,0 +1,46 @@
+<html>
+<head>
+<title>BankID test</title>
+<script type="text/javascript">
+
+var output;
+var pluginVersion;
+
+function init() {
+    output = document.getElementById('output');
+    pluginVersion = document.getElementById('pluginVersion');
+    output.value = "";
+    output.value += "Version: >";
+    output.value += pluginVersion.GetVersion()+"<\n";
+}
+
+</script>
+</head>
+<body onload="init()" style="background: #FFFFDD">
+<p> Plugin installerad: 
+<script type="text/javascript">
+var pluginInstalled = false;
+
+var pluginInstalled = 
+   (navigator.mimeTypes &&
+    navigator.mimeTypes["application/x-personal-version"] &&
+    navigator.mimeTypes["application/x-personal-version"].enabledPlugin);
+
+document.write(pluginInstalled ? "Ja" : "Nej");
+</script>
+</p>
+
+<div>
+<textarea cols="80" rows="30" id="output">
+</textarea>
+</div>
+
+<div>
+<object id="pluginVersion" type="application/x-personal-version"></object>
+</div>
+
+</body>
+</html>
+
+
+
