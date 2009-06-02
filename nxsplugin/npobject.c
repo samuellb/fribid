@@ -55,7 +55,7 @@ static bool objInvoke(NPObject *npobj, NPIdentifier ident,
     switch (this->plugin->type) {
         case PT_VersionQuerier:
             if (!strcmp(name, "GetVersion") && (argCount == 0)) {
-                const char *s = strdup("hejhopp");
+                char *s = plugin_getVersion(this->plugin);
                 STRINGZ_TO_NPVARIANT(s, *result);
                 return true;
             }
