@@ -297,14 +297,14 @@ int auth_performAction_Authenticate(Plugin *plugin) {
     if (len < 0x18) {
         plugin->lastError = PE_UnknownError;
         free(data);
-        return 3;
+        return 1;
     }
     
     int innerLength = fetch_uint32(&data[0x10]);
     if ((innerLength < 0) || (innerLength != len-0x18)) {
         plugin->lastError = PE_UnknownError;
         free(data);
-        return 4;
+        return 1;
     }
     
     plugin->lastError = fetch_uint32(&data[0x14+innerLength]);

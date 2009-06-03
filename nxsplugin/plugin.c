@@ -59,4 +59,8 @@ int auth_performAction(Plugin *plugin, const char *action) {
     }
 }
 
+int auth_getLastError(Plugin *plugin) {
+    return plugin->lastError;
+}
+
 
