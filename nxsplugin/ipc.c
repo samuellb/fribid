@@ -11,6 +11,7 @@
 #include <sys/wait.h>
 #include <time.h>
 #include <stdbool.h>
+#include <errno.h>
 
 #include <base64.h> // from npapi
 
@@ -71,8 +72,24 @@ void startNexus() {
     waitpid(-1, NULL, WNOHANG);
 }
 
+void disconnect() {
+    close(sock);
+    sock = -1;
+}
+
+bool isConnected() {
+    char dummy;
+    int len = recv(sock, &dummy, sizeof(char), MSG_DONTWAIT | MSG_PEEK);
+    if (len == 0) return false;      // Socket is closed
+    else if (len == 1) return true;  // There's data (not closed)
+    else return (errno == EAGAIN); // EAGAIN = no data, but the socket is open
+}
+
 void verifySocket() {
-    if (sock != -1) return;
+    if (sock != -1) {
+        if (isConnected()) return;
+        else close(sock);
+    }
     
     sock = socket(PF_UNIX, SOCK_STREAM, 0);
     if (sock == -1) {
@@ -94,8 +111,7 @@ void verifySocket() {
                 startNexus();
             } else if (tries > 10) {
                 // Timeout
-                close(sock);
-                sock = -1;
+                disconnect();
                 return;
             }
             tries++;
@@ -110,8 +126,7 @@ void verifySocket() {
     sendpacket("IPC TEST", 8);
     
     if (recvchar(sock) != '\n') {
-        close(sock);
-        sock = -1;
+        disconnect();
         return;
     }
 }
