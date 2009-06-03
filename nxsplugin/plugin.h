@@ -14,6 +14,7 @@ typedef enum {
 typedef struct {
     PluginType type;
     
+    char *url;
     PluginError lastError;
     
     union {
@@ -27,7 +28,7 @@ typedef struct {
     } info;
 } Plugin;
 
-Plugin *plugin_new(PluginType pluginType);
+Plugin *plugin_new(PluginType pluginType, const char *url);
 void plugin_free(Plugin *plugin);
 
 /* Some of the functions below are forwarded to the Nexus Personal main program

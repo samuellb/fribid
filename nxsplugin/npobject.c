@@ -8,6 +8,49 @@
 
 #include "npobject.h"
 
+
+static bool getProperty(NPP instance, NPObject *obj, const char *name, NPVariant *result) {
+    NPIdentifier ident = NPN_GetStringIdentifier(name);
+    return NPN_GetProperty(instance, obj, ident, result);
+}
+
+static char *getDocumentURL(NPP instance) {
+    NPObject *obj;
+    
+    NPN_GetValue(instance, NPNVWindowNPObject, &obj);
+    
+    static const char const *identifiers[] = {
+        "document", "location", "href", NULL
+    };
+    
+    const char **identifier = &identifiers[0];
+    while (1) {
+        NPVariant value;
+        
+        getProperty(instance, obj, *identifier, &value);
+        NPN_ReleaseObject(obj);
+        
+        identifier++;
+        if (*identifier) {
+            // Expecting an object
+            if (!NPVARIANT_IS_OBJECT(value)) {
+                NPN_ReleaseVariantValue(&value);
+                return NULL;
+            }
+            obj = NPVARIANT_TO_OBJECT(value);
+        } else {
+            // Expecting a string
+            if (!NPVARIANT_IS_STRING(value)) {
+                NPN_ReleaseVariantValue(&value);
+                return NULL;
+            }
+            char *url = strdup(NPVARIANT_TO_STRING(value).utf8characters);
+            NPN_ReleaseVariantValue(&value);
+            return url;
+        }
+    }
+}
+
 /* Object methods */
 static NPObject *objAllocate(NPP npp, NPClass *aClass) {
     return malloc(sizeof(PluginObject));
@@ -152,7 +195,11 @@ static NPClass baseClass = {
 static NPObject *npobject_new(NPP instance, PluginType pluginType) {
     PluginObject *obj = (PluginObject*)NPN_CreateObject(instance, &baseClass);
     assert(obj->base._class != NULL);
-    obj->plugin = plugin_new(pluginType);
+    
+    char *url = getDocumentURL(instance);
+    obj->plugin = plugin_new(pluginType,
+                             (url != NULL ? url : ""));
+    free(url);
     return (NPObject*)obj;
 }
 

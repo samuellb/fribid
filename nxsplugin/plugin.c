@@ -5,9 +5,10 @@
 
 #include "plugin.h"
 
-Plugin *plugin_new(PluginType pluginType) {
+Plugin *plugin_new(PluginType pluginType, const char *url) {
     Plugin *plugin = calloc(1, sizeof(Plugin));
     plugin->type = pluginType;
+    plugin->url = strdup(url);
     return plugin;
 }
 
@@ -21,6 +22,7 @@ void plugin_free(Plugin *plugin) {
             free(plugin->info.auth.signature);
             break;
     }
+    free(plugin->url);
     free(plugin);
 }
 

@@ -237,12 +237,11 @@ int auth_performAction_Authenticate(Plugin *plugin) {
     }
     
     // TODO get these from the browser
-    static const char url[] = "https://localhost/hej";
     static const char ip[] = "127.0.0.1";
     
     const int challengeLength = strlen(plugin->info.auth.challenge);
     const int policysLength = strlen(plugin->info.auth.policys);
-    const int urlLength = strlen(url);
+    const int urlLength = strlen(plugin->url);
     const int ipLength = strlen(ip);
     
     const int packetLength = 0x31 + challengeLength +
@@ -266,7 +265,7 @@ int auth_performAction_Authenticate(Plugin *plugin) {
     store_string(packet, plugin->info.auth.challenge, challengeLength, &p);
     
     p += 0x4;
-    store_string(packet, url, urlLength, &p);
+    store_string(packet, plugin->url, urlLength, &p);
     
     store_string(packet, ip, ipLength, &p);
     
