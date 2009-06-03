@@ -311,9 +311,7 @@ int auth_performAction_Authenticate(Plugin *plugin) {
         
         // The byte after the encoded result is zero since it's the first
         // byte of the error code. It's used as a null terminator
-        int signatureLength;
-        plugin->info.auth.signature = (char*)ATOB_AsciiToData(&data[0x14], (unsigned int*)&signatureLength);
-        plugin->info.auth.signature[signatureLength] = '\0';
+        plugin->info.auth.signature = strdup(&data[0x14]);
     }
     
     free(data);
