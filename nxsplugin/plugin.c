@@ -16,8 +16,8 @@ void plugin_free(Plugin *plugin) {
         case PT_Version:
             break;
         case PT_Authentication:
-            if (plugin->info.auth.challenge) free(plugin->info.auth.challenge);
-            if (plugin->info.auth.policys) free(plugin->info.auth.policys);
+            free(plugin->info.auth.challenge);
+            free(plugin->info.auth.policys);
             break;
     }
     free(plugin);
