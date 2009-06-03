@@ -18,7 +18,7 @@
 #include "plugin.h"
 #include "ipc.h"
 
-void verifySocket();
+static void verifySocket();
 
 /* * * *  Low-level socket I/O  * * * */
 static int sock = -1;
@@ -26,7 +26,7 @@ static int sock = -1;
 #define SENDFLAGS (0)
 #define RECVFLAGS (0)
 
-int sendpacket(const char *data, int len) {
+static int sendpacket(const char *data, int len) {
     char packet[4+len];
     
     assert(sizeof(int) == 4);
@@ -36,16 +36,16 @@ int sendpacket(const char *data, int len) {
     return send(sock, packet, 4+len, SENDFLAGS);
 }
 
-int sendchar(char ch) {
+static int sendchar(char ch) {
     return send(sock, &ch, 1, SENDFLAGS);
 }
 
-char recvchar() {
+static char recvchar() {
     char ch;
     return (recv(sock, &ch, 1, RECVFLAGS) ==  1 ? ch : '\0');
 }
 
-int recvpacket(int *len, char **packet) {
+static int recvpacket(int *len, char **packet) {
     if (recv(sock, len, 4, RECVFLAGS) != 4) return -1;
     
     *packet = malloc(*len);
@@ -54,7 +54,7 @@ int recvpacket(int *len, char **packet) {
     return 4+*len;
 }
 
-void dumpPacket(const char *filename, char *packet, int len) {
+static void dumpPacket(const char *filename, char *packet, int len) {
     FILE *dump = fopen(filename, "wb");
     fwrite(packet, len, 1, dump);
     fclose(dump);
@@ -63,7 +63,7 @@ void dumpPacket(const char *filename, char *packet, int len) {
 #define SOCKET_MAXLEN 107
 #define NEXUS_EXECUTABLE "/usr/local/lib/personal/personal.sh"
 
-void startNexus() {
+static void startNexus() {
     pid_t nexus = fork();
     if (nexus == 0) {
         execl(NEXUS_EXECUTABLE, NEXUS_EXECUTABLE);
@@ -72,12 +72,12 @@ void startNexus() {
     waitpid(-1, NULL, WNOHANG);
 }
 
-void disconnect() {
+static void disconnect() {
     close(sock);
     sock = -1;
 }
 
-bool isConnected() {
+static bool isConnected() {
     char dummy;
     int len = recv(sock, &dummy, sizeof(char), MSG_DONTWAIT | MSG_PEEK);
     if (len == 0) return false;      // Socket is closed
@@ -85,7 +85,7 @@ bool isConnected() {
     else return (errno == EAGAIN); // EAGAIN = no data, but the socket is open
 }
 
-void verifySocket() {
+static void verifySocket() {
     if (sock != -1) {
         if (isConnected()) return;
         else close(sock);
