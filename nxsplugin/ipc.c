@@ -236,13 +236,10 @@ int auth_performAction_Authenticate(Plugin *plugin) {
         return 1;
     }
     
-    // TODO get these from the browser
-    static const char ip[] = "127.0.0.1";
-    
     const int challengeLength = strlen(plugin->info.auth.challenge);
     const int policysLength = strlen(plugin->info.auth.policys);
     const int urlLength = strlen(plugin->url);
-    const int ipLength = strlen(ip);
+    const int ipLength = strlen(plugin->ip);
     
     const int packetLength = 0x31 + challengeLength +
                              0x19 + policysLength +
@@ -267,7 +264,7 @@ int auth_performAction_Authenticate(Plugin *plugin) {
     p += 0x4;
     store_string(packet, plugin->url, urlLength, &p);
     
-    store_string(packet, ip, ipLength, &p);
+    store_string(packet, plugin->ip, ipLength, &p);
     
     packet[p] = 1;
     

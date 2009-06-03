@@ -15,6 +15,7 @@ typedef struct {
     PluginType type;
     
     char *url;
+    char *ip;
     PluginError lastError;
     
     union {
@@ -28,7 +29,7 @@ typedef struct {
     } info;
 } Plugin;
 
-Plugin *plugin_new(PluginType pluginType, const char *url);
+Plugin *plugin_new(PluginType pluginType, const char *url, const char *ip);
 void plugin_free(Plugin *plugin);
 
 /* Some of the functions below are forwarded to the Nexus Personal main program

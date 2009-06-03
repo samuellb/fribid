@@ -1,7 +1,12 @@
 #define _BSD_SOURCE 1
+#define _POSIX_C_SOURCE 200112
 #include <string.h>
 #include <stdlib.h>
 #include <assert.h>
+
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <netdb.h>
 
 #include <npapi.h>
 #include <npruntime.h>
@@ -14,14 +19,10 @@ static bool getProperty(NPP instance, NPObject *obj, const char *name, NPVariant
     return NPN_GetProperty(instance, obj, ident, result);
 }
 
-static char *getDocumentURL(NPP instance) {
+static char *getWindowProperty(NPP instance, const char const *identifiers[]) {
     NPObject *obj;
     
     NPN_GetValue(instance, NPNVWindowNPObject, &obj);
-    
-    static const char const *identifiers[] = {
-        "document", "location", "href", NULL
-    };
     
     const char **identifier = &identifiers[0];
     while (1) {
@@ -50,6 +51,51 @@ static char *getDocumentURL(NPP instance) {
         }
     }
 }
+
+static char *getDocumentURL(NPP instance) {
+    static const char const *identifiers[] = {
+        "document", "location", "href", NULL
+    };
+    return getWindowProperty(instance, identifiers);
+}
+
+static char *getDocumentHostname(NPP instance) {
+    static const char const *identifiers[] = {
+        "document", "location", "hostname", NULL
+    };
+    return getWindowProperty(instance, identifiers);
+}
+
+static char *getDocumentIP(NPP instance) {
+    // FIXME This function performs a DNS lookup independently of the
+    //       browser. So it's possible that the browser and the plugin
+    //       get different addresses. This is a (small) security problem
+    //       since the browser might have loaded a maliciuous page while
+    //       the plugin authenticates with the real IP.
+    char *hostname = getDocumentHostname(instance);
+    
+    struct addrinfo *ai;
+    int ret = getaddrinfo(hostname, NULL, NULL, &ai);
+    free(hostname);
+    if (ret != 0) return NULL;
+    
+    // Find first INET address
+    while (ai && (ai->ai_family != AF_INET) && (ai->ai_family != AF_INET6))
+        ai = ai->ai_next;
+    
+    if (!ai) return NULL;
+    
+    char ip[NI_MAXHOST];
+    if (getnameinfo(ai->ai_addr, ai->ai_addrlen, ip, NI_MAXHOST,
+                    NULL, 0, NI_NUMERICHOST) != 0) {
+        freeaddrinfo(ai);
+        return NULL;
+    }
+    freeaddrinfo(ai);
+    
+    return strdup(ip);
+}
+
 
 /* Object methods */
 static NPObject *objAllocate(NPP npp, NPClass *aClass) {
@@ -197,8 +243,11 @@ static NPObject *npobject_new(NPP instance, PluginType pluginType) {
     assert(obj->base._class != NULL);
     
     char *url = getDocumentURL(instance);
+    char *ip = getDocumentIP(instance);
     obj->plugin = plugin_new(pluginType,
-                             (url != NULL ? url : ""));
+                             (url != NULL ? url : ""),
+                             (ip != NULL ? ip : ""));
+    free(ip);
     free(url);
     return (NPObject*)obj;
 }
