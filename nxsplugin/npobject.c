@@ -39,7 +39,8 @@ static bool objHasMethod(NPObject *npobj, NPIdentifier ident) {
         case PT_Version:
             return !strcmp(name, "GetVersion");
         case PT_Authentication:
-            return !strcmp(name, "GetParam") || !strcmp(name, "SetParam");
+            return !strcmp(name, "GetParam") || !strcmp(name, "SetParam") ||
+                   !strcmp(name, "PerformAction");
         default:
             return false;
     }
@@ -76,6 +77,13 @@ static bool objInvoke(NPObject *npobj, NPIdentifier ident,
                               NPVARIANT_TO_STRING(args[0]).utf8characters,
                               NPVARIANT_TO_STRING(args[1]).utf8characters);
                 VOID_TO_NPVARIANT(*result);
+                return true;
+            } else if (!strcmp(name, "PerformAction") && (argCount == 1) &&
+                       NPVARIANT_IS_STRING(args[0])) {
+                // Perform action
+                int ret = auth_performAction(this->plugin,
+                                             NPVARIANT_TO_STRING(args[0]).utf8characters);
+                INT32_TO_NPVARIANT((int32_t)ret, *result);
                 return true;
             }
             return false;

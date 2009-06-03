@@ -18,6 +18,7 @@ void plugin_free(Plugin *plugin) {
         case PT_Authentication:
             free(plugin->info.auth.challenge);
             free(plugin->info.auth.policys);
+            free(plugin->info.auth.signature);
             break;
     }
     free(plugin);
@@ -48,6 +49,14 @@ bool auth_setParam(Plugin *plugin, const char *name, const char *value) {
     free(*valuePtr);
     *valuePtr = strdup(value);
     return true;
+}
+
+int auth_performAction(Plugin *plugin, const char *action) {
+    if (!strcmp(action, "Authenticate")) {
+        return auth_performAction_Authenticate(plugin);
+    } else {
+        return 1;
+    }
 }
 
 

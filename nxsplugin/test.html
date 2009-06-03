@@ -15,13 +15,19 @@ function init() {
     
     pluginAuth = document.getElementById('pluginAuth');
     output.value += "Calling SetParam(Challenge)\n";
-    pluginAuth.SetParam("Challenge", "value of Challenge");
+    pluginAuth.SetParam("Challenge", "MTI0MzYwMTMyOTk5NTU3MTI4OTg0MjkwMzY3OTYwODM=");
     output.value += "Calling SetParam(Policys)\n";
-    pluginAuth.SetParam("Policys", "value of Policys");
+    pluginAuth.SetParam("Policys", "MS4yLjc1Mi43OC4xLjE7MS4yLjc1Mi43OC4xLjI7MS4yLjMuNC41OzEuMi4zLjQuMTA=");
     
     output.value += "\nGetParam:\n";
     output.value += "    Challenge: >"+pluginAuth.GetParam("Challenge")+"<\n";
     output.value += "    Policys: >"+pluginAuth.GetParam("Policys")+"<\n";
+    output.value += "    Signature: >"+pluginAuth.GetParam("Signature")+"<\n";
+    
+    output.value += "\nInvoking PerformAction(Authenticate):\n";
+    output.value += "    return value = "+pluginAuth.PerformAction("Authenticate")+"\n";
+    
+    output.value += "\nGetParam:\n";
     output.value += "    Signature: >"+pluginAuth.GetParam("Signature")+"<\n";
 }
 

@@ -11,6 +11,7 @@
 #include <sys/wait.h>
 #include <time.h>
 #include <stdbool.h>
+#include <stdint.h>
 #include <errno.h>
 
 #include <base64.h> // from npapi
@@ -131,6 +132,42 @@ static void verifySocket() {
     }
 }
 
+static inline void store_uint32(char *packet, uint32_t value) {
+    packet[0] = (char)((value >> 24) & 0xFF);
+    packet[1] = (char)((value >> 16) & 0xFF);
+    packet[2] = (char)((value >> 8) & 0xFF);
+    packet[3] = (char)((value) & 0xFF);
+}
+
+static void store_string(char *packet, const char *str, const int length, int *p) {
+    store_uint32(&packet[*p], length);
+    *p += 4;
+    memcpy(&packet[*p], str, length);
+    *p += length;
+}
+
+static inline uint32_t fetch_uint32(char *packet) {
+    return (packet[0] << 24) |
+           (packet[1] << 16) |
+           (packet[2] << 8) |
+            packet[3];
+}
+
+// Removes newlines from base64 encoded data
+static void removeNewlines(char *s) {
+    const char *readp = s;
+    char *writep = s;
+    
+    while (*readp != '\0') {
+        if (*readp >= ' ') {
+            *writep = *readp;
+            writep++;
+        }
+        readp++;
+        
+    }
+    *writep = '\0';
+}
 
 /* * * *  Javascript API functions * * * */
 
@@ -142,7 +179,7 @@ char *version_getVersion(Plugin *plugin) {
     sendpacket("AAAAAQAAAAoAAAAIAAAAAQAAAAA=", 28);
     sendchar('\1');
     
-    if (recvchar(sock) != '\10') {
+    if (recvchar() != '\10') {
         plugin->lastError = PE_UnknownError;
         return strdup("");
     }
@@ -189,6 +226,105 @@ char *version_getVersion(Plugin *plugin) {
     return versionString;
 }
 
-
+/* Authentication objects */
+int auth_performAction_Authenticate(Plugin *plugin) {
+    verifySocket();
+    
+    if (!plugin->info.auth.challenge || !plugin->info.auth.policys) {
+        plugin->lastError = PE_UnknownError;
+        return 1;
+    }
+    
+    // TODO get these from the browser
+    static const char url[] = "https://localhost/hej";
+    static const char ip[] = "127.0.0.1";
+    
+    const int challengeLength = strlen(plugin->info.auth.challenge);
+    const int policysLength = strlen(plugin->info.auth.policys);
+    const int urlLength = strlen(url);
+    const int ipLength = strlen(ip);
+    
+    const int packetLength = 0x31 + challengeLength +
+                             0x19 + policysLength +
+                             8 + urlLength +
+                             4 + ipLength + 8;
+    
+    char *packet = calloc(1, packetLength);
+    
+    store_uint32(&packet[0x0], 1);
+    store_uint32(&packet[0x4], 0x14);
+    store_uint32(&packet[0x8], packetLength - 12);
+    store_uint32(&packet[0xC], 1);
+    store_uint32(&packet[0x10], 1);
+    store_uint32(&packet[0xC], 1);
+    
+    int p = 0x2D;
+    store_string(packet, plugin->info.auth.policys, policysLength, &p);
+    
+    p += 0x15;
+    store_string(packet, plugin->info.auth.challenge, challengeLength, &p);
+    
+    p += 0x4;
+    store_string(packet, url, urlLength, &p);
+    
+    store_string(packet, ip, ipLength, &p);
+    
+    packet[p] = 1;
+    
+    // Encode and send to Nexus Personal
+    char *encoded = BTOA_DataToAscii((unsigned char*)packet, packetLength);
+    free(packet);
+    removeNewlines(encoded);
+    
+    sendchar('\2');
+    sendpacket(encoded, strlen(encoded));
+    sendchar('\1');
+    free(encoded);
+    
+    // Get response
+    if (recvchar() != '\10') {
+        plugin->lastError = PE_UnknownError;
+        return 1;
+    }
+    
+    int len;
+    recvpacket(&len, &packet);
+    if (packet[len-1] == '\0') len--;
+    char *data = (char*)ATOB_AsciiToData(packet, (unsigned int*)&len);
+    free(packet);
+    
+    // Parse respose
+    if (len < 0x18) {
+        plugin->lastError = PE_UnknownError;
+        free(data);
+        return 3;
+    }
+    
+    int innerLength = fetch_uint32(&data[0x10]);
+    if ((innerLength < 0) || (innerLength != len-0x18)) {
+        plugin->lastError = PE_UnknownError;
+        free(data);
+        return 4;
+    }
+    
+    plugin->lastError = fetch_uint32(&data[0x14+innerLength]);
+    
+    if (plugin->lastError == 0) {
+        // No error
+        
+        // The byte after the encoded result is zero since it's the first
+        // byte of the error code. It's used as a null terminator
+        int signatureLength;
+        plugin->info.auth.signature = (char*)ATOB_AsciiToData(&data[0x14], (unsigned int*)&signatureLength);
+        plugin->info.auth.signature[signatureLength] = '\0';
+    }
+    
+    free(data);
+    
+    // Close IPC channel
+    sendchar('\v');
+    
+    return 0;
+}
 
 

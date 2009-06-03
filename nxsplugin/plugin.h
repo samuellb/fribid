@@ -37,6 +37,8 @@ char *version_getVersion(Plugin *plugin);
 
 char *auth_getParam(Plugin *plugin, const char *name);
 bool auth_setParam(Plugin *plugin, const char *name, const char *value);
+int auth_performAction(Plugin *plugin, const char *action);
+int auth_performAction_Authenticate(Plugin *plugin);
 // TODO more functions...
 
 #endif
