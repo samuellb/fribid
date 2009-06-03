@@ -4,6 +4,7 @@
 #include "plugin.h"
 
 #define MIME_VERSION "application/x-personal-version"
+#define MIME_AUTHENTICATION "application/x-personal-authentication"
 
 typedef struct {
     NPObject base;

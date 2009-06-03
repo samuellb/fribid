@@ -14,7 +14,6 @@ NPError NPP_New(NPMIMEType pluginType, NPP instance, uint16 mode,
     instance->pdata = npobject_fromMIME(instance, pluginType);
     
     if (instance->pdata) {
-        NPN_Status(instance, "Nexus Personal compatible plugin loaded");
         return NPERR_NO_ERROR;
     } else {
         return NPERR_INVALID_PARAM;

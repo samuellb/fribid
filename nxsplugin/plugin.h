@@ -2,7 +2,8 @@
 #define __PLUGIN_H__
 
 typedef enum {
-    PT_VersionQuerier,
+    PT_Version,
+    PT_Authentication,
 } PluginType;
 
 typedef enum {
@@ -14,6 +15,13 @@ typedef struct {
     PluginType type;
     
     PluginError lastError;
+    
+    union {
+        struct {
+            char *challenge;
+            char *policys;
+        } auth;
+    } info;
 } Plugin;
 
 Plugin *plugin_new(PluginType pluginType);
@@ -22,7 +30,7 @@ void plugin_free(Plugin *plugin);
 /* The functions below are forwarded to the Nexus Personal main program
    via IPC. These functions will be implemented in the plugin in the future
    so the plugin will become independent of Nexus. */
-char *plugin_getVersion(Plugin *plugin);
+char *version_getVersion(Plugin *plugin);
 // TODO more functions...
 
 #endif

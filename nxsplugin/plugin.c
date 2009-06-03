@@ -9,6 +9,14 @@ Plugin *plugin_new(PluginType pluginType) {
 }
 
 void plugin_free(Plugin *plugin) {
+    switch (plugin->type) {
+        case PT_Version:
+            break;
+        case PT_Authentication:
+            if (plugin->info.auth.challenge) free(plugin->info.auth.challenge);
+            if (plugin->info.auth.policys) free(plugin->info.auth.policys);
+            break;
+    }
     free(plugin);
 }
 

@@ -36,9 +36,8 @@ static bool objHasMethod(NPObject *npobj, NPIdentifier ident) {
         return false;
     
     switch (this->plugin->type) {
-        case PT_VersionQuerier:
+        case PT_Version:
             return !strcmp(name, "GetVersion");
-            break;
         default:
             return false;
     }
@@ -53,9 +52,9 @@ static bool objInvoke(NPObject *npobj, NPIdentifier ident,
         return false;
     
     switch (this->plugin->type) {
-        case PT_VersionQuerier:
+        case PT_Version:
             if (!strcmp(name, "GetVersion") && (argCount == 0)) {
-                char *s = plugin_getVersion(this->plugin);
+                char *s = version_getVersion(this->plugin);
                 STRINGZ_TO_NPVARIANT(s, *result);
                 return true;
             }
@@ -126,7 +125,9 @@ static NPObject *npobject_new(NPP instance, PluginType pluginType) {
 
 NPObject *npobject_fromMIME(NPP instance, NPMIMEType mimeType) {
     if (!strcmp(mimeType, MIME_VERSION)) {
-        return npobject_new(instance, PT_VersionQuerier);
+        return npobject_new(instance, PT_Version);
+    } else if (!strcmp(mimeType, MIME_AUTHENTICATION)) {
+        return npobject_new(instance, PT_Authentication);
     } else {
         return NULL;
     }

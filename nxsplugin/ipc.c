@@ -117,8 +117,10 @@ void verifySocket() {
 }
 
 
-/* Javascript API functions */
-char *plugin_getVersion(Plugin *plugin) {
+/* * * *  Javascript API functions * * * */
+
+/* Version objects */
+char *version_getVersion(Plugin *plugin) {
     verifySocket();
     
     sendchar('\2');
