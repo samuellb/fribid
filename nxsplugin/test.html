@@ -11,7 +11,18 @@ function init() {
     pluginVersion = document.getElementById('pluginVersion');
     output.value = "";
     output.value += "Version: >";
-    output.value += pluginVersion.GetVersion()+"<\n";
+    output.value += pluginVersion.GetVersion()+"<\n\n";
+    
+    pluginAuth = document.getElementById('pluginAuth');
+    output.value += "Calling SetParam(Challenge)\n";
+    pluginAuth.SetParam("Challenge", "value of Challenge");
+    output.value += "Calling SetParam(Policys)\n";
+    pluginAuth.SetParam("Policys", "value of Policys");
+    
+    output.value += "\nGetParam:\n";
+    output.value += "    Challenge: >"+pluginAuth.GetParam("Challenge")+"<\n";
+    output.value += "    Policys: >"+pluginAuth.GetParam("Policys")+"<\n";
+    output.value += "    Signature: >"+pluginAuth.GetParam("Signature")+"<\n";
 }
 
 </script>
@@ -37,6 +48,7 @@ document.write(pluginInstalled ? "Ja" : "Nej");
 
 <div>
 <object id="pluginVersion" type="application/x-personal-version"></object>
+<object id="pluginAuth" type="application/x-personal-authentication"></object>
 </div>
 
 </body>

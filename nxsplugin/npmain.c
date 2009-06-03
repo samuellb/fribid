@@ -47,7 +47,8 @@ NPError NPP_GetValue(NPP instance, NPPVariable variable, void *value) {
 }
 
 char *NPP_GetMIMEDescription() {
-    return MIME_VERSION "::Version";
+    return MIME_VERSION "::Version;"
+           MIME_AUTHENTICATION "::Authentication";
 }
 
 NPError NPP_Initialize() {

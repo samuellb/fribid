@@ -18,8 +18,11 @@ typedef struct {
     
     union {
         struct {
+            /* Input parameters */
             char *challenge;
             char *policys;
+            /* Output parameters */
+            char *signature;
         } auth;
     } info;
 } Plugin;
@@ -31,6 +34,9 @@ void plugin_free(Plugin *plugin);
    via IPC. These functions will be implemented in the plugin in the future
    so the plugin will become independent of Nexus. */
 char *version_getVersion(Plugin *plugin);
+
+char *auth_getParam(Plugin *plugin, const char *name);
+bool auth_setParam(Plugin *plugin, const char *name, const char *value);
 // TODO more functions...
 
 #endif
