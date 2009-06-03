@@ -200,6 +200,7 @@ char *version_getVersion(Plugin *plugin) {
     free(packet);
     
     sendchar('\v'); // Makes Nexus close the socket (the original plugin does this)
+    disconnect();
     
     // Packet format:
     // 
@@ -323,6 +324,7 @@ int auth_performAction_Authenticate(Plugin *plugin) {
     
     // Close IPC channel
     sendchar('\v');
+    disconnect();
     
     return 0;
 }
