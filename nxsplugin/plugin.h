@@ -15,6 +15,7 @@ typedef struct {
     PluginType type;
     
     char *url;
+    char *hostname;
     char *ip;
     PluginError lastError;
     
@@ -29,12 +30,16 @@ typedef struct {
     } info;
 } Plugin;
 
-Plugin *plugin_new(PluginType pluginType, const char *url, const char *ip);
+/* Implementation-specific initialization */
+void bankid_init();
+void bankid_shutdown();
+
+/* Plugin creation */
+Plugin *plugin_new(PluginType pluginType, const char *url,
+                   const char *hostname, const char *ip);
 void plugin_free(Plugin *plugin);
 
-/* Some of the functions below are forwarded to the Nexus Personal main program
-   via IPC. These functions will be implemented in the plugin in the future
-   so the plugin will become independent of Nexus. */
+/* Javascript API */
 char *version_getVersion(Plugin *plugin);
 
 char *auth_getParam(Plugin *plugin, const char *name);

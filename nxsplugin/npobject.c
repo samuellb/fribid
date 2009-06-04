@@ -243,11 +243,14 @@ static NPObject *npobject_new(NPP instance, PluginType pluginType) {
     assert(obj->base._class != NULL);
     
     char *url = getDocumentURL(instance);
+    char *hostname = getDocumentHostname(instance);
     char *ip = getDocumentIP(instance);
     obj->plugin = plugin_new(pluginType,
                              (url != NULL ? url : ""),
+                             (hostname != NULL ? hostname : ""),
                              (ip != NULL ? ip : ""));
     free(ip);
+    free(hostname);
     free(url);
     return (NPObject*)obj;
 }

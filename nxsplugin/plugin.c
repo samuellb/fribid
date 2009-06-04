@@ -5,10 +5,12 @@
 
 #include "plugin.h"
 
-Plugin *plugin_new(PluginType pluginType, const char *url, const char *ip) {
+Plugin *plugin_new(PluginType pluginType, const char *url,
+                   const char *hostname, const char *ip) {
     Plugin *plugin = calloc(1, sizeof(Plugin));
     plugin->type = pluginType;
     plugin->url = strdup(url);
+    plugin->hostname = strdup(hostname);
     plugin->ip = strdup(ip);
     return plugin;
 }
@@ -24,6 +26,7 @@ void plugin_free(Plugin *plugin) {
             break;
     }
     free(plugin->url);
+    free(plugin->hostname);
     free(plugin->ip);
     free(plugin);
 }

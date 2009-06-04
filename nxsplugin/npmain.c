@@ -52,10 +52,12 @@ char *NPP_GetMIMEDescription() {
 }
 
 NPError NPP_Initialize() {
+    bankid_init();
     return NPERR_NO_ERROR;
 }
 
 void NPP_Shutdown() {
+    bankid_shutdown();
 }
 
 
