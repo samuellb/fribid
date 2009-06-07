@@ -12,33 +12,34 @@
 static const char *xmldsec_template = 
     "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>"
     "<Signature xmlns=\"http://www.w3.org/2000/09/xmldsig#\">"
-        "<SignedInfo xmlns=\"http://www.w3.org/2000/09/xmldsig#\">"
-            "<CanonicalizationMethod Algorithm=\"http://www.w3.org/TR/2001/REC-xml-c14n-20010315\">"
-            "</CanonicalizationMethod>"
-            "<SignatureMethod Algorithm=\"http://www.w3.org/2000/09/xmldsig#rsa-sha1\">"
-            "</SignatureMethod>"
-            "%s"
-        "</SignedInfo>"
+        "%s"
         "<SignatureValue>%s</SignatureValue>"
         "%s"
         "<Object>%s</Object>"
     "</Signature>";
 
-static const char *references_template =
-    "<Reference Type=\"http://www.bankid.com/signature/v1.0.0/types\" URI=\"#bidSignedData\">"
-        "<Transforms>"
-            "<Transform Algorithm=\"http://www.w3.org/TR/2001/REC-xml-c14n-20010315\"></Transform>"
-        "</Transforms>"
-        "<DigestMethod Algorithm=\"http://www.w3.org/2001/04/xmlenc#sha256\"></DigestMethod>"
-        "<DigestValue>%s</DigestValue>"
-    "</Reference>"
-    "<Reference URI=\"#bidKeyInfo\">"
-        "<Transforms>"
-            "<Transform Algorithm=\"http://www.w3.org/TR/2001/REC-xml-c14n-20010315\"></Transform>"
-        "</Transforms>"
-        "<DigestMethod Algorithm=\"http://www.w3.org/2001/04/xmlenc#sha256\"></DigestMethod>"
-        "<DigestValue>%s</DigestValue>"
-    "</Reference>";
+static const char *signedinfo_template =
+    "<SignedInfo xmlns=\"http://www.w3.org/2000/09/xmldsig#\">"
+        "<CanonicalizationMethod Algorithm=\"http://www.w3.org/TR/2001/REC-xml-c14n-20010315\">"
+        "</CanonicalizationMethod>"
+        "<SignatureMethod Algorithm=\"http://www.w3.org/2000/09/xmldsig#rsa-sha1\">"
+        "</SignatureMethod>"
+        "<Reference Type=\"http://www.bankid.com/signature/v1.0.0/types\" URI=\"#bidSignedData\">"
+            "<Transforms>"
+                "<Transform Algorithm=\"http://www.w3.org/TR/2001/REC-xml-c14n-20010315\"></Transform>"
+            "</Transforms>"
+            "<DigestMethod Algorithm=\"http://www.w3.org/2001/04/xmlenc#sha256\"></DigestMethod>"
+            "<DigestValue>%s</DigestValue>"
+        "</Reference>"
+        "<Reference URI=\"#bidKeyInfo\">"
+            "<Transforms>"
+                "<Transform Algorithm=\"http://www.w3.org/TR/2001/REC-xml-c14n-20010315\"></Transform>"
+            "</Transforms>"
+            "<DigestMethod Algorithm=\"http://www.w3.org/2001/04/xmlenc#sha256\"></DigestMethod>"
+            "<DigestValue>%s</DigestValue>"
+        "</Reference>"
+    "</SignedInfo>";
+
 
 static const char *keyinfo_template =
     "<KeyInfo xmlns=\"http://www.w3.org/2000/09/xmldsig#\" Id=\"bidKeyInfo\">"
@@ -51,7 +52,7 @@ static const char *cert_template =
 static char *sha_base64(const char *str) {
     char shasum[SHA256_LENGTH];
     
-    HASH_HashBuf(HASH_AlgSHA256, shasum, (unsigned char*)str, strlen(str));
+    HASH_HashBuf(HASH_AlgSHA256, (unsigned char*)shasum, (unsigned char*)str, strlen(str));
     return base64_encode(shasum, sizeof(shasum));
 }
 
@@ -81,28 +82,40 @@ char *xmldsec_sign(const char *p12Data, const int p12Length,
     char *keyinfo = malloc(strlen(keyinfo_template) - 2 + certsLength +1);
     sprintf(keyinfo, keyinfo_template, keyinfoInner);
     
-    // References
+    // SignedInfo
     char *data_sha = sha_base64(data);
     char *keyinfo_sha = sha_base64(keyinfo);
     
-    char *references = malloc(strlen(references_template) - 2*2 +
+    char *signedinfo = malloc(strlen(signedinfo_template) - 2*2 +
                               strlen(data_sha) + strlen(keyinfo_sha) +1);
-    sprintf(references, references_template, data_sha, keyinfo_sha);
+    sprintf(signedinfo, signedinfo_template, data_sha, keyinfo_sha);
     free(keyinfo_sha);
     free(data_sha);
     
+    
     // Signature
-    char *signature = strdup(""); // TODO
+    char *sigData;
+    int sigLen;
+    
+    if (!keyfile_sign(p12Data, p12Length, person, certMask, password,
+                      signedinfo, strlen(signedinfo), &sigData, &sigLen)) {
+        free(keyinfo);
+        free(signedinfo);
+        return NULL;
+    }
+    
+    char *signature = base64_encode(sigData, sigLen);
+    free(sigData);
     
     // Glue everything together
     char *complete = malloc(strlen(xmldsec_template) - 4*2 +
-                            strlen(references) + strlen(signature) +
+                            strlen(signedinfo) + strlen(signature) +
                             strlen(keyinfo) + strlen(data) +1);
     sprintf(complete, xmldsec_template,
-            references, signature, keyinfo, data);
+            signedinfo, signature, keyinfo, data);
     
     free(keyinfo);
-    free(references);
+    free(signedinfo);
     free(signature);
     
     return complete;

@@ -18,6 +18,11 @@ bool keyfile_getBase64Chain(const char *data, const int datalen,
                             const char *person, const unsigned int certMask,
                             char ***certs, int *count);
 
+bool keyfile_sign(const char *data, const int datalen,
+                  const char *person, const unsigned int certMask, const char *password,
+                  const char *message, const int messagelen,
+                  char **signature, int *siglen);
+
 #endif
 
 
