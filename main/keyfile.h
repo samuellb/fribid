@@ -14,6 +14,7 @@ void keyfile_shutdown();
 
 bool keyfile_listPeople(const char *data, const int datalen,
                          char ***people, int *count);
+char *keyfile_getDisplayName(const char *person);
 bool keyfile_getBase64Chain(const char *data, const int datalen,
                             const char *person, const unsigned int certMask,
                             char ***certs, int *count);

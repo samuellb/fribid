@@ -181,6 +181,19 @@ bool keyfile_listPeople(const char *data, const int datalen,
     return true;
 }
 
+char *keyfile_getDisplayName(const char *person) {
+    const char *name = strstr(person, "OID.2.5.4.41=");
+    if (!name) return strdup(person);
+    
+    name += 13;
+    //return strndup(name, strcspn(name, ","));
+    int length = strcspn(name, ",");
+    char *displayName = malloc(length+1);
+    memcpy(displayName, name, length);
+    displayName[length] = '\0';
+    return displayName;
+}
+
 static CERTCertificate *findCert(const CERTCertList *certList,
                                  const char *person, const unsigned int certMask) {
     for CL_each(node, certList) {

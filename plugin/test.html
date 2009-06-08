@@ -26,6 +26,7 @@ function init() {
     
     output.value += "\nInvoking PerformAction(Authenticate):\n";
     output.value += "    return value = "+pluginAuth.PerformAction("Authenticate")+"\n";
+    output.value += "    GetLastError() = "+pluginAuth.GetLastError()+"\n";
     
     output.value += "\nGetParam:\n";
     output.value += "    Signature: >"+pluginAuth.GetParam("Signature")+"<\n";
