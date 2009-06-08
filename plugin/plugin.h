@@ -30,10 +30,6 @@ typedef struct {
     } info;
 } Plugin;
 
-/* Implementation-specific initialization */
-void bankid_init();
-void bankid_shutdown();
-
 /* Plugin creation */
 Plugin *plugin_new(PluginType pluginType, const char *url,
                    const char *hostname, const char *ip);

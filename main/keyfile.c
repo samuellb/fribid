@@ -85,14 +85,15 @@ static char *SECU_GetModulePassword(PK11SlotInfo *slot, PRBool retry, void *arg)
 }
 
 void keyfile_init() {
-    PK11_SetPasswordFunc(SECU_GetModulePassword);
+    //PK11_SetPasswordFunc(SECU_GetModulePassword);
     
-    PR_Init(PR_SYSTEM_THREAD, PR_PRIORITY_NORMAL, 1);
-    /*//if (NSS_NoDB_Init("") != SECSuccess) {
+    //PR_Init(PR_SYSTEM_THREAD, PR_PRIORITY_NORMAL, 1);
+    //if (NSS_NoDB_Init("") != SECSuccess) {
     // NSS_INIT_NOCERTDB maybe?
-    if (NSS_Initialize("/home/samuellb/Projekt/e-leg/nxsplugin/testdb", "", "", "secmod.db", 0) != SECSuccess) {
+    if (NSS_Initialize("/home/samuellb/Projekt/e-leg/main/testdb", "", "", "secmod.db",
+            NSS_INIT_NOMODDB | NSS_INIT_NOROOTINIT) != SECSuccess) {
         fprintf(stderr, "initialization failed!\n");
-    }*/
+    }
     
     SEC_PKCS12EnableCipher(PKCS12_RC2_CBC_40, 1);
     SEC_PKCS12EnableCipher(PKCS12_RC2_CBC_128, 1);
@@ -105,12 +106,12 @@ void keyfile_init() {
     //dummy
     //(void)PK11_IsFIPS();
     
-    printf("need used init = %d\n", PK11_NeedUserInit(PK11_GetInternalSlot()));
+    fprintf(stderr, "need used init = %d\n", PK11_NeedUserInit(PK11_GetInternalSlot()));
 }
 
 void keyfile_shutdown() {
-    /*NSS_Shutdown();
-    PR_Cleanup();*/
+    NSS_Shutdown();
+    PR_Cleanup();
 }
 
 static SEC_PKCS12DecoderContext *pkcs12_open(const char *data, const int datalen,
@@ -127,8 +128,12 @@ static SEC_PKCS12DecoderContext *pkcs12_open(const char *data, const int datalen
     
     if (PK11_NeedUserInit(slot)) {
         fprintf(stderr, "Need User Init => this will fail...\n");
-        //SECU_ChangePW(slot, 0, 0):
-        //PK11_InitPin(slot, NULL, ret);
+        //SECU_ChangePW(slot, PR_FALSE, &dummy):
+        //PK11_InitPin(slot, NULL, "");
+        // This doesn't seem to help
+        if (PK11_InitPin(slot, NULL, "") != SECSuccess) {
+            fprintf(stderr, "FAILED TO SET PIN\n");
+        }
     }
     
     if (PK11_Authenticate(slot, PR_TRUE, &dummy) != SECSuccess) {
@@ -179,8 +184,6 @@ static SEC_PKCS12DecoderContext *pkcs12_open(const char *data, const int datalen
     //SEC_ERROR_PKCS12_UNSUPPORTED_MAC_ALGORITHM != -8113
     
     // Maybe it needs some initialization?
-    
-    printf("secupwdata:  type=%d  data=%p\n", dummy.source, dummy.data);
     
     return decoder;
 }
@@ -387,22 +390,16 @@ static SECItem *nicknameCollisionFunction(SECItem *oldNick, PRBool *cancel, void
 
 
 bool keyfile_sign(const char *data, const int datalen,
-                  const char *person, const unsigned int certMask, const char *_password,
+                  const char *person, const unsigned int certMask, const char *password,
                   const char *message, const int messagelen,
                   char **signature, int *siglen) {
     
     assert(data != NULL);
     assert(person != NULL);
     assert(message != NULL);
-    assert(_password != NULL);
+    assert(password != NULL);
     assert(signature != NULL);
     assert(siglen != NULL);
-    
-    char *password = malloc(100);
-    fprintf(stderr, "password: ");
-    fgets(password, 100, stdin);
-    password[strlen(password)-1] = '\0';
-    printf("got >%s<\n", password);
     
     SEC_PKCS12DecoderContext *decoder = pkcs12_open(data, datalen, password);
     if (!decoder) return false;
