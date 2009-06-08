@@ -21,7 +21,7 @@ void bankid_shutdown() {
 /* Version objects */
 char *bankid_getVersion() {
     static const char *version =
-        "Personal=4.10.2.16&libtokenapi_so=4.10.2.16&libBranding_so=4.10.2.16&libCardSetec_so=4.10.2.16&libCardPrisma_so=4.10.2.16&libCardSiemens_so=4.10.2.16&libplugins_so=4.10.2.16&libP11_so=4.10.2.16&libai_so=4.10.2.16&personal_bin=0.0.0.0&"
+        "Personal=4.10.2.16&libtokenapi_so=4.10.2.16&libBranding_so=4.10.2.16&libCardSetec_so=4.10.2.16&libCardPrisma_so=4.10.2.16&libCardSiemens_so=4.10.2.16&libplugins_so=4.10.2.16&libP11_so=4.10.2.16&libai_so=4.10.2.16&personal_bin=4.10.2.16&"
         "platform=linux&distribution=ubuntu&os_version=8.04&best_before=1244660548&";
     return strdup(version);
 }
