@@ -103,7 +103,7 @@ int auth_performAction_Authenticate(Plugin *plugin) {
     plugin->lastError = pipe_readInt(pipein);
     plugin->info.auth.signature = pipe_readString(pipein);
     closePipes();
-    return (plugin->info.auth.signature != NULL ? 0 : 1);
+    return (strlen(plugin->info.auth.signature) != 0 ? 0 : 1);
 }
 
 
