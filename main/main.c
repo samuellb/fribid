@@ -11,10 +11,8 @@ static const char *version = "0.1.0";
 
 
 void pipeData() {
-    fprintf(stderr, "got data!\n");
     switch (pipe_readCommand(stdin)) {
         case PMC_Authenticate: {
-            fprintf(stderr, "reading stuff\n");
             char *challenge = pipe_readString(stdin);
             free(pipe_readString(stdin)); // Policy -- What's this doing?
             char *url = pipe_readString(stdin);
@@ -97,9 +95,7 @@ int main(int argc, char **argv) {
         platform_setupPipe(pipeData);
     }
     
-    fprintf(stderr, "entering main loop. ipc = %d\n", ipc);
     platform_mainloop();
-    fprintf(stderr, "shutdown\n");
     
     bankid_shutdown();
     return 0;

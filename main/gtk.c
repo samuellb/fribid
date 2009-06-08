@@ -1,5 +1,4 @@
 #define _BSD_SOURCE 1
-//#undef GDK_DISABLE_DEPRECATED
 #include <stdbool.h>
 #include <stdlib.h>
 #include <string.h>
@@ -83,18 +82,14 @@ static char *getz() {
 }
 
 bool platform_authenticate(char **signature, int *siglen, char **person, char **password) {
-    //fprintf(stderr, "Filename: ");
-    //char *filename = getz();
+    
     char *filename = strdup("/home/username/cbt/(YYMMDD HH.MM) FIRST FIRSTNAME LAST LASTNAME - BankID pa fil.p12");
-    //fprintf(stderr, "opening >%s<\n", filename);
     if (!platform_readFile(filename, signature, siglen)) {
         free(filename);
         return false;
     }
     free(filename);
     
-    //fprintf(stderr, "Person: ");
-    //*person = getz();
     *person = strdup("CN=FULL NAME,OID.2.5.4.41=(YYMMDD HH.MM) FIRSTNAME LAST LASTNAME - BankID på fil,serialNumber=PERSONAL NUMBER WITH FOUR DIGIT YEAR,givenName=FIRSTNAME MIDDLENAME,SN=LASTNAMES,O=ISSUING BANK (publ),C=COUNRTY CODE");
     
     fprintf(stderr, "Password: ");

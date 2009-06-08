@@ -99,12 +99,9 @@ int auth_performAction_Authenticate(Plugin *plugin) {
     pipe_sendString(pipeout, plugin->ip);
     
     pipe_finishCommand(pipeout);
-    fprintf(stderr, "plugin: sent everything\n");
     
     plugin->lastError = pipe_readInt(pipein);
-    fprintf(stderr, "plugin: read error code\n");
     plugin->info.auth.signature = pipe_readString(pipein);
-    fprintf(stderr, "plugin: read sig\n");
     closePipes();
     return (plugin->info.auth.signature != NULL ? 0 : 1);
 }
