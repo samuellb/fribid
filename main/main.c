@@ -32,6 +32,8 @@ void pipeData() {
                                             challenge, hostname, ip,
                                             &signature);
                 if (error == BIDERR_OK) break;
+                
+                error = BIDERR_UserCancel;
             }
             
             platform_endAuthenticate();
