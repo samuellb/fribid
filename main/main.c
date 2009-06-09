@@ -23,7 +23,7 @@ void pipeData() {
             char *ip = pipe_readString(stdin);
             
             char *message = NULL;
-            char *subjectFilter;
+            char *subjectFilter = NULL;
             if (command == PMC_Sign) {
                 message = pipe_readString(stdin);
                 subjectFilter = pipe_readString(stdin);
