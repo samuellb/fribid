@@ -4,6 +4,7 @@
 typedef enum {
     PT_Version,
     PT_Authentication,
+    PT_Signer,
 } PluginType;
 
 typedef enum {
@@ -24,9 +25,20 @@ typedef struct {
             /* Input parameters */
             char *challenge;
             char *policys;
+            void *dummy1; // To be compatible with .sign below
+            void *dummy0;
             /* Output parameters */
             char *signature;
         } auth;
+        struct {
+            /* Input parameters */
+            char *challenge;
+            char *policys;
+            char *subjectFilter;
+            char *message;
+            /* Output parameters */
+            char *signature;
+        } sign;
     } info;
 } Plugin;
 
@@ -38,11 +50,12 @@ void plugin_free(Plugin *plugin);
 /* Javascript API */
 char *version_getVersion(Plugin *plugin);
 
-char *auth_getParam(Plugin *plugin, const char *name);
-bool auth_setParam(Plugin *plugin, const char *name, const char *value);
-int auth_performAction(Plugin *plugin, const char *action);
-int auth_performAction_Authenticate(Plugin *plugin);
-int auth_getLastError(Plugin *plugin);
+char *sign_getParam(Plugin *plugin, const char *name);
+bool sign_setParam(Plugin *plugin, const char *name, const char *value);
+int sign_performAction(Plugin *plugin, const char *action);
+int sign_performAction_Authenticate(Plugin *plugin);
+int sign_performAction_Sign(Plugin *plugin);
+int sign_getLastError(Plugin *plugin);
 // TODO more functions...
 
 #endif

@@ -88,15 +88,19 @@ char *version_getVersion(Plugin *plugin) {
 }
 
 
-int auth_performAction_Authenticate(Plugin *plugin) {
-    openPipes(ipcOption);
-    pipe_sendCommand(pipeout, PMC_Authenticate);
-    
+static void sendSignCommon(const Plugin *plugin) {
     pipe_sendString(pipeout, plugin->info.auth.challenge);
     pipe_sendString(pipeout, plugin->info.auth.policys);
     pipe_sendString(pipeout, plugin->url);
     pipe_sendString(pipeout, plugin->hostname);
     pipe_sendString(pipeout, plugin->ip);
+}
+
+int sign_performAction_Authenticate(Plugin *plugin) {
+    openPipes(ipcOption);
+    pipe_sendCommand(pipeout, PMC_Authenticate);
+    
+    sendSignCommon(plugin);
     
     pipe_finishCommand(pipeout);
     
@@ -106,5 +110,20 @@ int auth_performAction_Authenticate(Plugin *plugin) {
     return (strlen(plugin->info.auth.signature) != 0 ? 0 : 1);
 }
 
+int sign_performAction_Sign(Plugin *plugin) {
+    openPipes(ipcOption);
+    pipe_sendCommand(pipeout, PMC_Sign);
+    
+    sendSignCommon(plugin);
+    pipe_sendString(pipeout, plugin->info.sign.message);
+    pipe_sendString(pipeout, plugin->info.sign.subjectFilter);
+    
+    pipe_finishCommand(pipeout);
+    
+    plugin->lastError = pipe_readInt(pipein);
+    plugin->info.auth.signature = pipe_readString(pipein);
+    closePipes();
+    return (strlen(plugin->info.auth.signature) != 0 ? 0 : 1);
+}
 
 

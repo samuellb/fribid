@@ -36,10 +36,14 @@ void platform_mainloop() {
 
 /* Authentication */
 static GtkDialog *signDialog;
+static GtkTextView *signText;
 static GtkComboBox *signaturesCombo;
 static GtkEntry *passwordEntry;
 
-void platform_startAuthenticate(const char *url, const char *hostname, const char *ip) {
+static GtkWidget *signLabel;
+static GtkWidget *signScroller;
+
+void platform_startSign(const char *url, const char *hostname, const char *ip) {
     GtkBuilder *builder = gtk_builder_new();
     GError *error = NULL;
     
@@ -52,8 +56,9 @@ void platform_startAuthenticate(const char *url, const char *hostname, const cha
     gtk_label_set_text(GTK_LABEL(gtk_builder_get_object(builder, "header_domain")),
                        hostname);
     
-    gtk_widget_hide(GTK_WIDGET(gtk_builder_get_object(builder, "sign_label")));
-    gtk_widget_hide(GTK_WIDGET(gtk_builder_get_object(builder, "sign_scroller")));
+    signLabel = GTK_WIDGET(gtk_builder_get_object(builder, "sign_label"));
+    signScroller = GTK_WIDGET(gtk_builder_get_object(builder, "sign_scroller"));
+    signText = GTK_TEXT_VIEW(gtk_builder_get_object(builder, "sign_text"));
     
     // Create a GtkListStore of (displayname, person, filename) tuples
     GtkListStore *signatures = gtk_list_store_new(3, G_TYPE_STRING, G_TYPE_STRING, G_TYPE_STRING);
@@ -103,13 +108,29 @@ void platform_startAuthenticate(const char *url, const char *hostname, const cha
     signDialog = GTK_DIALOG(gtk_builder_get_object(builder, "dialog_sign"));
     //gtk_window_set_transient_for(GTK_WINDOW(signDialog), ???);
     gtk_window_set_keep_above(GTK_WINDOW(signDialog), TRUE);
+    
+    platform_setMessage(NULL);
 }
 
-void platform_endAuthenticate() {
+void platform_endSign() {
     gtk_widget_destroy(GTK_WIDGET(signDialog));
 }
 
-bool platform_authenticate(char **signature, int *siglen, char **person, char **password) {
+void platform_setMessage(const char *message) {
+    // TODO set dialog title and header
+    if (message == NULL) {
+        gtk_widget_hide(signLabel);
+        gtk_widget_hide(signScroller);
+    } else {
+        GtkTextBuffer *textBuffer = gtk_text_view_get_buffer(signText);
+        gtk_text_buffer_set_text(textBuffer, message, strlen(message));
+        
+        gtk_widget_show(signLabel);
+        gtk_widget_show(signScroller);
+    }
+}
+
+bool platform_sign(char **signature, int *siglen, char **person, char **password) {
     
     if (gtk_dialog_run(signDialog) == 10) {
         // User pressed "Log in" or "Sign"

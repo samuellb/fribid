@@ -26,14 +26,15 @@ char *bankid_getVersion() {
     return strdup(version);
 }
 
-/* Authentication objects */
-static const char *authobj_template =
+/* Authentication and signing objects */
+static const char *sign_template =
     "<bankIdSignedData xmlns=\"http://www.bankid.com/signature/v1.0.0/types\" Id=\"bidSignedData\">"
+        "%s"
         "<srvInfo>"
             "<nonce>%s</nonce>"
         "</srvInfo>"
         "<clientInfo>"
-            "<funcId>Identification</funcId>"
+            "<funcId>%s</funcId>"
             "<host>"
                 "<fqdn>%s</fqdn>"
                 "<ip>%s</ip>"
@@ -42,35 +43,42 @@ static const char *authobj_template =
         "</clientInfo>"
     "</bankIdSignedData>";
 
-static const char *authobj_id = "bidSignedData";
+static const char *signedText_template =
+    "<usrVisibleData charset=\"UTF-8\" visible=\"wysiwys\">"
+        "%s"
+    "</usrVisibleData>";
+
+static const char *signobj_id = "bidSignedData";
 
 
-BankIDError bankid_authenticate(const char *p12Data, const int p12Length,
-                                const char *person, const char *password,
-                                const char *challenge,
-                                const char *hostname, const char *ip,
-                                char **signature) {
+static BankIDError sign(const char *p12Data, const int p12Length,
+                        const char *person, const char *password,
+                        const char *challenge,
+                        const char *hostname, const char *ip,
+                        const unsigned int certMask, const char *purpose, const char *extra,
+                        char **signature) {
     
     // Create the authentication XML
     char *versionStr = bankid_getVersion();
     char *version = base64_encode(versionStr, strlen(versionStr));
     free(versionStr);
     
-    char *object = malloc(strlen(authobj_template) - 4*2 +
+    char *object = malloc(strlen(sign_template) - 6*2 +
+                          strlen(extra) +
                           strlen(challenge) +
+                          strlen(purpose) +
                           strlen(hostname) + strlen(ip) +
                           strlen(version) +1);
-    sprintf(object, authobj_template, challenge, hostname, ip, version);
+    sprintf(object, sign_template, extra, challenge, purpose, hostname, ip, version);
     free(version);
     
     // Sign
     char *xmlsig = xmldsec_sign(p12Data, p12Length,
-                person, CERTUSE_AUTHENTICATION, password,
-                authobj_id, object);
+                person, certMask, password,
+                signobj_id, object);
     free(object);
     
     // Encode with base64
-    
     *signature = base64_encode(xmlsig, strlen(xmlsig));
     free(xmlsig);
     
@@ -81,4 +89,31 @@ BankIDError bankid_authenticate(const char *p12Data, const int p12Length,
     }
 }
 
+BankIDError bankid_authenticate(const char *p12Data, const int p12Length,
+                                const char *person, const char *password,
+                                const char *challenge,
+                                const char *hostname, const char *ip,
+                                char **signature) {
+    return sign(p12Data, p12Length, person, password, challenge,
+                hostname, ip, CERTUSE_AUTHENTICATION, "Identification", "", signature);
+}
+
+BankIDError bankid_sign(const char *p12Data, const int p12Length,
+                        const char *person, const char *password,
+                        const char *challenge,
+                        const char *hostname, const char *ip,
+                        const char *message,
+                        char **signature) {
+    BankIDError error;
+    
+    char *extra = malloc(strlen(signedText_template) - 1*2 +
+                         strlen(message) + 1);
+    sprintf(extra, signedText_template, message);
+    
+    error = sign(p12Data, p12Length, person, password, challenge,
+                 hostname, ip, CERTUSE_SIGNING, "Signing", extra, signature);
+    
+    free(extra);
+    return error;
+}
 

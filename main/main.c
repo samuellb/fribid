@@ -2,6 +2,7 @@
 #include <stdbool.h>
 #include <stdlib.h>
 #include <string.h>
+#include <base64.h>
 
 #include "bankid.h"
 #include "../common/pipe.h"
@@ -9,35 +10,67 @@
 
 static const char *version = "0.1.0";
 
+static char *base64_decode(const char *encoded) {
+    unsigned int length;
+    char *result = (char*)ATOB_AsciiToData(encoded, &length);
+    if (length != strlen(result)) {
+        fprintf(stderr, "bankid-se: NULL character in string\n");
+        abort();
+    }
+    return result;
+}
 
 void pipeData() {
-    switch (pipe_readCommand(stdin)) {
-        case PMC_Authenticate: {
+    int command = pipe_readCommand(stdin);
+    switch (command) {
+        case PMC_Authenticate:
+        case PMC_Sign: {
             char *challenge = pipe_readString(stdin);
             free(pipe_readString(stdin)); // Policy -- What's this doing?
             char *url = pipe_readString(stdin);
             char *hostname = pipe_readString(stdin);
             char *ip = pipe_readString(stdin);
             
+            char *message = NULL;
+            char *subjectFilter;
+            if (command == PMC_Sign) {
+                message = pipe_readString(stdin);
+                subjectFilter = pipe_readString(stdin);
+            }
+            
             char *p12Data = NULL, *person = NULL, *password = NULL;
             int p12Length;
             char *signature = NULL;
             BankIDError error = BIDERR_UserCancel;
             
-            platform_startAuthenticate(url, hostname, ip);
+            // TODO set subject filter
+            platform_startSign(url, hostname, ip);
+            if (message != NULL) {
+                char *decodedMessage = base64_decode(message);
+                platform_setMessage(decodedMessage);
+                free(decodedMessage);
+            }
             
-            while (platform_authenticate(&p12Data, &p12Length, &person, &password)) {
-                // Try to authenticate
-                error = bankid_authenticate(p12Data, p12Length, person, password,
-                                            challenge, hostname, ip,
-                                            &signature);
+            while (platform_sign(&p12Data, &p12Length, &person, &password)) {
+                // Try to authenticate/sign
+                if (command == PMC_Authenticate) {
+                    error = bankid_authenticate(p12Data, p12Length, person, password,
+                                                challenge, hostname, ip,
+                                                &signature);
+                } else {
+                    error = bankid_sign(p12Data, p12Length, person, password,
+                                        challenge, hostname, ip,
+                                        message, &signature);
+                }
                 if (error == BIDERR_OK) break;
                 
                 error = BIDERR_UserCancel;
             }
             
-            platform_endAuthenticate();
+            platform_endSign();
             
+            free(subjectFilter);
+            free(message);
             free(challenge);
             free(url);
             free(hostname);

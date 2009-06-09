@@ -7,6 +7,7 @@
 
 // Commands to the main program
 #define PMC_Authenticate    1
+#define PMC_Sign            2
 
 int pipe_readCommand(FILE *in);
 void pipe_sendCommand(FILE *out, int command);

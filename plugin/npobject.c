@@ -128,6 +128,7 @@ static bool objHasMethod(NPObject *npobj, NPIdentifier ident) {
         case PT_Version:
             return !strcmp(name, "GetVersion");
         case PT_Authentication:
+        case PT_Signer:
             return !strcmp(name, "GetParam") || !strcmp(name, "SetParam") ||
                    !strcmp(name, "PerformAction") || !strcmp(name, "GetLastError");
         default:
@@ -152,17 +153,18 @@ static bool objInvoke(NPObject *npobj, NPIdentifier ident,
             }
             return false;
         case PT_Authentication:
+        case PT_Signer:
             if (!strcmp(name, "GetParam") && (argCount == 1) &&
                 NPVARIANT_IS_STRING(args[0])) {
                 // Get parameter
-                char *s = auth_getParam(this->plugin,
+                char *s = sign_getParam(this->plugin,
                                         NPVARIANT_TO_STRING(args[0]).utf8characters);
                 STRINGZ_TO_NPVARIANT(s, *result);
                 return true;
             } else if (!strcmp(name, "SetParam") && (argCount == 2) &&
                        NPVARIANT_IS_STRING(args[0]) && NPVARIANT_IS_STRING(args[1])) {
                 // Set parameter
-                auth_setParam(this->plugin,
+                sign_setParam(this->plugin,
                               NPVARIANT_TO_STRING(args[0]).utf8characters,
                               NPVARIANT_TO_STRING(args[1]).utf8characters);
                 VOID_TO_NPVARIANT(*result);
@@ -170,13 +172,13 @@ static bool objInvoke(NPObject *npobj, NPIdentifier ident,
             } else if (!strcmp(name, "PerformAction") && (argCount == 1) &&
                        NPVARIANT_IS_STRING(args[0])) {
                 // Perform action
-                int ret = auth_performAction(this->plugin,
+                int ret = sign_performAction(this->plugin,
                                              NPVARIANT_TO_STRING(args[0]).utf8characters);
                 INT32_TO_NPVARIANT((int32_t)ret, *result);
                 return true;
             } else if (!strcmp(name, "GetLastError") && (argCount == 0)) {
                 // Get last error
-                int ret = auth_getLastError(this->plugin);
+                int ret = sign_getLastError(this->plugin);
                 INT32_TO_NPVARIANT((int32_t)ret, *result);
                 return true;
             }
@@ -260,6 +262,8 @@ NPObject *npobject_fromMIME(NPP instance, NPMIMEType mimeType) {
         return npobject_new(instance, PT_Version);
     } else if (!strcmp(mimeType, MIME_AUTHENTICATION)) {
         return npobject_new(instance, PT_Authentication);
+    } else if (!strcmp(mimeType, MIME_SIGNER)) {
+        return npobject_new(instance, PT_Signer);
     } else {
         return NULL;
     }
