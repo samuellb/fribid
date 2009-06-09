@@ -7,8 +7,8 @@
 
 #include "keyfile.h"
 #include "xmldecisec.h"
-#include "platform.h"
 #include "bankid.h"
+#include "misc.h"
 
 void bankid_init() {
     keyfile_init();
@@ -78,13 +78,13 @@ static BankIDError sign(const char *p12Data, const int p12Length,
                 signobj_id, object);
     free(object);
     
-    // Encode with base64
-    *signature = base64_encode(xmlsig, strlen(xmlsig));
-    free(xmlsig);
-    
     if (*signature) {
+        // Encode with base64
+        *signature = base64_encode(xmlsig, strlen(xmlsig));
+        free(xmlsig);
         return BIDERR_OK;
     } else {
+        *signature = NULL;
         return BIDERR_InternalError;
     }
 }
