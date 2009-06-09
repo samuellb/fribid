@@ -12,7 +12,6 @@
 #include <p12plcy.h>
 #include <ciferfam.h>
 #include <cert.h>
-#include <base64.h>
 #include <secitem.h>
 #include <secoid.h>
 #include <secport.h>
@@ -20,6 +19,7 @@
 #include <secerr.h>
 #include <cryptohi.h>
 
+#include "misc.h"
 #include "keyfile.h"
 
 typedef struct {
@@ -117,30 +117,6 @@ static CERTCertList *pkcs12_listCerts(const char *data, const int datalen) {
     CERTCertList *certList = SEC_PKCS12DecoderGetCerts(decoder);
     pkcs12_close(decoder);
     return certList;
-}
-
-// Removes newlines from base64 encoded data
-static void removeNewlines(char *s) {
-    const char *readp = s;
-    char *writep = s;
-    
-    while (*readp != '\0') {
-        if (*readp >= ' ') {
-            *writep = *readp;
-            writep++;
-        }
-        readp++;
-        
-    }
-    *writep = '\0';
-}
-
-char *base64_encode(const char *data, const int length) {
-    if (length == 0) return strdup("");
-    
-    char *base64 = BTOA_DataToAscii((const unsigned char*)data, length);
-    removeNewlines(base64);
-    return base64;
 }
 
 static char *der_encode(const CERTCertificate *cert) {

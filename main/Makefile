@@ -4,14 +4,15 @@ CCFLAGS=-Wall -Wextra -std=c99 -pedantic -Wno-unused-parameter -g -I../npapi/inc
 LDFLAGS=`pkg-config --cflags --libs gtk+-2.0` -lnss3 -lsmime3
 
 
-OBJECTS=bankid.o keyfile.o main.o pipe.o posix.o gtk.o xmldecisec.o
+OBJECTS=bankid.o keyfile.o main.o misc.o pipe.o posix.o gtk.o xmldecisec.o
 
 all: bankid-se
 
-bankid.o: keyfile.h xmldecisec.h
-keyfile.o: keyfile.h
+bankid.o: bankid.h keyfile.h xmldecisec.h
+keyfile.o: keyfile.h misc.h
 gtk.o: platform.h
-main.o: platform.h ../common/pipe.h
+main.o: bankid.h misc.h platform.h ../common/pipe.h
+misc.o: misc.h
 pipe.o: ../common/pipe.h ../common/pipe.c
 posix.o: platform.h
 xmldecisec.o: xmldecisec.h keyfile.h

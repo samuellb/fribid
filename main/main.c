@@ -7,18 +7,9 @@
 #include "bankid.h"
 #include "../common/pipe.h"
 #include "platform.h"
+#include "misc.h"
 
 static const char *version = "0.1.0";
-
-static char *base64_decode(const char *encoded) {
-    unsigned int length;
-    char *result = (char*)ATOB_AsciiToData(encoded, &length);
-    if (length != strlen(result)) {
-        fprintf(stderr, "bankid-se: NULL character in string\n");
-        abort();
-    }
-    return result;
-}
 
 void pipeData() {
     int command = pipe_readCommand(stdin);
@@ -36,6 +27,21 @@ void pipeData() {
             if (command == PMC_Sign) {
                 message = pipe_readString(stdin);
                 subjectFilter = pipe_readString(stdin);
+            }
+            
+            // Validate input
+            if (!is_canonical_base64(challenge) ||
+                !is_valid_hostname(hostname) ||
+                !is_valid_ip_address(ip) ||
+                !is_https_url(url) ||
+                (command == PMC_Sign && (
+                    !is_canonical_base64(message) ||
+                    !is_canonical_base64(subjectFilter)
+                ))) {
+                pipe_sendInt(stdout, BIDERR_InternalError);
+                pipe_sendString(stdout, "");
+                pipe_flush(stdout);
+                exit(1);
             }
             
             char *p12Data = NULL, *person = NULL, *password = NULL;

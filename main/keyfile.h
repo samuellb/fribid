@@ -7,8 +7,6 @@
 #define CERTUSE_SIGNING          64
 #define CERTUSE_AUTHENTICATION  128
 
-char *base64_encode(const char *data, const int length);
-
 void keyfile_init();
 void keyfile_shutdown();
 
