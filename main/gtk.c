@@ -39,9 +39,53 @@ static GtkDialog *signDialog;
 static GtkTextView *signText;
 static GtkComboBox *signaturesCombo;
 static GtkEntry *passwordEntry;
+static GtkButton *signButton;
 
 static GtkWidget *signLabel;
 static GtkWidget *signScroller;
+
+
+static void showMessage(GtkMessageType type, const char *text) {
+    GtkWidget *dialog = gtk_message_dialog_new(
+        GTK_WINDOW(signDialog), GTK_DIALOG_DESTROY_WITH_PARENT,
+        type, GTK_BUTTONS_CLOSE, text);
+    gtk_dialog_run(GTK_DIALOG(dialog));
+    gtk_widget_destroy(dialog);
+}
+
+static void validateDialog(GtkWidget *ignored1, gpointer *ignored2) {
+    gtk_widget_set_sensitive(GTK_WIDGET(signButton),
+                             (gtk_combo_box_get_active(signaturesCombo) != -1));
+}
+
+static bool addSignatureFile(GtkListStore *signatures, const char *filename,
+                        GtkTreeIter *iter) {
+    int fileLen;
+    char *fileData;
+    platform_readFile(filename, &fileData, &fileLen);
+    
+    int personCount;
+    char **people = NULL;
+    keyfile_listPeople(fileData, fileLen, &people, &personCount);
+    
+    for (int i = 0; i < personCount; i++) {
+        char *displayName = keyfile_getDisplayName(people[i]);
+        
+        gtk_list_store_append(signatures, iter);
+        gtk_list_store_set(signatures, iter,
+                           0, displayName,
+                           1, people[i],
+                           2, filename, -1);
+        
+        free(displayName);
+        free(people[i]);
+    }
+    free(people);
+    memset(fileData, 0, fileLen);
+    free(fileData);
+    
+    return (personCount != 0);
+}
 
 void platform_startSign(const char *url, const char *hostname, const char *ip) {
     GtkBuilder *builder = gtk_builder_new();
@@ -52,6 +96,8 @@ void platform_startSign(const char *url, const char *hostname, const char *ip) {
         g_error_free(error);
         return;
     }
+    
+    signButton = GTK_BUTTON(gtk_builder_get_object(builder, "button_sign"));
     
     gtk_label_set_text(GTK_LABEL(gtk_builder_get_object(builder, "header_domain")),
                        hostname);
@@ -68,27 +114,7 @@ void platform_startSign(const char *url, const char *hostname, const char *ip) {
     PlatformDirIter *dir = platform_openKeysDir();
     while (platform_iterateDir(dir)) {
         char *filename = platform_currentPath(dir);
-        int fileLen;
-        char *fileData;
-        platform_readFile(filename, &fileData, &fileLen);
-        
-        int personCount;
-        char **people = NULL;
-        keyfile_listPeople(fileData, fileLen, &people, &personCount);
-        
-        for (int i = 0; i < personCount; i++) {
-            char *displayName = keyfile_getDisplayName(people[i]);
-            
-            gtk_list_store_append(signatures, &iter);
-            gtk_list_store_set(signatures, &iter,
-                               0, displayName,
-                               1, people[i],
-                               2, filename, -1);
-            
-            free(displayName);
-            free(people[i]);
-        }
-        free(people);
+        addSignatureFile(signatures, filename, &iter);
         free(filename);
     }
     platform_closeDir(dir);
@@ -103,6 +129,9 @@ void platform_startSign(const char *url, const char *hostname, const char *ip) {
     gtk_cell_layout_set_attributes(GTK_CELL_LAYOUT(signaturesCombo),
                                    renderer, "text", 0, NULL);
     
+    g_signal_connect(G_OBJECT(signaturesCombo), "changed",
+                     G_CALLBACK(validateDialog), NULL);
+    
     passwordEntry = GTK_ENTRY(gtk_builder_get_object(builder, "password_entry"));
     
     signDialog = GTK_DIALOG(gtk_builder_get_object(builder, "dialog_sign"));
@@ -110,6 +139,7 @@ void platform_startSign(const char *url, const char *hostname, const char *ip) {
     gtk_window_set_keep_above(GTK_WINDOW(signDialog), TRUE);
     
     platform_setMessage(NULL);
+    validateDialog(NULL, NULL);
 }
 
 void platform_endSign() {
@@ -130,9 +160,47 @@ void platform_setMessage(const char *message) {
     }
 }
 
-bool platform_sign(char **signature, int *siglen, char **person, char **password) {
+
+static void selectExternalFile() {
+    bool ok = true;
+    GtkFileChooser *chooser = GTK_FILE_CHOOSER(gtk_file_chooser_dialog_new(
+            "Select external signature", GTK_WINDOW(signDialog),
+            GTK_FILE_CHOOSER_ACTION_OPEN,
+            GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
+            GTK_STOCK_OPEN, GTK_RESPONSE_ACCEPT,
+            NULL));
+    if (gtk_dialog_run(GTK_DIALOG(chooser)) == GTK_RESPONSE_ACCEPT) {
+        gchar *filename = gtk_file_chooser_get_filename(chooser);
+        
+        // Add an item to the signatures list and select it
+        GtkTreeModel *signatures = gtk_combo_box_get_model(signaturesCombo);
+        GtkTreeIter iter;
+        iter.stamp = 0;
+        ok = addSignatureFile(GTK_LIST_STORE(signatures), filename, &iter);
+        if (ok) gtk_combo_box_set_active_iter(signaturesCombo, &iter);
+        
+        g_free(filename);
+    }
+    gtk_widget_destroy(GTK_WIDGET(chooser));
     
-    if (gtk_dialog_run(signDialog) == 10) {
+    if (!ok) {
+        showMessage(GTK_MESSAGE_ERROR, "Invalid file format");
+    }
+}
+
+#define RESPONSE_OK       10
+#define RESPONSE_CANCEL   20
+#define RESPONSE_EXTERNAL 30
+
+bool platform_sign(char **signature, int *siglen, char **person, char **password) {
+    guint response;
+    
+    while ((response = gtk_dialog_run(signDialog)) == RESPONSE_EXTERNAL) {
+        // User pressed "External file..."
+        selectExternalFile();
+    }
+    
+    if (response == RESPONSE_OK) {
         // User pressed "Log in" or "Sign"
         GtkTreeIter iter;
         iter.stamp = 0;
@@ -147,7 +215,7 @@ bool platform_sign(char **signature, int *siglen, char **person, char **password
             gtk_tree_model_get(model, &iter,
                                1, person,
                                2, &filename, -1);
-        
+            
             // Read .p12 file
             platform_readFile(filename, signature, siglen);
             free(filename);
@@ -162,6 +230,8 @@ bool platform_sign(char **signature, int *siglen, char **person, char **password
     }
 }
 
-
+void platform_signError() {
+    showMessage(GTK_MESSAGE_ERROR, "Signing/authentication failed. Maybe the password is incorrect?");
+}
 
 

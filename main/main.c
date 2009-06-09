@@ -70,6 +70,7 @@ void pipeData() {
                 }
                 if (error == BIDERR_OK) break;
                 
+                platform_signError();
                 error = BIDERR_UserCancel;
             }
             
