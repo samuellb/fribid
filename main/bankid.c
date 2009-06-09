@@ -64,11 +64,15 @@ BankIDError bankid_authenticate(const char *p12Data, const int p12Length,
     free(version);
     
     // Sign
-    *signature = xmldsec_sign(p12Data, p12Length,
+    char *xmlsig = xmldsec_sign(p12Data, p12Length,
                 person, CERTUSE_AUTHENTICATION, password,
                 authobj_id, object);
-    
     free(object);
+    
+    // Encode with base64
+    
+    *signature = base64_encode(xmlsig, strlen(xmlsig));
+    free(xmlsig);
     
     if (*signature) {
         return BIDERR_OK;
