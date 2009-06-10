@@ -19,6 +19,7 @@
 #include <secerr.h>
 #include <cryptohi.h>
 
+#include "../common/defines.h"
 #include "misc.h"
 #include "platform.h"
 #include "keyfile.h"
@@ -54,14 +55,14 @@ void keyfile_init() {
     platform_seedRandom();
     nssDummyDir = platform_makeMemTempDir();
     if (!nssDummyDir) {
-        fprintf(stderr, "bankid-se: Failed to create temporary directory!\n");
+        fprintf(stderr, BINNAME ": Failed to create temporary directory!\n");
         abort();
     }
     
     // Initialize NSS
     if (NSS_Initialize(nssDummyDir, "", "", "secmod.db",
             NSS_INIT_NOMODDB | NSS_INIT_NOROOTINIT) != SECSuccess) {
-        fprintf(stderr, "bankid-se: NSS initialization failed!\n");
+        fprintf(stderr, BINNAME ": NSS initialization failed!\n");
     }
     
     SEC_PKCS12EnableCipher(PKCS12_RC2_CBC_40, 1);
@@ -93,7 +94,7 @@ static SEC_PKCS12DecoderContext *pkcs12_open(const char *data, const int datalen
     // "Key" is important here, otherwise things will silently fail later on
     PK11SlotInfo *slot = PK11_GetInternalKeySlot();
     if (!slot) {
-        fprintf(stderr, "bankid-se: got NULL slot\n");
+        fprintf(stderr, BINNAME ": got NULL slot\n");
     }
     
     if (PK11_NeedUserInit(slot)) {
@@ -103,13 +104,13 @@ static SEC_PKCS12DecoderContext *pkcs12_open(const char *data, const int datalen
         randomString[12] = '\0';
         
         if (PK11_InitPin(slot, NULL, randomString) != SECSuccess) {
-            fprintf(stderr, "bankid-se: failed to set PIN for NSS DB\n");
+            fprintf(stderr, BINNAME ": failed to set PIN for NSS DB\n");
             return false;
         }
     }
     
     if (PK11_Authenticate(slot, PR_TRUE, &dummy) != SECSuccess) {
-        fprintf(stderr, "bankid-se: failed to auth slot.\n");
+        fprintf(stderr, BINNAME ": failed to auth slot.\n");
     }
     
     // Convert the password to UCS2
@@ -117,7 +118,7 @@ static SEC_PKCS12DecoderContext *pkcs12_open(const char *data, const int datalen
     if (!PORT_UCS2_UTF8Conversion(PR_TRUE, (unsigned char*)password, strlen(password)+1,
                                   passwordItem->data, passwordItem->len,
                                   &passwordItem->len)) {
-        fprintf(stderr, "bankid-se: failed to convert password\n");
+        fprintf(stderr, BINNAME ": failed to convert password\n");
         return NULL;
     }
     
@@ -133,7 +134,7 @@ static SEC_PKCS12DecoderContext *pkcs12_open(const char *data, const int datalen
     
     if ((SEC_PKCS12DecoderVerify(decoder) != SECSuccess) &&
         (password[0] != '\0')) {
-        fprintf(stderr, "bankid-se: decoder verify failed with "
+        fprintf(stderr, BINNAME ": decoder verify failed with "
                         "non-empty password. error = %d\n", PR_GetError());
     }
     
@@ -288,13 +289,13 @@ bool keyfile_sign(const char *data, const int datalen,
     if (!decoder) return false;
     
     if (SEC_PKCS12DecoderValidateBags(decoder, nicknameCollisionFunction) != SECSuccess) {
-        fprintf(stderr, "bankid-se: failed to validate \"bags\". error = %d\n", PR_GetError());
+        fprintf(stderr, BINNAME ": failed to validate \"bags\". error = %d\n", PR_GetError());
         pkcs12_close(decoder);
         return false;
     }
     
     if (SEC_PKCS12DecoderImportBags(decoder) != SECSuccess) {
-        fprintf(stderr, "bankid-se: failed to import \"bags\". error = %d\n", PR_GetError());
+        fprintf(stderr, BINNAME ": failed to import \"bags\". error = %d\n", PR_GetError());
         return false;
     }
     CERTCertList *certList = SEC_PKCS12DecoderGetCerts(decoder);
@@ -314,7 +315,7 @@ bool keyfile_sign(const char *data, const int datalen,
             SECItem result = { siBuffer, NULL, 0 };
             if (SEC_SignData(&result, (unsigned char *)message, messagelen, privkey,
                              SEC_OID_ISO_SHA_WITH_RSA_SIGNATURE) != SECSuccess) {
-                fprintf(stderr, "bankid-se: failed to sign data!\n");
+                fprintf(stderr, BINNAME ": failed to sign data!\n");
                 SECKEY_DestroyPrivateKey(privkey);
                 CERT_DestroyCertList(certList);
                 return false;

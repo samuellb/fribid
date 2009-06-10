@@ -2,12 +2,13 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "../common/defines.h"
 #include "../common/pipe.h"
 
 int pipe_readCommand(FILE *in) {
     int command = 0;
     if (fscanf(in, " %d;", &command) != 1) {
-        fprintf(stderr, "bankid-se: pipe error\n");
+        fprintf(stderr, BINNAME ": pipe error\n");
         abort();
     }
     return command;

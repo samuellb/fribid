@@ -10,6 +10,7 @@
 #include <time.h>
 #include <unistd.h>
 
+#include "../common/defines.h"
 #include "platform.h"
 
 void platform_seedRandom() {
@@ -135,8 +136,8 @@ static char *makeTempDir(const char *template) {
 
 char *platform_makeMemTempDir() {
     static const char *paths[] = {
-        "/dev/shm/bankid-se-%s.tmp",
-        "/tmp/bankid-se-%s.tmp",
+        "/dev/shm/" BINNAME "-%s.tmp",
+        "/tmp/" BINNAME "-%s.tmp",
         NULL
     };
     

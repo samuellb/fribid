@@ -6,10 +6,10 @@ OBJECTS=ipc.o npmain.o npobject.o plugin.o pipe.o npn_gate.o np_entry.o
 
 all: libplugins.so
 
-ipc.o: ../common/pipe.h plugin.h
+ipc.o: ../common/defines.h ../common/pipe.h plugin.h
 npmain.o: npobject.h plugin.h
 npobject.o: npobject.h plugin.h
-pipe.o: ../common/pipe.h ../common/pipe.c
+pipe.o: ../common/pipe.h ../common/pipe.c ../common/defines.h
 plugin.o: plugin.h
 
 %.o: %.c
@@ -18,7 +18,7 @@ plugin.o: plugin.h
 libplugins.so: $(OBJECTS)
 	$(CC) -shared -Wl,-soname,libplugins.so -o $@ $^ -lc
 
-.PHONY: clean
+.PHONY: all clean
 clean:
 	-rm -f $(OBJECTS) libplugins.so
 

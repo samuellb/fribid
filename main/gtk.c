@@ -8,6 +8,7 @@
 
 #include <unistd.h> // For STDIN_FILENO
 
+#include "../common/defines.h"
 #include "bankid.h"
 #include "keyfile.h"
 #include "platform.h"
@@ -99,8 +100,8 @@ void platform_startSign(const char *url, const char *hostname, const char *ip) {
     GtkBuilder *builder = gtk_builder_new();
     GError *error = NULL;
     
-    if (!gtk_builder_add_from_file(builder, "/home/samuellb/Projekt/e-leg/main/gtk/bankid.xml", &error)) {
-        fprintf(stderr, "bankid-se: Failed to open GtkBuilder XML: %s\n", error->message);
+    if (!gtk_builder_add_from_file(builder, UI_GTK_XML, &error)) {
+        fprintf(stderr, BINNAME ": Failed to open GtkBuilder XML: %s\n", error->message);
         g_error_free(error);
         return;
     }

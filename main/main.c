@@ -4,8 +4,9 @@
 #include <string.h>
 #include <base64.h>
 
-#include "bankid.h"
+#include "../common/defines.h"
 #include "../common/pipe.h"
+#include "bankid.h"
 #include "platform.h"
 #include "misc.h"
 
@@ -127,7 +128,7 @@ int main(int argc, char **argv) {
         if (!strcmp(argv[i], "--internal--ipc")) {
             ipc = true;
         } else {
-            fprintf(stderr, "bankid-se: Invalid option: %s\n", argv[i]);
+            fprintf(stderr, BINNAME ": Invalid option: %s\n", argv[i]);
             error = true;
         }
     }
@@ -137,6 +138,9 @@ int main(int argc, char **argv) {
     /* Set up pipe */
     if (ipc) {
         platform_setupPipe(pipeData);
+    } else {
+        fprintf(stderr, "This is an internal program.\n");
+        return 2;
     }
     
     platform_mainloop();

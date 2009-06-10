@@ -8,11 +8,11 @@
 #include <sys/wait.h>
 #include <sys/types.h>
 
+#include "../common/defines.h"
 #include "../common/pipe.h"
 #include "plugin.h"
 
-//static const char *mainBinary = "bankid-se";
-static const char *mainBinary = "/home/samuellb/Projekt/e-leg/main/bankid-se";
+static const char *mainBinary = SIGNING_EXECUTABLE;
 static const char *versionOption = "--internal--bankid-version-string";
 static const char *ipcOption = "--internal--ipc";
 
@@ -54,7 +54,7 @@ static void openPipes(const char *option) {
         //close(pipeOut[PIPE_READ_END]);
         
         execlp(mainBinary, mainBinary, option, (char *)NULL);
-        perror("bankid-se: Failed to execute main binary");
+        perror(BINNAME ": Failed to execute main binary");
         exit(1);
     } else {
         // Parent process
