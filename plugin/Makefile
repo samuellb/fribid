@@ -1,6 +1,6 @@
 
 CC=gcc
-CCFLAGS=-Wall -Wextra -std=c99 -pedantic -Wno-unused-parameter -g -I../npapi/include -fpic -fvisibility=hidden
+CCFLAGS=-O2 -g -Wall -Wextra -std=c99 -pedantic -Wno-unused-parameter -I../npapi/include -fPIC -fvisibility=hidden
 
 OBJECTS=ipc.o npmain.o npobject.o plugin.o pipe.o npn_gate.o np_entry.o
 
@@ -16,7 +16,7 @@ plugin.o: plugin.h
 	$(CC) $(CCFLAGS) -c $< -o $@
 
 libplugins.so: $(OBJECTS)
-	$(CC) -shared -Wl,-soname,libplugins.so -o $@ $^ -lc
+	$(CC) -shared -Wl,-z,defs,-soname,libplugins.so -o $@ $^ -lc
 
 .PHONY: all clean
 clean:
