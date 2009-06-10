@@ -12,11 +12,11 @@ npobject.o: npobject.h plugin.h
 pipe.o: ../common/pipe.h ../common/pipe.c ../common/defines.h
 plugin.o: plugin.h
 
-%.o: %.c
+.c.o:
 	$(CC) $(CCFLAGS) -c $< -o $@
 
 libplugins.so: $(OBJECTS)
-	$(CC) -shared -Wl,-z,defs,-soname,libplugins.so -o $@ $^ -lc
+	$(CC) -shared -Wl,-z,defs,-soname,libplugins.so -o $@ $(OBJECTS) -lc
 
 .PHONY: all clean
 clean:

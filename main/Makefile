@@ -17,11 +17,11 @@ pipe.o: ../common/pipe.h ../common/pipe.c ../common/defines.h
 posix.o: platform.h ../common/defines.h
 xmldecisec.o: xmldecisec.h keyfile.h misc.h
 
-%.o: %.c
+.c.o:
 	$(CC) $(CCFLAGS) -c $< -o $@
 
 bankid-se: $(OBJECTS)
-	$(CC) $(LINKFLAGS) -o $@ $^
+	$(CC) $(LINKFLAGS) -o $@ $(OBJECTS)
 
 .PHONY: all clean
 clean:
