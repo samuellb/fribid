@@ -8,6 +8,7 @@
 
 #include "keyfile.h"
 #include "xmldecisec.h"
+#include "misc.h"
 
 static const char *xmldsec_template = 
     "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>"

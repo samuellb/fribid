@@ -31,12 +31,14 @@ char *platform_makeMemTempDir();
 
 /* User interface */
 void platform_mainloop();
+void platform_leaveMainloop();
 
 void platform_startSign(const char *url, const char *hostname, const char *ip);
 void platform_endSign();
 void platform_setMessage(const char *message);
 bool platform_sign(char **signature, int *siglen, char **person, char **password);
 
+void platform_signError();
 
 #endif
 

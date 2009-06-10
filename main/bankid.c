@@ -7,8 +7,8 @@
 
 #include "keyfile.h"
 #include "xmldecisec.h"
-#include "bankid.h"
 #include "misc.h"
+#include "bankid.h"
 
 void bankid_init() {
     keyfile_init();

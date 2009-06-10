@@ -216,11 +216,6 @@ static bool objEnumerate(NPObject *npobj, NPIdentifier **value,
     return false;
 }
 
-/*static bool objConstruct(NPObject *npobj, const NPVariant *args,
-                         uint32_t argCount, NPVariant *result) {
-    return false;
-}*/
-
 static NPClass baseClass = {
     NP_CLASS_STRUCT_VERSION,
     objAllocate,
@@ -234,7 +229,6 @@ static NPClass baseClass = {
     objSetProperty,
     objRemoveProperty,
     objEnumerate,
-    //objConstruct,
     NULL,
 };
 

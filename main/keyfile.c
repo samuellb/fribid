@@ -20,8 +20,8 @@
 #include <cryptohi.h>
 
 #include "misc.h"
-#include "keyfile.h"
 #include "platform.h"
+#include "keyfile.h"
 
 typedef struct {
     enum {
@@ -93,7 +93,7 @@ static SEC_PKCS12DecoderContext *pkcs12_open(const char *data, const int datalen
     // "Key" is important here, otherwise things will silently fail later on
     PK11SlotInfo *slot = PK11_GetInternalKeySlot();
     if (!slot) {
-        fprintf(stderr, "got NULL slot\n");
+        fprintf(stderr, "bankid-se: got NULL slot\n");
     }
     
     if (PK11_NeedUserInit(slot)) {
@@ -103,7 +103,8 @@ static SEC_PKCS12DecoderContext *pkcs12_open(const char *data, const int datalen
         randomString[12] = '\0';
         
         if (PK11_InitPin(slot, NULL, randomString) != SECSuccess) {
-            fprintf(stderr, "FAILED TO SET PIN\n");
+            fprintf(stderr, "bankid-se: failed to set PIN for NSS DB\n");
+            return false;
         }
     }
     
@@ -130,8 +131,11 @@ static SEC_PKCS12DecoderContext *pkcs12_open(const char *data, const int datalen
     if (SEC_PKCS12DecoderUpdate(decoder, (unsigned char*)data, datalen) != SECSuccess)
         return NULL;
     
-    fprintf(stderr, " decoder verify: %d\n", (SEC_PKCS12DecoderVerify(decoder) == SECSuccess));
-    fprintf(stderr, " last error: %d\n", PR_GetError());
+    if ((SEC_PKCS12DecoderVerify(decoder) != SECSuccess) &&
+        (password[0] != '\0')) {
+        fprintf(stderr, "bankid-se: decoder verify failed with "
+                        "non-empty password. error = %d\n", PR_GetError());
+    }
     
     return decoder;
 }
@@ -246,18 +250,11 @@ bool keyfile_getBase64Chain(const char *data, const int datalen,
 static SECItem *nicknameCollisionFunction(SECItem *oldNick, PRBool *cancel, void *wincx) {
     CERTCertificate* cert = (CERTCertificate*)wincx;
     
-    if (!cert || (cancel == NULL)) {
-        fprintf(stderr, "cert or cancel param is NULL\n");
-        return NULL;
-    }
+    if (!cert || (cancel == NULL)) return NULL;
     
     char *caNick = CERT_MakeCANickname(cert);
-    if (!caNick) {
-        fprintf(stderr, "no CA nick\n");
-        return NULL;
-    }
+    if (!caNick) return NULL;
     
-    fprintf(stderr, "oldnick: %*s   canick: %s\n", oldNick->len, oldNick->data, caNick);
     if (oldNick && oldNick->data && (oldNick->data != 0) &&
         (oldNick->len == strlen(caNick)) &&
         !strncmp((const char*)oldNick->data, caNick, oldNick->len)) {
@@ -291,17 +288,14 @@ bool keyfile_sign(const char *data, const int datalen,
     if (!decoder) return false;
     
     if (SEC_PKCS12DecoderValidateBags(decoder, nicknameCollisionFunction) != SECSuccess) {
-        fprintf(stderr, "failed to validate the bags. error = %d\n", PR_GetError());
+        fprintf(stderr, "bankid-se: failed to validate \"bags\". error = %d\n", PR_GetError());
         pkcs12_close(decoder);
         return false;
     }
     
     if (SEC_PKCS12DecoderImportBags(decoder) != SECSuccess) {
-        fprintf(stderr, "failed to import \"bags\". error = %d\n", PR_GetError());
-        // -8099 = SEC_ERROR_PKCS12_UNABLE_TO_IMPORT_KEY
-        //         seems to occur when there's no public key for a private key
-/*        pkcs12_close(decoder);
-        return false;*/
+        fprintf(stderr, "bankid-se: failed to import \"bags\". error = %d\n", PR_GetError());
+        return false;
     }
     CERTCertList *certList = SEC_PKCS12DecoderGetCerts(decoder);
     pkcs12_close(decoder);
@@ -320,7 +314,7 @@ bool keyfile_sign(const char *data, const int datalen,
             SECItem result = { siBuffer, NULL, 0 };
             if (SEC_SignData(&result, (unsigned char *)message, messagelen, privkey,
                              SEC_OID_ISO_SHA_WITH_RSA_SIGNATURE) != SECSuccess) {
-                fprintf(stderr, "failed to sign data!\n");
+                fprintf(stderr, "bankid-se: failed to sign data!\n");
                 SECKEY_DestroyPrivateKey(privkey);
                 CERT_DestroyCertList(certList);
                 return false;

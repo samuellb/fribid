@@ -6,7 +6,7 @@ OBJECTS=ipc.o npmain.o npobject.o plugin.o pipe.o npn_gate.o np_entry.o
 
 all: libplugins.so
 
-ipc.o: ../common/pipe.h
+ipc.o: ../common/pipe.h plugin.h
 npmain.o: npobject.h plugin.h
 npobject.o: npobject.h plugin.h
 pipe.o: ../common/pipe.h ../common/pipe.c

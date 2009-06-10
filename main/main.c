@@ -42,7 +42,7 @@ void pipeData() {
                 pipe_sendString(stdout, "");
                 pipe_flush(stdout);
                 
-                gtk_main_quit();
+                platform_leaveMainloop();
                 return;
             }
             
@@ -93,7 +93,7 @@ void pipeData() {
             pipe_flush(stdout);
             
             free(signature);
-            gtk_main_quit();
+            platform_leaveMainloop();
             break;
         }
     }
@@ -127,7 +127,7 @@ int main(int argc, char **argv) {
         if (!strcmp(argv[i], "--internal--ipc")) {
             ipc = true;
         } else {
-            fprintf(stderr, "Invalid option: %s\n", argv[i]);
+            fprintf(stderr, "bankid-se: Invalid option: %s\n", argv[i]);
             error = true;
         }
     }

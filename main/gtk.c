@@ -4,6 +4,7 @@
 #include <string.h>
 #include <gtk/gtk.h>
 #include <glib.h>
+#include <assert.h>
 
 #include <unistd.h> // For STDIN_FILENO
 
@@ -15,18 +16,25 @@ void platform_init(int *argc, char ***argv) {
     gtk_init(argc, argv);
 }
 
+void platform_leaveMainloop() {
+    gtk_main_quit();
+}
+
+static PlatformPipeFunction* currentPipeFunction = NULL;
+
 static gboolean pipeCallback(GIOChannel *source,
                              GIOCondition condition, gpointer data) {
-    fprintf(stderr, "pipe callback\n");
-    ((PlatformPipeFunction*)data)();
+    currentPipeFunction();
     return TRUE;
 }
 
 void platform_setupPipe(PlatformPipeFunction *pipeFunction) {
-    GIOChannel *stdinChannel = g_io_channel_unix_new(STDIN_FILENO);
+    assert(currentPipeFunction == NULL);
+    currentPipeFunction = pipeFunction;
     
+    GIOChannel *stdinChannel = g_io_channel_unix_new(STDIN_FILENO);
     g_io_add_watch(stdinChannel,
-                   G_IO_IN | G_IO_HUP | G_IO_ERR, pipeCallback, (void*)pipeFunction);
+                   G_IO_IN | G_IO_HUP | G_IO_ERR, pipeCallback, NULL);
     g_io_channel_unref(stdinChannel);
 }
 
@@ -164,7 +172,7 @@ void platform_setMessage(const char *message) {
 static void selectExternalFile() {
     bool ok = true;
     GtkFileChooser *chooser = GTK_FILE_CHOOSER(gtk_file_chooser_dialog_new(
-            "Select external signature", GTK_WINDOW(signDialog),
+            "Select external identity file", GTK_WINDOW(signDialog),
             GTK_FILE_CHOOSER_ACTION_OPEN,
             GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
             GTK_STOCK_OPEN, GTK_RESPONSE_ACCEPT,

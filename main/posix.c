@@ -105,7 +105,7 @@ void platform_makeRandomString(char *buff, int length) {
     static const char *randChars =
         "0123456789_-ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
     
-    for (size_t i = 0; i < length; i++) {
+    for (int i = 0; i < length; i++) {
         int randVal = rand();
         buff[i] = randChars[(i ^ randVal ^ (randVal >> 6) ^
                              (randVal >> 12) ^ (randVal >> 18)) % 64];

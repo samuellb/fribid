@@ -8,14 +8,14 @@ OBJECTS=bankid.o keyfile.o main.o misc.o pipe.o posix.o gtk.o xmldecisec.o
 
 all: bankid-se
 
-bankid.o: bankid.h keyfile.h xmldecisec.h
-keyfile.o: keyfile.h misc.h
-gtk.o: platform.h
+bankid.o: bankid.h keyfile.h misc.h xmldecisec.h
+keyfile.o: keyfile.h misc.h platform.h
+gtk.o: platform.h bankid.h keyfile.h
 main.o: bankid.h misc.h platform.h ../common/pipe.h
 misc.o: misc.h
 pipe.o: ../common/pipe.h ../common/pipe.c
 posix.o: platform.h
-xmldecisec.o: xmldecisec.h keyfile.h
+xmldecisec.o: xmldecisec.h keyfile.h misc.h
 
 %.o: %.c
 	$(CC) $(CCFLAGS) -c $< -o $@

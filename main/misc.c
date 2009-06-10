@@ -28,7 +28,6 @@ char *base64_encode(const char *data, const int length) {
     return base64;
 }
 
-#include <stdio.h>
 char *base64_decode(const char *encoded) {
     unsigned int length;
 
@@ -51,7 +50,6 @@ bool is_canonical_base64(const char *encoded) {
     
     char *recoded = base64_encode(decoded, strlen(decoded));
     
-    fprintf(stderr, " '%s' == '%s'  ?  %d\n", encoded, recoded, !strcmp(recoded, encoded));
     bool equal = !strcmp(recoded, encoded);
     
     free(recoded);
