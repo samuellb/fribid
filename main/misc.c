@@ -33,13 +33,13 @@ char *base64_decode(const char *encoded) {
     unsigned int length;
 
     char *temp = (char*)ATOB_AsciiToData(encoded, &length);
+    if (!temp) return NULL;
     char *result = malloc(length+1);
-    memcpy(result, temp, length+1);
+    memcpy(result, temp, length);
     result[length] = '\0';
     free(temp);
     
     if (length != strlen(result)) {
-        fprintf(stderr, "contains NULL: (%d != %d) %s\n", length, strlen(result), encoded);
         return NULL;
     }
     return result;
