@@ -78,7 +78,7 @@ static BankIDError sign(const char *p12Data, const int p12Length,
                 signobj_id, object);
     free(object);
     
-    if (*signature) {
+    if (xmlsig) {
         // Encode with base64
         *signature = base64_encode(xmlsig, strlen(xmlsig));
         free(xmlsig);
