@@ -6,12 +6,18 @@
 /* Initialization */
 void platform_init(int *argc, char ***argv);
 
+/* Random number generation */
+void platform_seedRandom();
+void platform_makeRandomString(char *buff, int length);
+
 /* Pipe I/O */
 typedef void (PlatformPipeFunction) ();
 void platform_setupPipe(PlatformPipeFunction *pipeFunction);
 
 /* File IO */
 bool platform_readFile(const char *filename, char **data, int *length);
+bool platform_deleteFile(const char *filename);
+bool platform_deleteDir(const char *filename);
 
 typedef struct PlatformDirIter PlatformDirIter;
 PlatformDirIter *platform_openDir(const char *pathname);
@@ -21,6 +27,7 @@ char *platform_currentPath(PlatformDirIter *iter);
 void platform_closeDir(PlatformDirIter *iter);
 
 PlatformDirIter *platform_openKeysDir();
+char *platform_makeMemTempDir();
 
 /* User interface */
 void platform_mainloop();

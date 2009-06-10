@@ -3,9 +3,21 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/types.h>
+#include <sys/stat.h>
 #include <dirent.h>
+#include <errno.h>
+#include <sys/time.h>
+#include <time.h>
+#include <unistd.h>
 
 #include "platform.h"
+
+void platform_seedRandom() {
+    struct timeval tv;
+    gettimeofday(&tv, NULL);
+    
+    srand(tv.tv_sec ^ tv.tv_usec ^ getpid());
+}
 
 struct PlatformDirIter {
     DIR *dir;
@@ -26,6 +38,14 @@ bool platform_readFile(const char *filename, char **data, int *length) {
     bool ok = (fread(*data, *length, 1, file) == 1);
     fclose(file);
     return ok;
+}
+
+bool platform_deleteFile(const char *filename) {
+    return (unlink(filename) == 0);
+}
+
+bool platform_deleteDir(const char *filename) {
+    return (rmdir(filename) == 0);
 }
 
 PlatformDirIter *platform_openDir(const char *pathname) {
@@ -81,5 +101,51 @@ PlatformDirIter *platform_openKeysDir() {
     return iter;
 }
 
+void platform_makeRandomString(char *buff, int length) {
+    static const char *randChars =
+        "0123456789_-ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
+    
+    for (size_t i = 0; i < length; i++) {
+        int randVal = rand();
+        buff[i] = randChars[(i ^ randVal ^ (randVal >> 6) ^
+                             (randVal >> 12) ^ (randVal >> 18)) % 64];
+    }
+}
+
+static char *makeTempDir(const char *template) {
+    
+    
+    while (true) {
+        // Create template
+        char randomString[12];
+        platform_makeRandomString(randomString, 12);
+        
+        // Create directory
+        char *dir = malloc(strlen(template) - 2 + 12 + 1);
+        sprintf(dir, template, randomString);
+        
+        if (mkdir(dir, S_IRWXU) == 0) {
+            return dir;
+        }
+        
+        // Error
+        if (errno != EEXIST) return NULL;
+    }
+}
+
+char *platform_makeMemTempDir() {
+    static const char *paths[] = {
+        "/dev/shm/bankid-se-%s.tmp",
+        "/tmp/bankid-se-%s.tmp",
+        NULL
+    };
+    
+    for (const char **path = paths; *path; path++) {
+        char *dir = makeTempDir(*path);
+        if (dir) return dir;
+    }
+    
+    return NULL;
+}
 
 

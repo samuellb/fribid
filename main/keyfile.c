@@ -21,6 +21,7 @@
 
 #include "misc.h"
 #include "keyfile.h"
+#include "platform.h"
 
 typedef struct {
     enum {
@@ -32,12 +33,33 @@ typedef struct {
     char *data;
 } secuPWData;
 
+// Used for storing a dummy NSS database
+static char *nssDummyDir;
+
+static void cleanNSSDummyDir() {
+    // Remove file names of any files that NSS has created
+    // (if the OS supports deletion of filenames of files that are in use)
+    PlatformDirIter *iter = platform_openDir(nssDummyDir);
+    while (platform_iterateDir(iter)) {
+        char *file = platform_currentPath(iter);
+        platform_deleteFile(file);
+        free(file);
+    }
+    platform_closeDir(iter);
+}
 
 void keyfile_init() {
     PR_Init(PR_SYSTEM_THREAD, PR_PRIORITY_NORMAL, 1);
-    //if (NSS_NoDB_Init("") != SECSuccess) {
-    // NSS_INIT_NOCERTDB maybe?
-    if (NSS_Initialize("/home/samuellb/Projekt/e-leg/main/testdb", "", "", "secmod.db",
+    
+    platform_seedRandom();
+    nssDummyDir = platform_makeMemTempDir();
+    if (!nssDummyDir) {
+        fprintf(stderr, "bankid-se: Failed to create temporary directory!\n");
+        abort();
+    }
+    
+    // Initialize NSS
+    if (NSS_Initialize(nssDummyDir, "", "", "secmod.db",
             NSS_INIT_NOMODDB | NSS_INIT_NOROOTINIT) != SECSuccess) {
         fprintf(stderr, "bankid-se: NSS initialization failed!\n");
     }
@@ -49,11 +71,18 @@ void keyfile_init() {
     SEC_PKCS12EnableCipher(PKCS12_DES_56, 1);
     SEC_PKCS12EnableCipher(PKCS12_DES_EDE3_168, 1);
     SEC_PKCS12SetPreferredCipher(PKCS12_DES_EDE3_168, 1);
+    
+    cleanNSSDummyDir(); // The files are deleted when they are closed
+                        // (or on exit if not supported by the OS)
 }
 
 void keyfile_shutdown() {
     NSS_Shutdown();
     PR_Cleanup();
+    
+    cleanNSSDummyDir();
+    platform_deleteDir(nssDummyDir);
+    free(nssDummyDir);
 }
 
 static SEC_PKCS12DecoderContext *pkcs12_open(const char *data, const int datalen,
@@ -68,9 +97,12 @@ static SEC_PKCS12DecoderContext *pkcs12_open(const char *data, const int datalen
     }
     
     if (PK11_NeedUserInit(slot)) {
-        fprintf(stderr, "Need User Init => this will fail...\n");
-        // This doesn't seem to help
-        if (PK11_InitPin(slot, NULL, "") != SECSuccess) {
+        // Create a new encrypted database
+        char randomString[13];
+        platform_makeRandomString(randomString, 12);
+        randomString[12] = '\0';
+        
+        if (PK11_InitPin(slot, NULL, randomString) != SECSuccess) {
             fprintf(stderr, "FAILED TO SET PIN\n");
         }
     }

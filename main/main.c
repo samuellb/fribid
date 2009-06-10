@@ -41,7 +41,9 @@ void pipeData() {
                 pipe_sendInt(stdout, BIDERR_InternalError);
                 pipe_sendString(stdout, "");
                 pipe_flush(stdout);
-                exit(1);
+                
+                gtk_main_quit();
+                return;
             }
             
             char *p12Data = NULL, *person = NULL, *password = NULL;
@@ -91,7 +93,7 @@ void pipeData() {
             pipe_flush(stdout);
             
             free(signature);
-            exit(0);
+            gtk_main_quit();
             break;
         }
     }
