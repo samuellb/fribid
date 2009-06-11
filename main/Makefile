@@ -1,6 +1,5 @@
 
-CC=gcc
-CCFLAGS=-O2 -g -Wall -Wextra -std=c99 -pedantic -Wno-unused-parameter -I../npapi/include `pkg-config --cflags gtk+-2.0` -DGTK_DISABLE_DEPRECATED=1 -DGDK_DISABLE_DEPRECATED=1 -DG_DISABLE_DEPRECATED=1
+CCFLAGS=$(COMMONCFLAGS) -I../npapi/include `pkg-config --cflags gtk+-2.0` -DGTK_DISABLE_DEPRECATED=1 -DGDK_DISABLE_DEPRECATED=1 -DG_DISABLE_DEPRECATED=1
 LINKFLAGS=`pkg-config --cflags --libs gtk+-2.0` -lnss3 -lsmime3
 
 
