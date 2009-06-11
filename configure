@@ -21,6 +21,18 @@ while [ "$#" != "0" ]; do
     --exec-prefix=*)
         execprefix=${flag#--exec-prefix=}
         ;;
+    --internal--get-define=*)
+        name=${flag#--internal--get-define=}
+        printf '#include "%s"\n%s\n' "$basedir/common/defines.h" "$name" | cpp - | sed 's/#[^\n]*//g' | tr -d '\n' | sed 's/"\s"//g' | tr -d '\"'
+        exit 0
+        ;;
+    --internal--remove-link)
+        link="$1"
+        target="$2"
+        shift 2
+        [ ! -h "$link" ] || [ "`readlink "$link"`" != "$target" ] || rm -f "$link"
+        exit 0
+        ;;
     *)
         echo "Invalid option: $flag"
         error=1
