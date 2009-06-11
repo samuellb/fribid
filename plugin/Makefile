@@ -1,4 +1,5 @@
 
+COMMONCFLAGS=-O2 -g -Wall -Wextra -std=c99 -pedantic -Wno-unused-parameter
 CCFLAGS=$(COMMONCFLAGS) -I../npapi/include -fPIC -fvisibility=hidden
 
 OBJECTS=ipc.o npmain.o npobject.o plugin.o pipe.o npn_gate.o np_entry.o
