@@ -1,8 +1,7 @@
 #ifndef __DEFINES_H__
 #define __DEFINES_H__
 
-#define PREFIX   "/usr/local"
-#define EPREFIX  PREFIX
+#include "config.h"
 
 #define BINNAME  "bankid-se"
 

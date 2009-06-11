@@ -6,10 +6,10 @@ OBJECTS=ipc.o npmain.o npobject.o plugin.o pipe.o npn_gate.o np_entry.o
 
 all: libplugins.so
 
-ipc.o: ../common/defines.h ../common/pipe.h plugin.h
+ipc.o: ../common/pipe.h plugin.h
 npmain.o: npobject.h plugin.h
 npobject.o: npobject.h plugin.h
-pipe.o: ../common/pipe.h ../common/pipe.c ../common/defines.h
+pipe.o: ../common/pipe.h ../common/pipe.c
 plugin.o: plugin.h
 
 .c.o:
@@ -22,4 +22,8 @@ libplugins.so: $(OBJECTS)
 clean:
 	-rm -f $(OBJECTS) libplugins.so
 
+$(OBJECTS): ../common/defines.h ../common/config.h
+../common/config.h:
+	@echo "You must run ./configure first." >&2 && false
+../common/defines.h:
 
