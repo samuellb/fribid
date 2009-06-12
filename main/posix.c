@@ -114,24 +114,25 @@ void platform_makeRandomString(char *buff, int length) {
 }
 
 static char *makeTempDir(const char *template) {
+    char *dir = malloc(strlen(template) - 2 + 12 + 1);
     
-    
-    while (true) {
+    do {
         // Create template
-        char randomString[12];
+        char randomString[13];
         platform_makeRandomString(randomString, 12);
+        randomString[12] = '\0';
         
         // Create directory
-        char *dir = malloc(strlen(template) - 2 + 12 + 1);
         sprintf(dir, template, randomString);
         
         if (mkdir(dir, S_IRWXU) == 0) {
             return dir;
         }
-        
-        // Error
-        if (errno != EEXIST) return NULL;
-    }
+    } while (errno == EEXIST);
+    
+    // Directory doesn't exist, but can't be created
+    free(dir);
+    return NULL;
 }
 
 char *platform_makeMemTempDir() {
