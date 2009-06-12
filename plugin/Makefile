@@ -5,7 +5,8 @@ CCFLAGS=$(COMMONCFLAGS) -I../npapi/include -fPIC -fvisibility=hidden
 # Files to be installed
 LIB_PATH=`../configure --internal--get-define=LIB_PATH`
 NPAPI_PLUGIN_LIB=`../configure --internal--get-define=NPAPI_PLUGIN_LIB`
-NPAPI_PLUGIN_LINK=`../configure --internal--get-define=NPAPI_PLUGIN_LINK`
+NPAPI_PLUGIN_LINK1=`../configure --internal--get-define=NPAPI_PLUGIN_LINK1`
+NPAPI_PLUGIN_LINK2=`../configure --internal--get-define=NPAPI_PLUGIN_LINK2`
 NPAPI_PLUGIN_REL=`../configure --internal--get-define=NPAPI_PLUGIN_REL`
 
 OBJECTS=ipc.o npmain.o npobject.o plugin.o pipe.o npn_gate.o np_entry.o
@@ -30,13 +31,16 @@ clean:
 
 install:
 	install -T -D -s -m 644 libplugins.so $(NPAPI_PLUGIN_LIB) && \
-	../configure --internal--remove-link $(NPAPI_PLUGIN_LINK) $(NPAPI_PLUGIN_REL) && \
-	ln -s $(NPAPI_PLUGIN_REL) $(NPAPI_PLUGIN_LINK)
+	../configure --internal--remove-link $(NPAPI_PLUGIN_LINK1) $(NPAPI_PLUGIN_REL) && \
+	../configure --internal--remove-link $(NPAPI_PLUGIN_LINK2) $(NPAPI_PLUGIN_REL) && \
+	ln -s $(NPAPI_PLUGIN_REL) $(NPAPI_PLUGIN_LINK1)
+	ln -s $(NPAPI_PLUGIN_REL) $(NPAPI_PLUGIN_LINK2)
 
 uninstall:
 	rm -f $(NPAPI_PLUGIN_LIB)
 	[ ! -d $(LIB_PATH) ] || rmdir $(LIB_PATH) 2> /dev/null || true
-	../configure --internal--remove-link $(NPAPI_PLUGIN_LINK) $(NPAPI_PLUGIN_REL)
+	../configure --internal--remove-link $(NPAPI_PLUGIN_LINK1) $(NPAPI_PLUGIN_REL)
+	../configure --internal--remove-link $(NPAPI_PLUGIN_LINK2) $(NPAPI_PLUGIN_REL)
 
 $(OBJECTS): ../common/defines.h ../common/config.h
 ../common/config.h:
