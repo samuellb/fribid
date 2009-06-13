@@ -31,10 +31,10 @@ sign: $(OBJECTS)
 
 .PHONY: all clean install uninstall
 clean:
-	-rm -f $(OBJECTS) sign
+	rm -f $(OBJECTS) sign
 
 install: sign gtk/sign.xml
-	install -T -D -s sign $(SIGNING_EXECUTABLE) && \
+	install -T -D -s sign $(SIGNING_EXECUTABLE)
 	install -T -D -m 644 gtk/sign.xml $(UI_GTK_XML)
 
 uninstall:

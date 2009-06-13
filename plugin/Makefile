@@ -27,12 +27,12 @@ libplugins.so: $(OBJECTS)
 
 .PHONY: all clean install uninstall
 clean:
-	-rm -f $(OBJECTS) libplugins.so
+	rm -f $(OBJECTS) libplugins.so
 
 install:
-	install -T -D -s -m 644 libplugins.so $(NPAPI_PLUGIN_LIB) && \
-	../configure --internal--remove-link $(NPAPI_PLUGIN_LINK1) $(NPAPI_PLUGIN_REL) && \
-	../configure --internal--remove-link $(NPAPI_PLUGIN_LINK2) $(NPAPI_PLUGIN_REL) && \
+	install -T -D -s -m 644 libplugins.so $(NPAPI_PLUGIN_LIB)
+	../configure --internal--remove-link $(NPAPI_PLUGIN_LINK1) $(NPAPI_PLUGIN_REL)
+	../configure --internal--remove-link $(NPAPI_PLUGIN_LINK2) $(NPAPI_PLUGIN_REL)
 	ln -s $(NPAPI_PLUGIN_REL) $(NPAPI_PLUGIN_LINK1)
 	ln -s $(NPAPI_PLUGIN_REL) $(NPAPI_PLUGIN_LINK2)
 
