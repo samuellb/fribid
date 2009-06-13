@@ -121,12 +121,14 @@ void platform_startSign(const char *url, const char *hostname, const char *ip) {
     iter.stamp = 0;
     
     PlatformDirIter *dir = platform_openKeysDir();
-    while (platform_iterateDir(dir)) {
-        char *filename = platform_currentPath(dir);
-        addSignatureFile(signatures, filename, &iter);
-        free(filename);
+    if (dir) {
+        while (platform_iterateDir(dir)) {
+            char *filename = platform_currentPath(dir);
+            addSignatureFile(signatures, filename, &iter);
+            free(filename);
+        }
+        platform_closeDir(dir);
     }
-    platform_closeDir(dir);
     
     signaturesCombo = GTK_COMBO_BOX(gtk_builder_get_object(builder, "signature_combo"));
     gtk_combo_box_set_model(signaturesCombo, GTK_TREE_MODEL(signatures));
