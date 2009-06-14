@@ -45,10 +45,12 @@ void platform_mainloop() {
 
 /* Authentication */
 static GtkDialog *signDialog;
+static GtkLabel *operationLabel;
 static GtkTextView *signText;
 static GtkComboBox *signaturesCombo;
 static GtkEntry *passwordEntry;
 static GtkButton *signButton;
+static GtkLabel *signButtonLabel;
 
 static GtkWidget *signLabel;
 static GtkWidget *signScroller;
@@ -107,7 +109,9 @@ void platform_startSign(const char *url, const char *hostname, const char *ip) {
     }
     
     signButton = GTK_BUTTON(gtk_builder_get_object(builder, "button_sign"));
+    signButtonLabel = GTK_LABEL(gtk_builder_get_object(builder, "buttonlabel_sign"));
     
+    operationLabel = GTK_LABEL(gtk_builder_get_object(builder, "header_op"));
     gtk_label_set_text(GTK_LABEL(gtk_builder_get_object(builder, "header_domain")),
                        hostname);
     
@@ -162,12 +166,20 @@ void platform_setMessage(const char *message) {
     if (message == NULL) {
         gtk_widget_hide(signLabel);
         gtk_widget_hide(signScroller);
+        
+        gtk_window_set_title(GTK_WINDOW(signDialog), "Authentication");
+        gtk_label_set_label(GTK_LABEL(operationLabel), "<big><b>Log in to: </b></big>");
+        gtk_label_set_label(signButtonLabel, "_Log in");
     } else {
         GtkTextBuffer *textBuffer = gtk_text_view_get_buffer(signText);
         gtk_text_buffer_set_text(textBuffer, message, strlen(message));
         
         gtk_widget_show(signLabel);
         gtk_widget_show(signScroller);
+        
+        gtk_window_set_title(GTK_WINDOW(signDialog), "Signing");
+        gtk_label_set_label(GTK_LABEL(operationLabel), "<big><b>Site: </b></big>");
+        gtk_label_set_label(GTK_LABEL(signButtonLabel), "_Sign");
     }
 }
 

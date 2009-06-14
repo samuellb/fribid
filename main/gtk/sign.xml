@@ -32,7 +32,6 @@
                 <child>
                   <object class="GtkLabel" id="header_domain">
                     <property name="visible">True</property>
-                    <property name="yalign">0</property>
                     <property name="label">&lt;big&gt;test.se&lt;/big&gt;</property>
                     <property name="use_markup">True</property>
                   </object>
@@ -47,6 +46,18 @@
               </packing>
             </child>
             <child>
+              <object class="GtkLabel" id="spacer_label">
+                <property name="visible">True</property>
+                <property name="label" translatable="no">&lt;span size="4"&gt; hej&lt;/span&gt;</property>
+                <property name="use_markup">True</property>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="padding">6</property>
+                <property name="position">1</property>
+              </packing>
+            </child>
+            <child>
               <object class="GtkLabel" id="sign_label">
                 <property name="visible">True</property>
                 <property name="xalign">0</property>
@@ -55,7 +66,7 @@
               <packing>
                 <property name="expand">False</property>
                 <property name="padding">6</property>
-                <property name="position">1</property>
+                <property name="position">2</property>
               </packing>
             </child>
             <child>
@@ -75,7 +86,7 @@
               </object>
               <packing>
                 <property name="padding">3</property>
-                <property name="position">2</property>
+                <property name="position">3</property>
               </packing>
             </child>
             <child>
@@ -142,7 +153,7 @@
               <packing>
                 <property name="expand">False</property>
                 <property name="padding">6</property>
-                <property name="position">3</property>
+                <property name="position">4</property>
               </packing>
             </child>
           </object>
@@ -192,7 +203,7 @@
                       <object class="GtkAlignment" id="alignment2">
                         <property name="visible">True</property>
                         <child>
-                          <object class="GtkLabel" id="label1">
+                          <object class="GtkLabel" id="buttonlabel_sign">
                             <property name="visible">True</property>
                             <property name="xalign">0</property>
                             <property name="label" translatable="yes">_Log in</property>
