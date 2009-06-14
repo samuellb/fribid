@@ -91,5 +91,5 @@ else
 fi
 
 echo "Wrote $CONFFILE."
-echo "Type \`\`make'' to compile, and then \`\`$INSTALLCMD'' to install."
+echo "Type \"make\" to compile, and then \"$INSTALLCMD\" to install."
 
