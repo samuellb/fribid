@@ -65,7 +65,7 @@ EXPORT NPError OSCALL NP_GetEntryPoints(NPPluginFuncs* pFuncs)
   pFuncs->version       = (NP_VERSION_MAJOR << 8) | NP_VERSION_MINOR;
   pFuncs->newp          = NPP_New;
   pFuncs->destroy       = NPP_Destroy;
-  //pFuncs->setwindow     = NPP_SetWindow;
+  pFuncs->setwindow     = NPP_SetWindow;
   //pFuncs->newstream     = NPP_NewStream;
   //pFuncs->destroystream = NPP_DestroyStream;
   //pFuncs->asfile        = NPP_StreamAsFile;
@@ -168,7 +168,7 @@ NP_Initialize(NPNetscapeFuncs* pFuncs
   pluginFuncs->size       = sizeof(NPPluginFuncs);
   pluginFuncs->newp       = NPP_New;
   pluginFuncs->destroy    = NPP_Destroy;
-  //pluginFuncs->setwindow  = NPP_SetWindow;
+  pluginFuncs->setwindow  = NPP_SetWindow;
   //pluginFuncs->newstream  = NPP_NewStream;
   //pluginFuncs->destroystream = NPP_DestroyStream;
   //pluginFuncs->asfile     = NPP_StreamAsFile;
@@ -190,4 +190,13 @@ EXPORT NPError OSCALL NP_Shutdown()
 {
   return NPERR_NO_ERROR;
 }
+
+/* Dummy functions */
+NPError NP_LOADDS NPP_SetWindow(NPP instance, NPWindow* window) {
+    return NPERR_NO_ERROR;
+}
+
+
+
+
 
