@@ -41,8 +41,7 @@
 static char *strndup(const char *source, int maxLength) {
     int i;
     for (i = 0;; i++) {
-        if (i >= maxLength) { i++; break; }
-        if (source[i] == '\0') break;
+        if ((i >= maxLength) || (source[i] == '\0')) break;
     }
     
     char *ret = malloc(i+1);
