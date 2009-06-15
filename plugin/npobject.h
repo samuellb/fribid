@@ -36,6 +36,7 @@ typedef struct {
     Plugin *plugin;
 } PluginObject;
 
+char *npstr(char *source);
 NPObject *npobject_fromMIME(NPP instance, NPMIMEType mimeType);
 
 #endif

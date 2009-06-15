@@ -50,6 +50,15 @@ static char *strndup(const char *source, int maxLength) {
     return ret;
 }
 
+// Re-allocates a string with NPN_MemAlloc instead of malloc
+char *npstr(char *source) {
+    int size = strlen(source)+1;
+    char *dest = NPN_MemAlloc(size);
+    memcpy(dest, source, size);
+    free(source);
+    return dest;
+}
+
 static bool getProperty(NPP instance, NPObject *obj, const char *name, NPVariant *result) {
     NPIdentifier ident = NPN_GetStringIdentifier(name);
     return NPN_GetProperty(instance, obj, ident, result);
@@ -184,7 +193,7 @@ static bool objInvoke(NPObject *npobj, NPIdentifier ident,
     switch (this->plugin->type) {
         case PT_Version:
             if (!strcmp(name, "GetVersion") && (argCount == 0)) {
-                char *s = version_getVersion(this->plugin);
+                char *s = npstr(version_getVersion(this->plugin));
                 STRINGZ_TO_NPVARIANT(s, *result);
                 return true;
             }
@@ -196,7 +205,7 @@ static bool objInvoke(NPObject *npobj, NPIdentifier ident,
                 // Get parameter
                 char *param = strndup(NPVARIANT_TO_STRING(args[0]).utf8characters, NPVARIANT_TO_STRING(args[0]).utf8length);
                 
-                char *s = sign_getParam(this->plugin, param);
+                char *s = npstr(sign_getParam(this->plugin, param));
                 
                 free(param);
                 STRINGZ_TO_NPVARIANT(s, *result);
