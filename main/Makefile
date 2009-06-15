@@ -1,7 +1,7 @@
 
 COMMONCFLAGS=-O2 -g -Wall -Wextra -std=c99 -pedantic -Wno-unused-parameter
 CCFLAGS=$(COMMONCFLAGS) -I../npapi/include `pkg-config --cflags gtk+-2.0` -DGTK_DISABLE_DEPRECATED=1 -DGDK_DISABLE_DEPRECATED=1 -DG_DISABLE_DEPRECATED=1
-LINKFLAGS=`pkg-config --cflags --libs gtk+-2.0` -lnss3 -lsmime3
+LINKFLAGS=`pkg-config --cflags --libs gtk+-2.0` `pkg-config --cflags --libs nss`
 
 # Files to be installed
 LIB_PATH=`../configure --internal--get-define=LIB_PATH`
@@ -34,8 +34,10 @@ clean:
 	rm -f $(OBJECTS) sign
 
 install: sign gtk/sign.xml
-	install -T -D -s sign $(SIGNING_EXECUTABLE)
-	install -T -D -m 644 gtk/sign.xml $(UI_GTK_XML)
+	install -d $(LIB_PATH)
+	install -d $(UI_PATH)
+	install -s sign $(LIB_PATH)
+	install -m 644 gtk/sign.xml $(UI_PATH)
 
 uninstall:
 	rm -f $(SIGNING_EXECUTABLE) $(UI_GTK_XML)

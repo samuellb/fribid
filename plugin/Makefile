@@ -30,7 +30,8 @@ clean:
 	rm -f $(OBJECTS) libplugins.so
 
 install:
-	install -T -D -s -m 644 libplugins.so $(NPAPI_PLUGIN_LIB)
+	install -d $(LIB_PATH)
+	install -s -m 644 libplugins.so $(LIB_PATH)
 	../configure --internal--remove-link $(NPAPI_PLUGIN_LINK1) $(NPAPI_PLUGIN_REL)
 	../configure --internal--remove-link $(NPAPI_PLUGIN_LINK2) $(NPAPI_PLUGIN_REL)
 	ln -s $(NPAPI_PLUGIN_REL) $(NPAPI_PLUGIN_LINK1)
