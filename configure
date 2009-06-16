@@ -19,7 +19,26 @@ while [ "$#" != "0" ]; do
     shift
     case "$flag" in
     --help)
-        # TODO
+        echo "Usage: $0 [options]
+
+This script creates a build configuration. The default options are to
+install system-wide, into /usr/local, and use /usr/lib/mozilla/plugins
+as the plugin directory.
+
+Options:
+
+    --help                Shows this help.
+    --prefix=PATH         Sets the installation prefix. [/usr/local]
+    --exec-prefix=PATH    Sets the installation prefix for executable files.
+                          The default is to use the same prefix for all files.
+    --plugin-path=PATH    Sets the NPAPI plugin path [/usr/lib/mozilla/plugin]
+                          This option may be repeated if you want to create
+                          plugin links in several places. Do not include the
+                          prefix in the path.
+    --current-user        Selects a per-user installation. Equivalent to:
+                              --prefix=$userPrefix
+                              --plugin-path=$userPluginPath
+"
         exit 0
         ;;
     --prefix=*)
