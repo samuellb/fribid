@@ -7,5 +7,5 @@ all clean install uninstall:
 distclean: clean
 	rm -f common/config.h
 
-.PHONY: all clean install uninstall $(SUBDIRS)
+.PHONY: all clean distclean install uninstall $(SUBDIRS)
 
