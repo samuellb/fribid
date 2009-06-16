@@ -3,6 +3,9 @@
 prefix="/usr/local"
 execprefix=""
 
+pluginPathSet=""
+pluginPaths="/usr/lib/mozilla/plugins"
+
 error=""
 
 basedir=`dirname "$0"`
@@ -20,6 +23,16 @@ while [ "$#" != "0" ]; do
         ;;
     --exec-prefix=*)
         execprefix=${flag#--exec-prefix=}
+        ;;
+    --plugin-path=*)
+        path=${flag#--plugin-path=}
+        path=${path%/}
+        if [ -z "$pluginPathSet" ]; then
+            pluginPathSet=1
+            pluginPaths="$path"
+        else
+            pluginPaths="$pluginPaths $path"
+        fi
         ;;
     --internal--get-define=*)
         name=${flag#--internal--get-define=}
@@ -41,7 +54,7 @@ while [ "$#" != "0" ]; do
 done
 
 if [ ! -r "$basedir/common/defines.h" ]; then
-    echo "Source code not found."
+    echo "ERROR: Source code not found."
     error=1
 fi
 
@@ -49,6 +62,8 @@ if [ -n "$error" ]; then
     exit 2
 fi
 
+
+### Prefixes
 prefixPath="$prefix"
 
 if [ -z "$execprefix" ]; then
@@ -62,6 +77,29 @@ if [ -n "$execprefix" ]; then
     echo "Executable/library prefix: $execPath"
 fi
 
+
+### Plugin paths
+hasPaths=""
+for path in $pluginPaths; do
+    hasPaths="1"
+    if [ "$path" = "${path%/plugins}" ]; then
+    	echo "WARNING: Plugin path $path doesn't end with /plugins." >&2
+    elif [ -d "$path" ]; then
+        echo "Plugin path: $path"
+    else
+    	echo "WARNING: Plugin path $path doesn't exist!"
+    	if [ -z "$pluginPathSet" ]; then
+            echo "         You may need to change it with the --plugin-path=... option." >&2
+        fi
+    fi
+done
+
+if [ -z "$hasPaths" ]; then
+    echo "No plugin paths specified."
+fi
+
+
+### Write configuration
 CONFFILE="$basedir/common/config.h"
 
 echo "
@@ -70,9 +108,11 @@ echo "
 
 #define PREFIX \"$prefixPath\"
 #define EPREFIX \"$execPath\"
+#define NPAPI_PLUGIN_PATHS \"$pluginPaths\"
 " > $CONFFILE
 
 
+### Display success message
 cancreate() {
     if [ -w "$1" ]; then
         return 0
