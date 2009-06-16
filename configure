@@ -1,10 +1,14 @@
 #!/bin/sh
 
+prefixSet=""
 prefix="/usr/local"
 execprefix=""
 
 pluginPathSet=""
 pluginPaths="/usr/lib/mozilla/plugins"
+
+userPluginPath="$HOME/.mozilla/plugins"
+userPrefix="$HOME/.local"
 
 error=""
 
@@ -20,6 +24,7 @@ while [ "$#" != "0" ]; do
         ;;
     --prefix=*)
         prefix=${flag#--prefix=}
+        prefixSet=1
         ;;
     --exec-prefix=*)
         execprefix=${flag#--exec-prefix=}
@@ -32,6 +37,18 @@ while [ "$#" != "0" ]; do
             pluginPaths="$path"
         else
             pluginPaths="$pluginPaths $path"
+        fi
+        ;;
+    --current-user)
+        if [ -z "$prefixSet" ]; then
+            prefix="$userPrefix"
+        fi
+        
+        if [ -z "$pluginPathSet" ]; then
+            pluginPathSet=1
+            pluginPaths="$userPluginPath"
+        else
+            pluginPaths="$pluginPaths $userPluginPath"
         fi
         ;;
     --internal--get-define=*)
