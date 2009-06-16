@@ -27,8 +27,6 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-#include <base64.h>
-
 #include "keyfile.h"
 #include "xmldecisec.h"
 #include "misc.h"

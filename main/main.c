@@ -26,7 +26,6 @@
 #include <stdbool.h>
 #include <stdlib.h>
 #include <string.h>
-#include <base64.h>
 
 #include "../common/defines.h"
 #include "../common/pipe.h"
