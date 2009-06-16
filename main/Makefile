@@ -34,16 +34,16 @@ clean:
 	rm -f $(OBJECTS) sign
 
 install: sign gtk/sign.xml
-	install -d $(LIB_PATH)
-	install -d $(UI_PATH)
-	install -s sign $(LIB_PATH)
-	install -m 644 gtk/sign.xml $(UI_PATH)
+	install -d $(DESTDIR)$(LIB_PATH)
+	install -d $(DESTDIR)$(UI_PATH)
+	install -s sign $(DESTDIR)$(LIB_PATH)
+	install -m 644 gtk/sign.xml $(DESTDIR)$(UI_PATH)
 
 uninstall:
-	rm -f $(SIGNING_EXECUTABLE) $(UI_GTK_XML)
-	[ ! -d $(LIB_PATH) ] || rmdir $(LIB_PATH) 2> /dev/null || true
-	[ ! -d $(UI_PATH) ] || rmdir $(UI_PATH)
-	[ ! -d $(SHARE_PATH) ] || rmdir $(SHARE_PATH)
+	rm -f $(DESTDIR)$(SIGNING_EXECUTABLE) $(DESTDIR)$(UI_GTK_XML)
+	[ ! -d $(DESTDIR)$(LIB_PATH) ] || rmdir $(DESTDIR)$(LIB_PATH) 2> /dev/null || true
+	[ ! -d $(DESTDIR)$(UI_PATH) ] || rmdir $(DESTDIR)$(UI_PATH)
+	[ ! -d $(DESTDIR)$(SHARE_PATH) ] || rmdir $(DESTDIR)$(SHARE_PATH)
 
 $(OBJECTS): ../common/defines.h ../common/config.h
 ../common/config.h:

@@ -28,19 +28,19 @@ clean:
 	rm -f $(OBJECTS) libplugins.so
 
 install:
-	install -d $(LIB_PATH)
-	install -s -m 644 libplugins.so $(LIB_PATH)
+	install -d $(DESTDIR)$(LIB_PATH)
+	install -s -m 644 libplugins.so $(DESTDIR)$(LIB_PATH)
 	for path in $(NPAPI_PLUGIN_PATHS); do \
-	    (../configure --internal--remove-link $$path/libplugins.so $(NPAPI_PLUGIN_LIB) || exit 1) && \
-	    install -d $$path && \
-	    ln -s $(NPAPI_PLUGIN_LIB) $$path/libplugins.so; \
+	    (../configure --internal--remove-link $(DESTDIR)$$path/libplugins.so $(NPAPI_PLUGIN_LIB) || exit 1) && \
+	    install -d $(DESTDIR)$$path && \
+	    ln -s $(NPAPI_PLUGIN_LIB) $(DESTDIR)$$path/libplugins.so; \
 	done
 
 uninstall:
-	rm -f $(NPAPI_PLUGIN_LIB)
-	[ ! -d $(LIB_PATH) ] || rmdir $(LIB_PATH) 2> /dev/null || true
+	rm -f $(DESTDIR)$(NPAPI_PLUGIN_LIB)
+	[ ! -d $(DESTDIR)$(LIB_PATH) ] || rmdir $(DESTDIR)$(LIB_PATH) 2> /dev/null || true
 	for path in $(NPAPI_PLUGIN_PATHS); do \
-	    ../configure --internal--remove-link $$path/libplugins.so $(NPAPI_PLUGIN_LIB) || exit 1; \
+	    ../configure --internal--remove-link $(DESTDIR)$$path/libplugins.so $(NPAPI_PLUGIN_LIB) || exit 1; \
 	done
 
 $(OBJECTS): ../common/defines.h ../common/config.h
