@@ -1,7 +1,8 @@
 
 COMMONCFLAGS=-O2 -g -Wall -Wextra -std=c99 -pedantic -Wno-unused-parameter
-CCFLAGS=$(COMMONCFLAGS) -I../npapi/include `pkg-config --cflags gtk+-2.0 nss nspr` -DGTK_DISABLE_DEPRECATED=1 -DGDK_DISABLE_DEPRECATED=1 -DG_DISABLE_DEPRECATED=1
-LINKFLAGS=`pkg-config --libs gtk+-2.0 nss nspr`
+CCFLAGS=$(COMMONCFLAGS) -I../npapi/include `pkg-config --cflags 'gtk+-2.0 >= 2.12' 'nss >= 3.10' nspr` -DGTK_DISABLE_DEPRECATED=1 -DGDK_DISABLE_DEPRECATED=1 -DG_DISABLE_DEPRECATED=1
+LINKFLAGS=-Wl,--as-needed
+LIBS=`pkg-config --libs 'gtk+-2.0 >= 2.12' 'nss >= 3.10' nspr`
 
 # Files to be installed
 LIB_PATH=`../configure --internal--get-define=LIB_PATH`
@@ -27,7 +28,7 @@ xmldecisec.o: xmldecisec.h keyfile.h misc.h
 	$(CC) $(CCFLAGS) -c $< -o $@
 
 sign: $(OBJECTS)
-	$(CC) $(LINKFLAGS) -o $@ $(OBJECTS)
+	$(CC) $(LINKFLAGS) $(OBJECTS) $(LIBS) -o $@
 
 .PHONY: all clean install uninstall
 clean:
