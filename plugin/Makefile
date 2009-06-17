@@ -1,6 +1,6 @@
 
 COMMONCFLAGS=-O2 -g -Wall -Wextra -std=c99 -pedantic -Wno-unused-parameter
-CCFLAGS=$(COMMONCFLAGS) -I../npapi/include -fPIC -fvisibility=hidden
+CCFLAGS=$(COMMONCFLAGS) -I../npapi -fPIC -fvisibility=hidden
 
 # Files to be installed
 LIB_PATH=`../configure --internal--get-define=LIB_PATH`

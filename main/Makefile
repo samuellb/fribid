@@ -1,7 +1,7 @@
 
 COMMONCFLAGS=-O2 -g -Wall -Wextra -std=c99 -pedantic -Wno-unused-parameter
-CCFLAGS=$(COMMONCFLAGS) -I../npapi/include `pkg-config --cflags gtk+-2.0` -DGTK_DISABLE_DEPRECATED=1 -DGDK_DISABLE_DEPRECATED=1 -DG_DISABLE_DEPRECATED=1
-LINKFLAGS=`pkg-config --cflags --libs gtk+-2.0` `pkg-config --cflags --libs nss`
+CCFLAGS=$(COMMONCFLAGS) -I../npapi/include `pkg-config --cflags gtk+-2.0 nss nspr` -DGTK_DISABLE_DEPRECATED=1 -DGDK_DISABLE_DEPRECATED=1 -DG_DISABLE_DEPRECATED=1
+LINKFLAGS=`pkg-config --libs gtk+-2.0 nss nspr`
 
 # Files to be installed
 LIB_PATH=`../configure --internal--get-define=LIB_PATH`
