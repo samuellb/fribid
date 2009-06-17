@@ -28,7 +28,6 @@
 #include <stdlib.h>
 
 #include <sechash.h>
-#include <hasht.h>
 
 #include "keyfile.h"
 #include "xmldecisec.h"

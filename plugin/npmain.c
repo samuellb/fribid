@@ -28,7 +28,6 @@
 
 #include <npapi.h>
 #include <npruntime.h>
-#include <npupp.h>
 
 #include "plugin.h"
 #include "npobject.h"

@@ -29,7 +29,7 @@
 #include <stdio.h>
 #include <assert.h>
 
-#include <pk11func.h>
+#include <pk11pub.h>
 #include <p12.h>
 #include <nss.h>
 #include <prinit.h>
