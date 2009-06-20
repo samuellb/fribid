@@ -53,6 +53,25 @@ void platform_closeDir(PlatformDirIter *iter);
 PlatformDirIter *platform_openKeysDir();
 char *platform_makeMemTempDir();
 
+/* Configuration */
+char *platform_getConfigPath(const char *appname);
+
+typedef struct PlatformConfig PlatformConfig;
+PlatformConfig *platform_openConfig(const char *appname);
+bool platform_saveConfig(PlatformConfig *config);
+void platform_freeConfig(PlatformConfig *config);
+
+#define PLATFORM_CFGPARAMS PlatformConfig *config, \
+                           const char *section, const char *name
+bool platform_getConfigInteger(const PLATFORM_CFGPARAMS, long *value);
+bool platform_getConfigBool(const PLATFORM_CFGPARAMS, bool *value);
+bool platform_getConfigString(const PLATFORM_CFGPARAMS, char **value);
+
+void platform_setConfigInteger(PLATFORM_CFGPARAMS, long value);
+void platform_setConfigBool(PLATFORM_CFGPARAMS, bool value);
+void platform_setConfigString(PLATFORM_CFGPARAMS, const char *value);
+
+
 /* User interface */
 void platform_mainloop();
 void platform_leaveMainloop();
