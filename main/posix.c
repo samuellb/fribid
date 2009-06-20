@@ -100,8 +100,7 @@ char *platform_currentName(PlatformDirIter *iter) {
 
 char *platform_currentPath(PlatformDirIter *iter) {
     char *path = malloc(strlen(iter->path) + strlen(iter->entry->d_name) + 2);
-    path[0] = '\0';
-    strcat(path, iter->path);
+    strcpy(path, iter->path);
     strcat(path, "/");
     strcat(path, iter->entry->d_name);
     return path;
@@ -117,8 +116,7 @@ PlatformDirIter *platform_openKeysDir() {
     static const char *suffix = "/cbt";
     
     char *path = malloc(strlen(getenv("HOME")) + strlen(suffix) +1);
-    path[0] = '\0';
-    strcat(path, getenv("HOME"));
+    strcpy(path, getenv("HOME"));
     strcat(path, suffix);
     
     PlatformDirIter *iter = platform_openDir(path);
