@@ -26,11 +26,16 @@
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <time.h>
+#include <stdint.h>
+#include <inttypes.h>
 
+#include "../common/defines.h"
 #include "keyfile.h"
 #include "xmldecisec.h"
 #include "misc.h"
 #include "bankid.h"
+#include "platform.h"
 
 void bankid_init() {
     keyfile_init();
@@ -40,12 +45,59 @@ void bankid_shutdown() {
     keyfile_shutdown();
 }
 
+#define EXPIRY_RAND (rand() % 65535)
+
+static char *getVersionString() {
+    static const char *template =
+        "Personal=4.10.2.16&libtokenapi_so=4.10.2.16&libBranding_so=4.10.2.16&libCardSetec_so=4.10.2.16&libCardPrisma_so=4.10.2.16&libCardSiemens_so=4.10.2.16&libplugins_so=4.10.2.16&libP11_so=4.10.2.16&libai_so=4.10.2.16&personal_bin=4.10.2.16&"
+        "platform=linux&distribution=ubuntu&os_version=8.04&best_before=%" PRId64 "&";
+    
+    long lexpiry;
+    int64_t expiry;
+    
+    PlatformConfig *cfg = platform_openConfig(BINNAME);
+    if (platform_getConfigInteger(cfg, "version", "best-before", &lexpiry)) {
+        expiry = lexpiry;
+    } else {
+        expiry = RELEASE_TIME - EXPIRY_RAND;
+    }
+    platform_freeConfig(cfg);
+    
+    char *result = malloc(strlen(template) -1 + 21 + 1);
+    sprintf(result, template, expiry);
+    return result;
+}
+
+static bool checkValidity() {
+    // TODO
+    return true;
+}
+
+void bankid_checkVersionValidity() {
+    PlatformConfig *cfg = platform_openConfig(BINNAME);
+    
+    long lexpiry;
+    time_t expiry;
+    if (platform_getConfigInteger(cfg, "version", "best-before", &lexpiry)) {
+        expiry = lexpiry;
+    } else {
+        expiry = 0;
+    }
+    
+    time_t now = time(NULL);
+    if (now >= expiry - 14*24*3600) {
+        if (checkValidity()) {
+            platform_setConfigInteger(cfg, "version", "best-before",
+                                      now - EXPIRY_RAND);
+            platform_saveConfig(cfg);
+        }
+    }
+    platform_freeConfig(cfg);
+}
+
 /* Version objects */
 char *bankid_getVersion() {
-    static const char *version =
-        "Personal=4.10.2.16&libtokenapi_so=4.10.2.16&libBranding_so=4.10.2.16&libCardSetec_so=4.10.2.16&libCardPrisma_so=4.10.2.16&libCardSiemens_so=4.10.2.16&libplugins_so=4.10.2.16&libP11_so=4.10.2.16&libai_so=4.10.2.16&personal_bin=4.10.2.16&"
-        "platform=linux&distribution=ubuntu&os_version=8.04&best_before=1244660548&";
-    return strdup(version);
+    return getVersionString();
 }
 
 /* Authentication and signing objects */

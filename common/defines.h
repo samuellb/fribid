@@ -3,7 +3,8 @@
 
 #include "config.h"
 
-#define BINNAME  "bankid-se"
+#define BINNAME             "bankid-se"
+#define RELEASE_TIME        1245574966
 
 #define LIB_PATH            EPREFIX "/lib/" BINNAME
 #define SHARE_PATH          PREFIX "/share/" BINNAME
