@@ -76,7 +76,10 @@ bool platform_saveConfig(PlatformConfig *config) {
     
     g_mkdir_with_parents(config->path, 0700);
     
-    return g_file_set_contents(config->filename, data, length, NULL);
+    bool result = g_file_set_contents(config->filename, data, length, NULL);
+    g_free(data);
+    
+    return result;
 }
 
 void platform_freeConfig(PlatformConfig *config) {
