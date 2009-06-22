@@ -25,6 +25,9 @@
 #ifndef __BANKID_H__
 #define __BANKID_H__
 
+#include <stdbool.h>
+
+
 typedef enum {
     BIDERR_OK =               0,
     BIDERR_InternalError =    1,
@@ -34,6 +37,7 @@ typedef enum {
 void bankid_init();
 void bankid_shutdown();
 void bankid_checkVersionValidity();
+bool bankid_versionHasExpired();
 char *bankid_getVersion();
 
 

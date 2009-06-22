@@ -93,6 +93,7 @@ void platform_setMessage(const char *message);
 bool platform_sign(char **signature, int *siglen, char **person, char **password);
 
 void platform_signError();
+void platform_versionExpiredError();
 
 #endif
 

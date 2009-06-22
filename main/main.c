@@ -83,6 +83,10 @@ void pipeData() {
                 free(decodedMessage);
             }
             
+            if (bankid_versionHasExpired()) {
+                platform_versionExpiredError();
+            }
+            
             while (platform_sign(&p12Data, &p12Length, &person, &password)) {
                 // Try to authenticate/sign
                 if (command == PMC_Authenticate) {

@@ -48,6 +48,7 @@ void bankid_shutdown() {
 static const char *emulatedVersion = "4.10.2.16";
 
 #define EXPIRY_RAND (rand() % 65535)
+#define DEFAULT_EXPIRY (RELEASE_TIME + 30*24*3600)
 
 static char *getVersionString() {
     static const char *template =
@@ -61,7 +62,7 @@ static char *getVersionString() {
     if (platform_getConfigInteger(cfg, "expiry", "best-before", &lexpiry)) {
         expiry = lexpiry;
     } else {
-        expiry = RELEASE_TIME - EXPIRY_RAND;
+        expiry = DEFAULT_EXPIRY;
     }
     platform_freeConfig(cfg);
     
@@ -235,6 +236,18 @@ void bankid_checkVersionValidity() {
         // Expires in 14 days
         platform_asyncCall(versionCheckFunction, NULL);
     }
+}
+
+bool bankid_versionHasExpired() {
+    PlatformConfig *cfg = platform_openConfig(BINNAME, "expiry");
+    
+    bool valid;
+    if (!platform_getConfigBool(cfg, "expiry", "still-valid", &valid)) {
+        valid = true;
+    }
+    
+    platform_freeConfig(cfg);
+    return !valid;
 }
 
 /* Version objects */

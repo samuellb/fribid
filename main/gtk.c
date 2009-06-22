@@ -179,6 +179,8 @@ void platform_startSign(const char *url, const char *hostname, const char *ip) {
     
     platform_setMessage(NULL);
     validateDialog(NULL, NULL);
+    
+    gtk_widget_show(GTK_WIDGET(signDialog));
 }
 
 void platform_endSign() {
@@ -279,6 +281,14 @@ bool platform_sign(char **signature, int *siglen, char **person, char **password
 
 void platform_signError() {
     showMessage(GTK_MESSAGE_ERROR, "Signing/authentication failed. Maybe the password is incorrect?");
+}
+
+void platform_versionExpiredError() {
+    showMessage(GTK_MESSAGE_ERROR, "This software version has expired, and "
+                "will probably not be accepted on all web sites.\n"
+                "\n"
+                "Please download a newer version (if available), or use "
+                "the officially supported software (Nexus Personal) instead.");
 }
 
 
