@@ -68,9 +68,113 @@ static char *getVersionString() {
     return result;
 }
 
+static const char *checkHost = "159.72.128.183";
+
+static void connectionError() {
+    fprintf(stderr, BINNAME ": failed to connect to %s and check version validity\n", checkHost);
+}
+
 static bool checkValidity(bool *valid) {
-    // TODO
-    *valid = true;
+    static const char *template =
+        "POST / HTTP/1.1\r\n"
+        "Host: 159.72.128.183\r\n"
+        "Content-Length: %d\r\n"
+        "User-Agent: "BINNAME"\r\n"
+        "Cache-Control: no-cache\r\n"
+        "Content-Type: application/xml; charset=utf-8\r\n"
+        "\r\n"
+        "<?xml version=\"1.0\"?>"
+        "<autoUpdateRequest>"
+            "<requestVersion>1.0</requestVersion>"
+            "<versionString>%s</versionString>"
+        "</autoUpdateRequest>";
+    
+    
+    char *versionString = getVersionString();
+    char *request = malloc(strlen(template) - 2*2 +
+                           10 + strlen(versionString) + 1);
+    sprintf(request, template, 127+strlen(versionString), versionString);
+    free(versionString);
+    
+    PlatformSocket *sock = platform_connectToHost(checkHost, true, 80);
+    
+    if (!sock) {
+        connectionError();
+        free(request);
+        return false;
+    }
+    
+    if (!platform_socketSend(sock, request, strlen(request))) {
+        connectionError();
+        free(request);
+        platform_closeSocket(sock);
+        return false;
+    }
+    free(request);
+    
+    char *response;
+    int responseLen;
+    // FIXME: The server could send the response in multiple packets...
+    // Note that this function zero-terminates the buffer
+    if (!platform_socketReceive(sock, &response, &responseLen)) {
+        connectionError();
+        platform_closeSocket(sock);
+        return false;
+    }
+    platform_closeSocket(sock);
+    
+    static const char *httpOk = "HTTP/1.1 200 ";
+    
+    const bool httpIsOk = (strncmp(response, httpOk, strlen(httpOk)) == 0);
+    const char *headersEnd = strstr(response, "\r\n\r\n");
+    if (!httpIsOk || !headersEnd) {
+        // Not OK
+        connectionError();
+        free(response);
+        platform_closeSocket(sock);
+        return false;
+    }
+    
+    // Skip needless "Byte Order Mark"
+    const char *ZWSP = "\357\273\277";
+    const char *xml = headersEnd+4;
+    if (strncmp(xml, ZWSP, 3) == 0) {
+        xml += 3;
+    }
+    
+    static const char *start =
+        "<?xml version=\"1.0\" encoding=\"utf-8\"?>"
+        "<autoUpdateResponse><responseVersion>1.0</responseVersion><action>";
+    
+    static const char *end =
+        "</action></autoUpdateResponse>";
+    
+    if ((strlen(xml) <= strlen(start) + strlen(end)) ||
+        (strncmp(xml, start, strlen(start)) != 0)) {
+        connectionError();
+        free(response);
+        return false;
+    }
+    
+    const char *status = xml + strlen(start);
+    const int statusLength = strcspn(status, "<");
+    
+    if (strcmp(status+statusLength, end) != 0) {
+        connectionError();
+        free(response);
+        return false;
+    }
+    
+    if (strncmp(status, "OK", statusLength) == 0) {
+        *valid = true;
+    } else if (strncmp(status, "Revoked", statusLength) == 0) {
+        *valid = false;
+    } else {
+        free(response);
+        return false;
+    }
+    
+    free(response);
     return true;
 }
 

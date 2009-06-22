@@ -76,6 +76,13 @@ void platform_setConfigString(PLATFORM_CFGPARAMS, const char *value);
 typedef void (AsyncCallFunction) (void *);
 void platform_asyncCall(AsyncCallFunction *function, void *param);
 
+/* Network */
+typedef struct PlatformSocket PlatformSocket;
+PlatformSocket *platform_connectToHost(const char *hostname, bool isNumeric, int port);
+bool platform_socketSend(PlatformSocket *ps, const char *data, int length);
+bool platform_socketReceive(PlatformSocket *ps, char **data, int *length);
+void platform_closeSocket(PlatformSocket *ps);
+
 /* User interface */
 void platform_mainloop();
 void platform_leaveMainloop();
