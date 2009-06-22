@@ -68,9 +68,26 @@ static char *getVersionString() {
     return result;
 }
 
-static bool checkValidity() {
+static bool checkValidity(bool *valid) {
     // TODO
+    *valid = true;
     return true;
+}
+
+static void versionCheckFunction(void *param) {
+    PlatformConfig *cfg = platform_openConfig(BINNAME, "expiry");
+    bool valid;
+    
+    if (checkValidity(&valid)) {
+        if (valid) {
+            platform_setConfigInteger(cfg, "expiry", "best-before",
+                                      time(NULL) - EXPIRY_RAND + 30*24*3600);
+        }
+        platform_setConfigBool(cfg, "expiry", "still-valid", valid);
+        platform_saveConfig(cfg);
+    }
+    
+    platform_freeConfig(cfg);
 }
 
 void bankid_checkVersionValidity() {
@@ -84,15 +101,20 @@ void bankid_checkVersionValidity() {
         expiry = 0;
     }
     
-    time_t now = time(NULL);
-    if (now >= expiry - 14*24*3600) {
-        if (checkValidity()) {
-            platform_setConfigInteger(cfg, "expiry", "best-before",
-                                      now - EXPIRY_RAND);
-            platform_saveConfig(cfg);
-        }
-    }
     platform_freeConfig(cfg);
+    
+    // Check the expiry
+    time_t now = time(NULL);
+    if (now >= expiry) {
+        // Expired
+        bool maybeValid;
+        if (!platform_getConfigBool(cfg, "expiry", "still-valid", &maybeValid) || maybeValid) {
+            versionCheckFunction(NULL);
+        }
+    } else if (now >= expiry - 14*24*3600) {
+        // Expires in 14 days
+        platform_asyncCall(versionCheckFunction, NULL);
+    }
 }
 
 /* Version objects */

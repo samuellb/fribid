@@ -33,6 +33,7 @@ typedef enum {
 
 void bankid_init();
 void bankid_shutdown();
+void bankid_checkVersionValidity();
 char *bankid_getVersion();
 
 

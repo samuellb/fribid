@@ -33,6 +33,7 @@
 #include <sys/time.h>
 #include <time.h>
 #include <unistd.h>
+#include <sys/wait.h>
 
 #include "../common/defines.h"
 #include "platform.h"
@@ -170,6 +171,21 @@ char *platform_makeMemTempDir() {
     }
     
     return NULL;
+}
+
+void platform_asyncCall(AsyncCallFunction *function, void *param) {
+    pid_t child = fork();
+    if (child == -1) {
+        // Call the function synchronously instead
+        function(param);
+    } else if (child == 0) {
+        // This is done asynchronously
+        function(param);
+        exit(0);
+    } else {
+        // "Dereference" the process id
+        waitpid(-1, NULL, WNOHANG);
+    }
 }
 
 

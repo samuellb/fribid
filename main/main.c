@@ -139,6 +139,9 @@ int process_non_ui_args(int argc, char **argv) {
 int main(int argc, char **argv) {
     bool ipc = false, error = false;
     
+    /* Check whether the current version is still valid */
+    bankid_checkVersionValidity();
+    
     /* Parse command line and set up the UI component */
     if (process_non_ui_args(argc, argv)) {
         return 0;

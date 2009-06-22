@@ -72,6 +72,9 @@ void platform_setConfigInteger(PLATFORM_CFGPARAMS, long value);
 void platform_setConfigBool(PLATFORM_CFGPARAMS, bool value);
 void platform_setConfigString(PLATFORM_CFGPARAMS, const char *value);
 
+/* Asynchronous calls / threads */
+typedef void (AsyncCallFunction) (void *);
+void platform_asyncCall(AsyncCallFunction *function, void *param);
 
 /* User interface */
 void platform_mainloop();
