@@ -86,21 +86,21 @@ void platform_freeConfig(PlatformConfig *config) {
 }
 
 bool platform_getConfigInteger(const PLATFORM_CFGPARAMS, long *value) {
-    GError *err;
+    GError *err = NULL;
     *value = g_key_file_get_integer(config->keyfile,
                                     section, name, &err);
     return (err == NULL);
 }
 
 bool platform_getConfigBool(const PLATFORM_CFGPARAMS, bool *value) {
-    GError *err;
+    GError *err = NULL;
     *value = g_key_file_get_boolean(config->keyfile,
                                     section, name, &err);
     return (err == NULL);
 }
 
 bool platform_getConfigString(const PLATFORM_CFGPARAMS, char **value) {
-    GError *err;
+    GError *err = NULL;
     *value = g_key_file_get_string(config->keyfile,
                                    section, name, &err);
     return (err == NULL);
