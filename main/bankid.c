@@ -45,6 +45,8 @@ void bankid_shutdown() {
     keyfile_shutdown();
 }
 
+static const char *emulatedVersion = "4.10.2.16";
+
 #define EXPIRY_RAND (rand() % 65535)
 
 static char *getVersionString() {
@@ -188,6 +190,7 @@ static void versionCheckFunction(void *param) {
                                       time(NULL) - EXPIRY_RAND + 30*24*3600);
         }
         platform_setConfigBool(cfg, "expiry", "still-valid", valid);
+        platform_setConfigString(cfg, "expiry", "checked-with-emulated-version", emulatedVersion);
         platform_saveConfig(cfg);
     }
     
@@ -207,6 +210,15 @@ void bankid_checkVersionValidity() {
     
     bool maybeValid;
     if (!platform_getConfigBool(cfg, "expiry", "still-valid", &maybeValid)) {
+        maybeValid = true;
+    }
+    
+    char *checkedWithVersion;
+    if (!platform_getConfigString(cfg, "expiry", "checked-with-emulated-version", &checkedWithVersion)) {
+        maybeValid = true;
+    } else if (strcmp(checkedWithVersion, emulatedVersion) != 0) {
+        // The check was done with another version, so the current version
+        // might still not have expired even if the old version has.
         maybeValid = true;
     }
     
