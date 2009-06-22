@@ -46,15 +46,17 @@ struct PlatformConfig {
     bool changed;
 };
 
-PlatformConfig *platform_openConfig(const char *appname) {
+PlatformConfig *platform_openConfig(const char *appname,
+                                    const char *configname) {
     PlatformConfig *result = malloc(sizeof(PlatformConfig));
     
     result->path = platform_getConfigPath(appname);
     
-    static const char *suffix = "/settings";
-    result->filename = malloc(strlen(result->path) + strlen(suffix) + 1);
+    result->filename = malloc(strlen(result->path) + 1 +
+                              strlen(configname) + 1);
     strcpy(result->filename, result->path);
-    strcat(result->filename, suffix);
+    strcat(result->filename, "/");
+    strcat(result->filename, configname);
     
     result->keyfile = g_key_file_new();
     result->changed = false;

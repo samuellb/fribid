@@ -57,7 +57,8 @@ char *platform_makeMemTempDir();
 char *platform_getConfigPath(const char *appname);
 
 typedef struct PlatformConfig PlatformConfig;
-PlatformConfig *platform_openConfig(const char *appname);
+PlatformConfig *platform_openConfig(const char *appname,
+                                    const char *configname);
 bool platform_saveConfig(PlatformConfig *config);
 void platform_freeConfig(PlatformConfig *config);
 

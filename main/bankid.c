@@ -55,8 +55,8 @@ static char *getVersionString() {
     long lexpiry;
     int64_t expiry;
     
-    PlatformConfig *cfg = platform_openConfig(BINNAME);
-    if (platform_getConfigInteger(cfg, "version", "best-before", &lexpiry)) {
+    PlatformConfig *cfg = platform_openConfig(BINNAME, "expiry");
+    if (platform_getConfigInteger(cfg, "expiry", "best-before", &lexpiry)) {
         expiry = lexpiry;
     } else {
         expiry = RELEASE_TIME - EXPIRY_RAND;
@@ -74,11 +74,11 @@ static bool checkValidity() {
 }
 
 void bankid_checkVersionValidity() {
-    PlatformConfig *cfg = platform_openConfig(BINNAME);
+    PlatformConfig *cfg = platform_openConfig(BINNAME, "expiry");
     
     long lexpiry;
     time_t expiry;
-    if (platform_getConfigInteger(cfg, "version", "best-before", &lexpiry)) {
+    if (platform_getConfigInteger(cfg, "expiry", "best-before", &lexpiry)) {
         expiry = lexpiry;
     } else {
         expiry = 0;
@@ -87,7 +87,7 @@ void bankid_checkVersionValidity() {
     time_t now = time(NULL);
     if (now >= expiry - 14*24*3600) {
         if (checkValidity()) {
-            platform_setConfigInteger(cfg, "version", "best-before",
+            platform_setConfigInteger(cfg, "expiry", "best-before",
                                       now - EXPIRY_RAND);
             platform_saveConfig(cfg);
         }
