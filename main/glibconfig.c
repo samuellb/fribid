@@ -81,6 +81,7 @@ bool platform_saveConfig(PlatformConfig *config) {
 
 void platform_freeConfig(PlatformConfig *config) {
     free(config->filename);
+    free(config->path);
     g_key_file_free(config->keyfile);
     free(config);
 }

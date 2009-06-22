@@ -205,14 +205,18 @@ void bankid_checkVersionValidity() {
         expiry = 0;
     }
     
+    bool maybeValid;
+    if (!platform_getConfigBool(cfg, "expiry", "still-valid", &maybeValid)) {
+        maybeValid = true;
+    }
+    
     platform_freeConfig(cfg);
     
     // Check the expiry
     time_t now = time(NULL);
     if (now >= expiry) {
         // Expired
-        bool maybeValid;
-        if (!platform_getConfigBool(cfg, "expiry", "still-valid", &maybeValid) || maybeValid) {
+        if (maybeValid) {
             versionCheckFunction(NULL);
         }
     } else if (now >= expiry - 14*24*3600) {

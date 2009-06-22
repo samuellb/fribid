@@ -101,10 +101,13 @@ char *xmldsec_sign(const char *p12Data, const int p12Length,
     char *keyend = keyinfoInner;
     for (int i = 0; i < certCount; i++) {
         keyend += sprintf(keyend, cert_template, certs[i]);
+        free(certs[i]);
     }
+    free(certs);
     
     char *keyinfo = malloc(strlen(keyinfo_template) - 2 + certsLength +1);
     sprintf(keyinfo, keyinfo_template, keyinfoInner);
+    free(keyinfoInner);
     
     // SignedInfo
     char *data_sha = sha_base64(data);

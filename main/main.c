@@ -94,6 +94,12 @@ void pipeData() {
                                         challenge, hostname, ip,
                                         message, &signature);
                 }
+                
+                free(p12Data);
+                free(person);
+                memset(password, 0, strlen(password));
+                free(password);
+                
                 if (error == BIDERR_OK) break;
                 
                 platform_signError();
@@ -108,9 +114,6 @@ void pipeData() {
             free(url);
             free(hostname);
             free(ip);
-            free(p12Data);
-            free(person);
-            free(password);
             
             pipe_sendInt(stdout, error);
             pipe_sendString(stdout, (signature ? signature : ""));

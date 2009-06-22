@@ -111,7 +111,7 @@ void keyfile_shutdown() {
 }
 
 static SEC_PKCS12DecoderContext *pkcs12_open(const char *data, const int datalen,
-                                          const char *password) {
+                                             const char *password, SECItem **pwitem) {
     
     secuPWData dummy = { PW_NONE, NULL };
     
@@ -138,16 +138,16 @@ static SEC_PKCS12DecoderContext *pkcs12_open(const char *data, const int datalen
     }
     
     // Convert the password to UCS2
-    SECItem *passwordItem = SECITEM_AllocItem(NULL, NULL, 2*(strlen(password)+1));
+    *pwitem = SECITEM_AllocItem(NULL, NULL, 2*(strlen(password)+1));
     if (!PORT_UCS2_UTF8Conversion(PR_TRUE, (unsigned char*)password, strlen(password)+1,
-                                  passwordItem->data, passwordItem->len,
-                                  &passwordItem->len)) {
+                                  (*pwitem)->data, (*pwitem)->len,
+                                  &(*pwitem)->len)) {
         fprintf(stderr, BINNAME ": failed to convert password\n");
         return NULL;
     }
     
     SEC_PKCS12DecoderContext *decoder = SEC_PKCS12DecoderStart(
-            passwordItem, slot, &dummy, NULL, NULL, NULL, NULL, NULL);
+            *pwitem, slot, &dummy, NULL, NULL, NULL, NULL, NULL);
     
     if (!decoder)
         return NULL;
@@ -165,18 +165,20 @@ static SEC_PKCS12DecoderContext *pkcs12_open(const char *data, const int datalen
     return decoder;
 }
 
-static void pkcs12_close(SEC_PKCS12DecoderContext *decoder) {
+static void pkcs12_close(SEC_PKCS12DecoderContext *decoder, SECItem *pwitem) {
     SEC_PKCS12DecoderFinish(decoder);
+    SECITEM_FreeItem(pwitem, PR_TRUE);
 }
 
 static CERTCertList *pkcs12_listCerts(const char *data, const int datalen) {
     
-    SEC_PKCS12DecoderContext *decoder = pkcs12_open(data, datalen, "");
+    SECItem *pwitem;
+    SEC_PKCS12DecoderContext *decoder = pkcs12_open(data, datalen, "", &pwitem);
     
     if (!decoder) return NULL;
     
     CERTCertList *certList = SEC_PKCS12DecoderGetCerts(decoder);
-    pkcs12_close(decoder);
+    pkcs12_close(decoder, pwitem);
     return certList;
 }
 
@@ -309,21 +311,23 @@ bool keyfile_sign(const char *data, const int datalen,
     assert(signature != NULL);
     assert(siglen != NULL);
     
-    SEC_PKCS12DecoderContext *decoder = pkcs12_open(data, datalen, password);
+    SECItem *pwitem;
+    SEC_PKCS12DecoderContext *decoder = pkcs12_open(data, datalen, password, &pwitem);
     if (!decoder) return false;
     
     if (SEC_PKCS12DecoderValidateBags(decoder, nicknameCollisionFunction) != SECSuccess) {
         fprintf(stderr, BINNAME ": failed to validate \"bags\". error = %d\n", PR_GetError());
-        pkcs12_close(decoder);
+        pkcs12_close(decoder, pwitem);
         return false;
     }
     
     if (SEC_PKCS12DecoderImportBags(decoder) != SECSuccess) {
         fprintf(stderr, BINNAME ": failed to import \"bags\". error = %d\n", PR_GetError());
+        pkcs12_close(decoder, pwitem);
         return false;
     }
     CERTCertList *certList = SEC_PKCS12DecoderGetCerts(decoder);
-    pkcs12_close(decoder);
+    pkcs12_close(decoder, pwitem);
     
     for CL_each(node, certList) {
         if (((node->cert->keyUsage & certMask) == certMask) &&
