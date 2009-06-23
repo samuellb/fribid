@@ -29,11 +29,14 @@
 #include "../common/defines.h"
 #include "../common/pipe.h"
 
+static void pipeError() {
+    fprintf(stderr, BINNAME ": pipe error\n");
+}
+
 int pipe_readCommand(FILE *in) {
     int command = 0;
     if (fscanf(in, " %d;", &command) != 1) {
-        fprintf(stderr, BINNAME ": pipe error\n");
-        abort();
+        pipeError();
     }
     return command;
 }
@@ -52,25 +55,42 @@ void pipe_flush(FILE *out) {
 }
 
 void pipe_readData(FILE *in, char **data, int *length) {
-    fscanf(in, "%d;", length);
-    if (*length < 0) *length = 0;
+    if ((fscanf(in, "%d;", length) != 1) || (*length < 0)) {
+        pipeError();
+        *length = 0;
+    }
     *data = malloc(*length);
-    fread(*data, *length, 1, in);
+    if (fread(*data, *length, 1, in) != 1) {
+        pipeError();
+        *data = realloc(*data, 0);
+        *length = 0;
+    }
 }
 
 char *pipe_readString(FILE *in) {
-    int length;
+    int length = -1;
     fscanf(in, "%d;", &length);
-    if (length < 0) return strdup("");
+    if (length < 0) {
+        pipeError();
+        return strdup("");
+    }
+    
     char *data = malloc(length +1);
     data[length] = '\0';
-    fread(data, length, 1, in);
-    return data;
+    if (fread(data, length, 1, in) == 1) {
+        return data;
+    } else {
+        pipeError();
+        free(data);
+        return strdup("");
+    }
 }
 
 int pipe_readInt(FILE *in) {
-    int value;
-    fscanf(in, "%d;", &value);
+    int value = -1;
+    if (fscanf(in, "%d;", &value) != 1) {
+        pipeError();
+    }
     return value;
 }
 
@@ -86,3 +106,4 @@ void pipe_sendString(FILE *out, const char *str) {
 void pipe_sendInt(FILE *out, int value) {
     fprintf(out, "%d;", value);
 }
+
