@@ -76,7 +76,7 @@ EXPORT NPError OSCALL NP_GetEntryPoints(NPPluginFuncs* pFuncs)
   //pFuncs->urlnotify     = NPP_URLNotify;
   pFuncs->getvalue      = NPP_GetValue;
   //pFuncs->setvalue      = NPP_SetValue;
-  pFuncs->javaClass     = NULL;
+  //pFuncs->javaClass     = NULL;
 
   return NPERR_NO_ERROR;
 }
@@ -176,9 +176,9 @@ NP_Initialize(NPNetscapeFuncs* pFuncs
   //pluginFuncs->write      = NPP_Write;
   //pluginFuncs->print      = NPP_Print;
   //pluginFuncs->urlnotify  = NPP_URLNotify;
-  pluginFuncs->event      = NULL;
+  //pluginFuncs->event      = NULL;
   pluginFuncs->getvalue   = NPP_GetValue;
-  pluginFuncs->javaClass  = NULL;
+  //pluginFuncs->javaClass  = NULL;
 
   NPP_Initialize();
 #endif

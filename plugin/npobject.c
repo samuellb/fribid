@@ -73,8 +73,9 @@ static char *getWindowProperty(NPP instance, const char const *identifiers[]) {
     while (1) {
         NPVariant value;
         
-        getProperty(instance, obj, *identifier, &value);
+        bool ok = getProperty(instance, obj, *identifier, &value);
         NPN_ReleaseObject(obj);
+        if (!ok) return NULL;
         
         identifier++;
         if (*identifier) {
@@ -120,12 +121,13 @@ static char *getDocumentIP(NPP instance) {
     //       the plugin authenticates with the real IP.
     char *hostname = getDocumentHostname(instance);
     
-    struct addrinfo *ai;
-    int ret = getaddrinfo(hostname, NULL, NULL, &ai);
+    struct addrinfo *firstAddrInfo;
+    int ret = getaddrinfo(hostname, NULL, NULL, &firstAddrInfo);
     free(hostname);
     if (ret != 0) return NULL;
     
     // Find first INET address
+    const struct addrinfo *ai = firstAddrInfo;
     while (ai && (ai->ai_family != AF_INET) && (ai->ai_family != AF_INET6))
         ai = ai->ai_next;
     
@@ -134,10 +136,10 @@ static char *getDocumentIP(NPP instance) {
     char ip[NI_MAXHOST];
     if (getnameinfo(ai->ai_addr, ai->ai_addrlen, ip, NI_MAXHOST,
                     NULL, 0, NI_NUMERICHOST) != 0) {
-        freeaddrinfo(ai);
+        freeaddrinfo(firstAddrInfo);
         return NULL;
     }
-    freeaddrinfo(ai);
+    freeaddrinfo(firstAddrInfo);
     
     return strdup(ip);
 }
