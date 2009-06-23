@@ -215,6 +215,11 @@ static bool objInvoke(NPObject *npobj, NPIdentifier ident,
             } else if (!strcmp(name, "SetParam") && (argCount == 2) &&
                        NPVARIANT_IS_STRING(args[0]) && NPVARIANT_IS_STRING(args[1])) {
                 // Set parameter
+                if (NPVARIANT_TO_STRING(args[1]).utf8length >= 10*1024*1024) {
+                    // Value is larger than 10 MiB
+                    return false;
+                }
+                
                 char *param = strndup(NPVARIANT_TO_STRING(args[0]).utf8characters, NPVARIANT_TO_STRING(args[0]).utf8length);
                 char *value = strndup(NPVARIANT_TO_STRING(args[1]).utf8characters, NPVARIANT_TO_STRING(args[1]).utf8length);
                 
