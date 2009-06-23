@@ -103,11 +103,25 @@ bool sign_setParam(Plugin *plugin, const char *name, const char *value) {
     return true;
 }
 
+static bool hasSignParams(const Plugin *plugin) {
+    return (plugin->info.auth.challenge && plugin->info.auth.policys);
+}
+
 int sign_performAction(Plugin *plugin, const char *action) {
+    plugin->lastError = PE_UnknownError;
     if ((plugin->type == PT_Authentication) && !strcmp(action, "Authenticate")) {
-        return sign_performAction_Authenticate(plugin);
+        if (!hasSignParams(plugin)) {
+            return 1;
+        } else {
+            return sign_performAction_Authenticate(plugin);
+        }
     } else if ((plugin->type == PT_Signer) && !strcmp(action, "Sign")) {
-        return sign_performAction_Sign(plugin);
+        if (!hasSignParams(plugin) || !plugin->info.sign.subjectFilter ||
+            !plugin->info.sign.message) {
+            return 1;
+        } else {
+            return sign_performAction_Sign(plugin);
+        }
     } else {
         return 1;
     }
