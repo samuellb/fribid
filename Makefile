@@ -1,5 +1,5 @@
 
-SUBDIRS=main plugin
+SUBDIRS=client plugin
 
 all clean install uninstall:
 	for dir in $(SUBDIRS); do (cd $$dir && $(MAKE) $@) || exit $?; done

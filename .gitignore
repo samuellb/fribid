@@ -2,7 +2,6 @@
 *.so
 *~
 *#
-npapi
 crap
-main/sign
+client/sign
 common/config.h
