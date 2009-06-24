@@ -207,10 +207,12 @@ static bool objInvoke(NPObject *npobj, NPIdentifier ident,
                 // Get parameter
                 char *param = strndup(NPVARIANT_TO_STRING(args[0]).utf8characters, NPVARIANT_TO_STRING(args[0]).utf8length);
                 
-                char *s = npstr(sign_getParam(this->plugin, param));
+                char *value = sign_getParam(this->plugin, param);
                 
                 free(param);
-                STRINGZ_TO_NPVARIANT(s, *result);
+                if (value) STRINGZ_TO_NPVARIANT(npstr(value), *result);
+                else NULL_TO_NPVARIANT(*result);
+                
                 return true;
             } else if (!strcmp(name, "SetParam") && (argCount == 2) &&
                        NPVARIANT_IS_STRING(args[0]) && NPVARIANT_IS_STRING(args[1])) {

@@ -85,12 +85,10 @@ static char **getParamPointer(Plugin *plugin, const char *name) {
 }
 
 char *sign_getParam(Plugin *plugin, const char *name) {
-    char **valuePtr = getParamPointer(plugin, name);
+    const char **valuePtr = getParamPointer(plugin, name);
     
-    char *value = NULL;
-    if (valuePtr && *valuePtr) value = strdup(*valuePtr);
-    
-    return (value != NULL ? value : strdup(""));
+    if (valuePtr && *valuePtr) return strdup(*valuePtr);
+    else return NULL;
 }
 
 bool sign_setParam(Plugin *plugin, const char *name, const char *value) {

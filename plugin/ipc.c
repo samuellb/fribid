@@ -131,7 +131,7 @@ int sign_performAction_Authenticate(Plugin *plugin) {
     plugin->lastError = pipe_readInt(pipein);
     plugin->info.auth.signature = pipe_readString(pipein);
     closePipes();
-    return (strlen(plugin->info.auth.signature) != 0 ? 0 : 1);
+    return plugin->lastError;
 }
 
 int sign_performAction_Sign(Plugin *plugin) {
@@ -147,7 +147,7 @@ int sign_performAction_Sign(Plugin *plugin) {
     plugin->lastError = pipe_readInt(pipein);
     plugin->info.auth.signature = pipe_readString(pipein);
     closePipes();
-    return (strlen(plugin->info.auth.signature) != 0 ? 0 : 1);
+    return plugin->lastError;
 }
 
 

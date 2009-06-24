@@ -17,8 +17,9 @@ function init() {
     output.value += "Calling SetParam(Challenge)\n";
     pluginAuth.SetParam("Challenge", "MTI0MzYwMTMyOTk5NTU3MTI4OTg0MjkwMzY3OTYwODM=");
     output.value += "Calling SetParam(Policys)\n";
-    pluginAuth.SetParam("Policys", "MS4yLjc1Mi43OC4xLjE7MS4yLjc1Mi43OC4xLjI7MS4yLjMuNC41OzEuMi4zLjQuMTA=");
+    var retval = pluginAuth.SetParam("Policys", "MS4yLjc1Mi43OC4xLjE7MS4yLjc1Mi43OC4xLjI7MS4yLjMuNC41OzEuMi4zLjQuMTA=");
     
+    output.value += "retval of sp = "+retval+"\n";
     output.value += "\nGetParam:\n";
     output.value += "    Challenge: >"+pluginAuth.GetParam("Challenge")+"<\n";
     output.value += "    Policys: >"+pluginAuth.GetParam("Policys")+"<\n";
