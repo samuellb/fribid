@@ -221,6 +221,7 @@ bool keyfile_listPeople(const char *data, const int datalen,
 }
 
 char *keyfile_getDisplayName(const char *person) {
+    // FIXME: Hack
     const char *name = strstr(person, "OID.2.5.4.41=");
     if (!name) return strdup(person);
     
@@ -231,6 +232,31 @@ char *keyfile_getDisplayName(const char *person) {
     memcpy(displayName, name, length);
     displayName[length] = '\0';
     return displayName;
+}
+
+bool keyfile_matchSubjectFilter(const char *person, const char *subjectFilter) {
+    // FIXME: Hack
+    if (!subjectFilter) return true;
+    
+    if ((strncmp(subjectFilter, "2.5.4.5=", 8) != 0) ||
+        (strchr(subjectFilter, ',') != NULL)) {
+        // OID 2.5.4.5 (Serial number) is the only supported/allowed filter
+        return true; // Nothing to filter with
+    }
+    
+    const char *wantedSerial = subjectFilter + 8;
+    
+    const char *serialOIDTag = strstr(person, "serialNumber=");
+    if (!serialOIDTag) {
+        // Shouldn't happen
+        return true;
+    }
+    
+    const char *actualSerial = serialOIDTag + 13;
+    size_t actualLength = strcspn(actualSerial, ",");
+    
+    return ((strlen(wantedSerial) == actualLength) &&
+            (strncmp(wantedSerial, actualSerial, actualLength) == 0));
 }
 
 static CERTCertificate *findCert(const CERTCertList *certList,

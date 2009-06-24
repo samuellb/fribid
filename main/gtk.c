@@ -79,6 +79,8 @@ static GtkLabel *signButtonLabel;
 static GtkWidget *signLabel;
 static GtkWidget *signScroller;
 
+static char *currentSubjectFilter;
+
 
 static void showMessage(GtkMessageType type, const char *text) {
     GtkWidget *dialog = gtk_message_dialog_new(
@@ -94,7 +96,7 @@ static void validateDialog(GtkWidget *ignored1, gpointer *ignored2) {
 }
 
 static bool addSignatureFile(GtkListStore *signatures, const char *filename,
-                        GtkTreeIter *iter) {
+                             GtkTreeIter *iter) {
     int fileLen;
     char *fileData;
     platform_readFile(filename, &fileData, &fileLen);
@@ -104,15 +106,17 @@ static bool addSignatureFile(GtkListStore *signatures, const char *filename,
     keyfile_listPeople(fileData, fileLen, &people, &personCount);
     
     for (int i = 0; i < personCount; i++) {
-        char *displayName = keyfile_getDisplayName(people[i]);
-        
-        gtk_list_store_append(signatures, iter);
-        gtk_list_store_set(signatures, iter,
-                           0, displayName,
-                           1, people[i],
-                           2, filename, -1);
-        
-        free(displayName);
+        if (keyfile_matchSubjectFilter(people[i], currentSubjectFilter)) {
+            char *displayName = keyfile_getDisplayName(people[i]);
+            
+            gtk_list_store_append(signatures, iter);
+            gtk_list_store_set(signatures, iter,
+                               0, displayName,
+                               1, people[i],
+                               2, filename, -1);
+            
+            free(displayName);
+        }
         free(people[i]);
     }
     free(people);
@@ -122,7 +126,12 @@ static bool addSignatureFile(GtkListStore *signatures, const char *filename,
     return (personCount != 0);
 }
 
-void platform_startSign(const char *url, const char *hostname, const char *ip) {
+void platform_startSign(const char *url, const char *hostname, const char *ip,
+                        const char *subjectFilter) {
+    
+    currentSubjectFilter = (subjectFilter != NULL ?
+                            strdup(subjectFilter) : NULL);
+    
     GtkBuilder *builder = gtk_builder_new();
     GError *error = NULL;
     
@@ -185,6 +194,7 @@ void platform_startSign(const char *url, const char *hostname, const char *ip) {
 
 void platform_endSign() {
     gtk_widget_destroy(GTK_WIDGET(signDialog));
+    free(currentSubjectFilter);
 }
 
 void platform_setMessage(const char *message) {
@@ -233,7 +243,10 @@ static void selectExternalFile() {
     gtk_widget_destroy(GTK_WIDGET(chooser));
     
     if (!ok) {
-        showMessage(GTK_MESSAGE_ERROR, "Invalid file format");
+        // TODO check the real reason for the error
+        showMessage(GTK_MESSAGE_ERROR, (currentSubjectFilter != NULL ?
+            "No matching identities found" :
+            "Invalid file format"));
     }
 }
 

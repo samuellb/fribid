@@ -73,10 +73,17 @@ void pipeData() {
             char *p12Data = NULL, *person = NULL, *password = NULL;
             int p12Length;
             char *signature = NULL;
+            char *decodedSubjectFilter = NULL;
             BankIDError error = BIDERR_UserCancel;
             
-            // TODO set subject filter
-            platform_startSign(url, hostname, ip);
+            if (subjectFilter) {
+                decodedSubjectFilter = base64_decode(subjectFilter);
+                free(subjectFilter);
+            }
+            
+            platform_startSign(url, hostname, ip, decodedSubjectFilter);
+            free(decodedSubjectFilter);
+            
             if (message != NULL) {
                 char *decodedMessage = base64_decode(message);
                 platform_setMessage(decodedMessage);
@@ -112,7 +119,6 @@ void pipeData() {
             
             platform_endSign();
             
-            free(subjectFilter);
             free(message);
             free(challenge);
             free(url);
