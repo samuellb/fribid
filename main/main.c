@@ -70,8 +70,10 @@ void pipeData() {
                 return;
             }
             
-            char *p12Data = NULL, *person = NULL, *password = NULL;
+            char *p12Data = NULL;
             int p12Length;
+            KeyfileSubject *person;
+            char *password = NULL;
             char *signature = NULL;
             char *decodedSubjectFilter = NULL;
             BankIDError error = BIDERR_UserCancel;
@@ -107,7 +109,7 @@ void pipeData() {
                 }
                 
                 free(p12Data);
-                free(person);
+                keyfile_freeSubject(person);
                 memset(password, 0, strlen(password));
                 free(password);
                 

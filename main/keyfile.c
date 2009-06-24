@@ -197,7 +197,7 @@ static char *der_encode(const CERTCertificate *cert) {
          !CERT_LIST_END(node, list); node = CERT_LIST_NEXT(node))
 
 bool keyfile_listPeople(const char *data, const int datalen,
-                         char ***people, int *count) {
+                        KeyfileSubject ***people, int *count) {
     *count = 0;
     
     CERTCertList *certList = pkcs12_listCerts(data, datalen);
@@ -207,8 +207,8 @@ bool keyfile_listPeople(const char *data, const int datalen,
         if (node->cert->keyUsage & CERTUSE_AUTHENTICATION) (*count)++;
     }
     
-    *people = malloc(*count * sizeof(char*));
-    char **person = *people;
+    *people = malloc(*count * sizeof(void*));
+    KeyfileSubject **person = *people;
     for CL_each(node, certList) {
         if (node->cert->keyUsage & CERTUSE_AUTHENTICATION) {
             *person = strdup(node->cert->subjectName);
@@ -220,7 +220,19 @@ bool keyfile_listPeople(const char *data, const int datalen,
     return true;
 }
 
-char *keyfile_getDisplayName(const char *person) {
+void keyfile_freeSubject(KeyfileSubject *person) {
+    free(person);
+}
+
+KeyfileSubject *keyfile_duplicateSubject(const KeyfileSubject *person) {
+    return strdup(person);
+}
+
+bool keyfile_compareSubjects(const KeyfileSubject *a, const KeyfileSubject *b) {
+    return (strcmp(a, b) == 0);
+}
+
+char *keyfile_getDisplayName(const KeyfileSubject *person) {
     // FIXME: Hack
     const char *name = strstr(person, "OID.2.5.4.41=");
     if (!name) return strdup(person);
@@ -234,7 +246,8 @@ char *keyfile_getDisplayName(const char *person) {
     return displayName;
 }
 
-bool keyfile_matchSubjectFilter(const char *person, const char *subjectFilter) {
+bool keyfile_matchSubjectFilter(const KeyfileSubject *person,
+                                const char *subjectFilter) {
     // FIXME: Hack
     if (!subjectFilter) return true;
     
@@ -260,7 +273,8 @@ bool keyfile_matchSubjectFilter(const char *person, const char *subjectFilter) {
 }
 
 static CERTCertificate *findCert(const CERTCertList *certList,
-                                 const char *person, const unsigned int certMask) {
+                                 const KeyfileSubject *person,
+                                 const unsigned int certMask) {
     for CL_each(node, certList) {
         if (((node->cert->keyUsage & certMask) == certMask) &&
              !strcmp(node->cert->subjectName, person)) {
@@ -271,7 +285,8 @@ static CERTCertificate *findCert(const CERTCertList *certList,
 }
 
 bool keyfile_getBase64Chain(const char *data, const int datalen,
-                            const char *person, const unsigned int certMask,
+                            const KeyfileSubject *person,
+                            const unsigned int certMask,
                             char ***certs, int *count) {
     
     CERTCertList *certList = pkcs12_listCerts(data, datalen);
@@ -326,7 +341,9 @@ static SECItem *nicknameCollisionFunction(SECItem *oldNick, PRBool *cancel, void
 
 
 bool keyfile_sign(const char *data, const int datalen,
-                  const char *person, const unsigned int certMask, const char *password,
+                  const KeyfileSubject *person,
+                  const unsigned int certMask,
+                  const char *password,
                   const char *message, const int messagelen,
                   char **signature, int *siglen) {
     

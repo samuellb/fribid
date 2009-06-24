@@ -102,7 +102,7 @@ static bool addSignatureFile(GtkListStore *signatures, const char *filename,
     platform_readFile(filename, &fileData, &fileLen);
     
     int personCount;
-    char **people = NULL;
+    KeyfileSubject **people = NULL;
     keyfile_listPeople(fileData, fileLen, &people, &personCount);
     
     for (int i = 0; i < personCount; i++) {
@@ -116,8 +116,9 @@ static bool addSignatureFile(GtkListStore *signatures, const char *filename,
                                2, filename, -1);
             
             free(displayName);
+        } else {
+            keyfile_freeSubject(people[i]);
         }
-        free(people[i]);
     }
     free(people);
     memset(fileData, 0, fileLen);
@@ -153,9 +154,8 @@ void platform_startSign(const char *url, const char *hostname, const char *ip,
     signText = GTK_TEXT_VIEW(gtk_builder_get_object(builder, "sign_text"));
     
     // Create a GtkListStore of (displayname, person, filename) tuples
-    GtkListStore *signatures = gtk_list_store_new(3, G_TYPE_STRING, G_TYPE_STRING, G_TYPE_STRING);
-    GtkTreeIter iter;
-    iter.stamp = 0;
+    GtkListStore *signatures = gtk_list_store_new(3, G_TYPE_STRING, G_TYPE_POINTER, G_TYPE_STRING);
+    GtkTreeIter iter = { .stamp = 0 };
     
     PlatformDirIter *dir = platform_openKeysDir();
     if (dir) {
@@ -193,6 +193,19 @@ void platform_startSign(const char *url, const char *hostname, const char *ip,
 }
 
 void platform_endSign() {
+    // Free all subjects in the list
+    GtkTreeModel *model = gtk_combo_box_get_model(signaturesCombo);
+    GtkTreeIter iter = { .stamp = 0 };
+    
+    bool valid = gtk_tree_model_get_iter_first(model, &iter);
+    while (valid) {
+        KeyfileSubject *subject;
+        gtk_tree_model_get(model, &iter,
+                           1, &subject, -1);
+        keyfile_freeSubject(subject);
+        valid = gtk_tree_model_iter_next(model, &iter);
+    }
+    
     gtk_widget_destroy(GTK_WIDGET(signDialog));
     free(currentSubjectFilter);
 }
@@ -233,8 +246,7 @@ static void selectExternalFile() {
         
         // Add an item to the signatures list and select it
         GtkTreeModel *signatures = gtk_combo_box_get_model(signaturesCombo);
-        GtkTreeIter iter;
-        iter.stamp = 0;
+        GtkTreeIter iter = { .stamp = 0 };
         ok = addSignatureFile(GTK_LIST_STORE(signatures), filename, &iter);
         if (ok) gtk_combo_box_set_active_iter(signaturesCombo, &iter);
         
@@ -254,7 +266,7 @@ static void selectExternalFile() {
 #define RESPONSE_CANCEL   20
 #define RESPONSE_EXTERNAL 30
 
-bool platform_sign(char **signature, int *siglen, char **person, char **password) {
+bool platform_sign(char **signature, int *siglen, KeyfileSubject **person, char **password) {
     guint response;
     
     while ((response = gtk_dialog_run(signDialog)) == RESPONSE_EXTERNAL) {
@@ -272,11 +284,13 @@ bool platform_sign(char **signature, int *siglen, char **person, char **password
         *person = NULL;
         
         if (gtk_combo_box_get_active_iter(signaturesCombo, &iter)) {
+            const KeyfileSubject *selectedPerson;
             char *filename;
             GtkTreeModel *model = gtk_combo_box_get_model(signaturesCombo);
             gtk_tree_model_get(model, &iter,
-                               1, person,
+                               1, &selectedPerson,
                                2, &filename, -1);
+            *person = keyfile_duplicateSubject(selectedPerson);
             
             // Read .p12 file
             platform_readFile(filename, signature, siglen);

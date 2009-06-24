@@ -81,13 +81,16 @@ static char *sha_base64(const char *str) {
 }
 
 char *xmldsec_sign(const char *p12Data, const int p12Length,
-                   const char *person, const unsigned int certMask, const char *password,
+                   const KeyfileSubject *person,
+                   const unsigned int certMask,
+                   const char *password,
                    const char *dataId, const char *data) {
     
     // Keyinfo
     char **certs;
     int certCount;
-    if (!keyfile_getBase64Chain(p12Data, p12Length, person, certMask, &certs, &certCount)) {
+    if (!keyfile_getBase64Chain(p12Data, p12Length, person, certMask,
+                                &certs, &certCount)) {
         return NULL;
     }
     

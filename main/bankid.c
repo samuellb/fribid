@@ -281,10 +281,12 @@ static const char *signobj_id = "bidSignedData";
 
 
 static BankIDError sign(const char *p12Data, const int p12Length,
-                        const char *person, const char *password,
+                        const KeyfileSubject *person,
+                        const char *password,
                         const char *challenge,
                         const char *hostname, const char *ip,
-                        const unsigned int certMask, const char *purpose, const char *extra,
+                        const unsigned int certMask,
+                        const char *purpose, const char *extra,
                         char **signature) {
     
     // Create the authentication XML
@@ -319,7 +321,8 @@ static BankIDError sign(const char *p12Data, const int p12Length,
 }
 
 BankIDError bankid_authenticate(const char *p12Data, const int p12Length,
-                                const char *person, const char *password,
+                                const KeyfileSubject *person,
+                                const char *password,
                                 const char *challenge,
                                 const char *hostname, const char *ip,
                                 char **signature) {
@@ -328,7 +331,8 @@ BankIDError bankid_authenticate(const char *p12Data, const int p12Length,
 }
 
 BankIDError bankid_sign(const char *p12Data, const int p12Length,
-                        const char *person, const char *password,
+                        const KeyfileSubject *person,
+                        const char *password,
                         const char *challenge,
                         const char *hostname, const char *ip,
                         const char *message,

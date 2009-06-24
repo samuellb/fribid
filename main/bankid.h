@@ -27,6 +27,7 @@
 
 #include <stdbool.h>
 
+#include "keyfile.h"
 
 typedef enum {
     BIDERR_OK =               0,
@@ -42,13 +43,15 @@ char *bankid_getVersion();
 
 
 BankIDError bankid_authenticate(const char *p12Data, const int p12Length,
-                                const char *person, const char *password,
+                                const KeyfileSubject *person,
+                                const char *password,
                                 const char *challenge,
                                 const char *hostname, const char *ip,
                                 char **signature);
 
 BankIDError bankid_sign(const char *p12Data, const int p12Length,
-                        const char *person, const char *password,
+                        const KeyfileSubject *person,
+                        const char *password,
                         const char *challenge,
                         const char *hostname, const char *ip,
                         const char *message,
