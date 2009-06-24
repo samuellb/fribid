@@ -51,10 +51,10 @@ NPError NPP_Destroy(NPP instance, NPSavedData **save) {
 NPError NPP_GetValue(NPP instance, NPPVariable variable, void *value) {
     switch (variable) {
         case NPPVpluginNameString:
-            *((const char**)value) = "BankID e-legitimation";
+            *((const char**)value) = "FriBID e-legitimation";
             return NPERR_NO_ERROR;
         case NPPVpluginDescriptionString:
-            *((const char**)value) = "Insticksmodul för BankID e-legitimation";
+            *((const char**)value) = "Insticksmodul för FriBID e-legitimation";
             return NPERR_NO_ERROR;
         case NPPVpluginScriptableNPObject:
             *((NPObject**)value) = (NPObject*)instance->pdata;

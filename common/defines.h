@@ -3,8 +3,8 @@
 
 #include "config.h"
 
-#define BINNAME             "bankid-se"
-#define RELEASE_TIME        1245574966
+#define BINNAME             "fribid"
+#define RELEASE_TIME        1245853443
 
 #define LIB_PATH            EPREFIX "/lib/" BINNAME
 #define SHARE_PATH          PREFIX "/share/" BINNAME
