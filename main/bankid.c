@@ -214,7 +214,7 @@ void bankid_checkVersionValidity() {
         maybeValid = true;
     }
     
-    char *checkedWithVersion;
+    char *checkedWithVersion = NULL;
     if (!platform_getConfigString(cfg, "expiry", "checked-with-emulated-version", &checkedWithVersion)) {
         maybeValid = true;
     } else if (strcmp(checkedWithVersion, emulatedVersion) != 0) {
@@ -222,6 +222,7 @@ void bankid_checkVersionValidity() {
         // might still not have expired even if the old version has.
         maybeValid = true;
     }
+    free(checkedWithVersion);
     
     platform_freeConfig(cfg);
     
