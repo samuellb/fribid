@@ -54,15 +54,22 @@ void pipeData() {
             }
             
             // Validate input
-            if (!is_canonical_base64(challenge) ||
-                !is_valid_hostname(hostname) ||
-                !is_valid_ip_address(ip) ||
-                !is_https_url(url) ||
-                (command == PMC_Sign && (
-                    !is_canonical_base64(message) ||
-                    !is_canonical_base64(subjectFilter)
-                ))) {
-                pipe_sendInt(stdout, BIDERR_InternalError);
+            BankIDError error = BIDERR_OK;
+            
+            if (!is_https_url(url)) {
+                error = BIDERR_NotSSL;
+            } else if (!is_canonical_base64(challenge) ||
+                       !is_valid_hostname(hostname) ||
+                       !is_valid_ip_address(ip) ||
+                       (command == PMC_Sign && (
+                           !is_canonical_base64(message) ||
+                           !is_canonical_base64(subjectFilter)
+                       ))) {
+                error = BIDERR_InternalError;
+            }
+            
+            if (error != BIDERR_OK) {
+                pipe_sendInt(stdout, error);
                 pipe_sendString(stdout, "");
                 pipe_flush(stdout);
                 
@@ -76,7 +83,7 @@ void pipeData() {
             char *password = NULL;
             char *signature = NULL;
             char *decodedSubjectFilter = NULL;
-            BankIDError error = BIDERR_UserCancel;
+            error = BIDERR_UserCancel;
             
             if (subjectFilter) {
                 decodedSubjectFilter = base64_decode(subjectFilter);
