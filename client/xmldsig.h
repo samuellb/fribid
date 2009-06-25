@@ -22,12 +22,12 @@
 
 */
 
-#ifndef __XMLDECISEC_H__
-#define __XMLDECISEC_H__
+#ifndef __XMLDSIG_H__
+#define __XMLDSIG_H__
 
 #include "keyfile.h"
 
-char *xmldsec_sign(const char *p12Data, const int p12Length,
+char *xmldsig_sign(const char *p12Data, const int p12Length,
                    const KeyfileSubject *person,
                    const unsigned int certMask,
                    const char *password,

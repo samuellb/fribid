@@ -30,10 +30,10 @@
 #include <sechash.h>
 
 #include "keyfile.h"
-#include "xmldecisec.h"
+#include "xmldsig.h"
 #include "misc.h"
 
-static const char *xmldsec_template = 
+static const char *xmldsig_template = 
     "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>"
     "<Signature xmlns=\"http://www.w3.org/2000/09/xmldsig#\">"
         "%s"
@@ -80,7 +80,7 @@ static char *sha_base64(const char *str) {
     return base64_encode(shasum, sizeof(shasum));
 }
 
-char *xmldsec_sign(const char *p12Data, const int p12Length,
+char *xmldsig_sign(const char *p12Data, const int p12Length,
                    const KeyfileSubject *person,
                    const unsigned int certMask,
                    const char *password,
@@ -138,10 +138,10 @@ char *xmldsec_sign(const char *p12Data, const int p12Length,
     free(sigData);
     
     // Glue everything together
-    char *complete = malloc(strlen(xmldsec_template) - 4*2 +
+    char *complete = malloc(strlen(xmldsig_template) - 4*2 +
                             strlen(signedinfo) + strlen(signature) +
                             strlen(keyinfo) + strlen(data) +1);
-    sprintf(complete, xmldsec_template,
+    sprintf(complete, xmldsig_template,
             signedinfo, signature, keyinfo, data);
     
     free(keyinfo);

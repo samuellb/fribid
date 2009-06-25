@@ -32,7 +32,7 @@
 
 #include "../common/defines.h"
 #include "keyfile.h"
-#include "xmldecisec.h"
+#include "xmldsig.h"
 #include "misc.h"
 #include "bankid.h"
 #include "platform.h"
@@ -305,7 +305,7 @@ static BankIDError sign(const char *p12Data, const int p12Length,
     free(version);
     
     // Sign
-    char *xmlsig = xmldsec_sign(p12Data, p12Length,
+    char *xmlsig = xmldsig_sign(p12Data, p12Length,
                 person, certMask, password,
                 signobj_id, object);
     free(object);

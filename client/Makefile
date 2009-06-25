@@ -11,11 +11,11 @@ UI_PATH=`../configure --internal--get-define=UI_PATH`
 SIGNING_EXECUTABLE=`../configure --internal--get-define=SIGNING_EXECUTABLE`
 UI_GTK_XML=`../configure --internal--get-define=UI_GTK_XML`
 
-OBJECTS=bankid.o keyfile.o main.o misc.o pipe.o posix.o glibconfig.o gtk.o xmldecisec.o
+OBJECTS=bankid.o keyfile.o main.o misc.o pipe.o posix.o glibconfig.o gtk.o xmldsig.o
 
 all: sign
 
-bankid.o: bankid.h keyfile.h misc.h xmldecisec.h
+bankid.o: bankid.h keyfile.h misc.h xmldsig.h
 keyfile.o: keyfile.h misc.h platform.h
 glibconfig.o: platform.h
 gtk.o: platform.h bankid.h keyfile.h
@@ -23,7 +23,7 @@ main.o: bankid.h misc.h platform.h ../common/pipe.h
 misc.o: misc.h
 pipe.o: ../common/pipe.h ../common/pipe.c
 posix.o: platform.h
-xmldecisec.o: xmldecisec.h keyfile.h misc.h
+xmldsig.o: xmldsig.h keyfile.h misc.h
 
 .c.o:
 	$(CC) $(CCFLAGS) -c $< -o $@
