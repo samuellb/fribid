@@ -26,7 +26,7 @@ clean:
 install:
 	for lang in $(LANGUAGES); do \
 	    install -d $(DESTDIR)$(LOCALEDIR)/$$lang/LC_MESSAGES && \
-	    install -m 644 -T $$lang.mo $(DESTDIR)$(LOCALEDIR)/$$lang/LC_MESSAGES/$(DOMAIN).mo || exit 1; \
+	    install -m 644 $$lang.mo $(DESTDIR)$(LOCALEDIR)/$$lang/LC_MESSAGES/$(DOMAIN).mo || exit 1; \
 	done 
 
 uninstall:
