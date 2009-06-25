@@ -85,7 +85,7 @@ static char **getParamPointer(Plugin *plugin, const char *name) {
 }
 
 char *sign_getParam(Plugin *plugin, const char *name) {
-    const char **valuePtr = getParamPointer(plugin, name);
+    char **valuePtr = getParamPointer(plugin, name);
     
     if (valuePtr && *valuePtr) return strdup(*valuePtr);
     else return NULL;
