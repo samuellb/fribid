@@ -23,7 +23,7 @@
 */
 
 #define _BSD_SOURCE 1
-#define _POSIX_C_SOURCE 199012
+#define _POSIX_C_SOURCE 200112
 #include <stdbool.h>
 #include <stdlib.h>
 #include <stdio.h>
