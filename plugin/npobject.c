@@ -210,8 +210,12 @@ static bool objInvoke(NPObject *npobj, NPIdentifier ident,
                 char *value = sign_getParam(this->plugin, param);
                 
                 free(param);
-                if (value) STRINGZ_TO_NPVARIANT(npstr(value), *result);
-                else NULL_TO_NPVARIANT(*result);
+                if (value) {
+                    // The macro below evaluates it's first parameter twice
+                    // and npstr frees it's input...
+                    value = npstr(value);
+                    STRINGZ_TO_NPVARIANT(value, *result);
+                } else NULL_TO_NPVARIANT(*result);
                 
                 return true;
             } else if (!strcmp(name, "SetParam") && (argCount == 2) &&
