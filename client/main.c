@@ -41,7 +41,7 @@ void pipeData() {
         case PMC_Authenticate:
         case PMC_Sign: {
             char *challenge = pipe_readString(stdin);
-            free(pipe_readString(stdin)); // Policy -- What's this doing?
+            free(pipe_readString(stdin)); // Just ignore the policies list for now
             char *url = pipe_readString(stdin);
             char *hostname = pipe_readString(stdin);
             char *ip = pipe_readString(stdin);
