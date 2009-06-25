@@ -80,6 +80,9 @@ static char *sha_base64(const char *str) {
     return base64_encode(shasum, sizeof(shasum));
 }
 
+/**
+ * Creates a xmldsig signature. See the sign function in bankid.c.
+ */
 char *xmldsig_sign(const char *p12Data, const int p12Length,
                    const KeyfileSubject *person,
                    const unsigned int certMask,

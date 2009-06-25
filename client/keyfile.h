@@ -27,16 +27,18 @@
 
 #include <stdbool.h>
 
+/* These values are used where "certMasks" are expected */
 #define CERTUSE_ISSUER            6
 #define CERTUSE_SIGNING          64
 #define CERTUSE_AUTHENTICATION  128
 
+// Subjects are just strings for now
 typedef char KeyfileSubject;
 
 void keyfile_init();
 void keyfile_shutdown();
 
-bool keyfile_listPeople(const char *data, const int datalen,
+bool keyfile_listPeople(const char *p12Data, const int p12Length,
                          KeyfileSubject ***people, int *count);
 
 void keyfile_freeSubject(KeyfileSubject *person);
@@ -46,12 +48,12 @@ char *keyfile_getDisplayName(const KeyfileSubject *person);
 bool keyfile_matchSubjectFilter(const KeyfileSubject *person,
                                 const char *subjectFilter);
 
-bool keyfile_getBase64Chain(const char *data, const int datalen,
+bool keyfile_getBase64Chain(const char *p12Data, const int p12Length,
                             const KeyfileSubject *person,
                             const unsigned int certMask,
                             char ***certs, int *count);
 
-bool keyfile_sign(const char *data, const int datalen,
+bool keyfile_sign(const char *p12Data, const int p12Length,
                   const KeyfileSubject *person,
                   const unsigned int certMask,
                   const char *password,

@@ -125,6 +125,7 @@ static bool addSignatureFile(GtkListStore *signatures, const char *filename,
             
             free(displayName);
         } else {
+            // The subject isn't needed
             keyfile_freeSubject(people[i]);
         }
     }
@@ -165,6 +166,7 @@ void platform_startSign(const char *url, const char *hostname, const char *ip,
     GtkListStore *signatures = gtk_list_store_new(3, G_TYPE_STRING, G_TYPE_POINTER, G_TYPE_STRING);
     GtkTreeIter iter = { .stamp = 0 };
     
+    // Look for P12s in ~/cbt
     PlatformDirIter *dir = platform_openKeysDir();
     if (dir) {
         while (platform_iterateDir(dir)) {
@@ -185,6 +187,7 @@ void platform_startSign(const char *url, const char *hostname, const char *ip,
     gtk_cell_layout_set_attributes(GTK_CELL_LAYOUT(signaturesCombo),
                                    renderer, "text", 0, NULL);
     
+    // Used to dim the "Sign" button when no signature has been selected
     g_signal_connect(G_OBJECT(signaturesCombo), "changed",
                      G_CALLBACK(validateDialog), NULL);
     
@@ -219,7 +222,6 @@ void platform_endSign() {
 }
 
 void platform_setMessage(const char *message) {
-    // TODO set dialog title and header
     if (message == NULL) {
         gtk_widget_hide(signLabel);
         gtk_widget_hide(signScroller);
@@ -274,6 +276,10 @@ static void selectExternalFile() {
 #define RESPONSE_CANCEL   20
 #define RESPONSE_EXTERNAL 30
 
+/**
+ * Waits for the user to fill in the dialog, and loads the P12 file for
+ * the selected subject.
+ */
 bool platform_sign(char **signature, int *siglen, KeyfileSubject **person, char **password) {
     guint response;
     
@@ -284,8 +290,7 @@ bool platform_sign(char **signature, int *siglen, KeyfileSubject **person, char 
     
     if (response == RESPONSE_OK) {
         // User pressed "Log in" or "Sign"
-        GtkTreeIter iter;
-        iter.stamp = 0;
+        GtkTreeIter iter = { .stamp = 0 };
         
         *signature = NULL;
         *siglen = 0;

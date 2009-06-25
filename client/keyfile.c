@@ -89,6 +89,7 @@ void keyfile_init() {
         fprintf(stderr, BINNAME ": NSS initialization failed!\n");
     }
     
+    // TODO is this needed?
     SEC_PKCS12EnableCipher(PKCS12_RC2_CBC_40, 1);
     SEC_PKCS12EnableCipher(PKCS12_RC2_CBC_128, 1);
     SEC_PKCS12EnableCipher(PKCS12_RC4_40, 1);
@@ -110,7 +111,7 @@ void keyfile_shutdown() {
     free(nssDummyDir);
 }
 
-static SEC_PKCS12DecoderContext *pkcs12_open(const char *data, const int datalen,
+static SEC_PKCS12DecoderContext *pkcs12_open(const char *p12Data, const int p12Length,
                                              const char *password, SECItem **pwitem) {
     
     secuPWData dummy = { PW_NONE, NULL };
@@ -153,7 +154,7 @@ static SEC_PKCS12DecoderContext *pkcs12_open(const char *data, const int datalen
         return NULL;
     
     // Put the data into the decoder
-    if (SEC_PKCS12DecoderUpdate(decoder, (unsigned char*)data, datalen) != SECSuccess)
+    if (SEC_PKCS12DecoderUpdate(decoder, (unsigned char*)p12Data, p12Length) != SECSuccess)
         return NULL;
     
     if ((SEC_PKCS12DecoderVerify(decoder) != SECSuccess) &&
@@ -170,10 +171,10 @@ static void pkcs12_close(SEC_PKCS12DecoderContext *decoder, SECItem *pwitem) {
     SECITEM_FreeItem(pwitem, PR_TRUE);
 }
 
-static CERTCertList *pkcs12_listCerts(const char *data, const int datalen) {
+static CERTCertList *pkcs12_listCerts(const char *p12Data, const int p12Length) {
     
     SECItem *pwitem;
-    SEC_PKCS12DecoderContext *decoder = pkcs12_open(data, datalen, "", &pwitem);
+    SEC_PKCS12DecoderContext *decoder = pkcs12_open(p12Data, p12Length, "", &pwitem);
     
     if (!decoder) return NULL;
     
@@ -196,11 +197,14 @@ static char *der_encode(const CERTCertificate *cert) {
         (CERTCertListNode *node = CERT_LIST_HEAD(list); \
          !CERT_LIST_END(node, list); node = CERT_LIST_NEXT(node))
 
-bool keyfile_listPeople(const char *data, const int datalen,
+/**
+ * Lists the subjects in the given P12 file.
+ */
+bool keyfile_listPeople(const char *p12Data, const int p12Length,
                         KeyfileSubject ***people, int *count) {
     *count = 0;
     
-    CERTCertList *certList = pkcs12_listCerts(data, datalen);
+    CERTCertList *certList = pkcs12_listCerts(p12Data, p12Length);
     if (!certList) return false;
     
     for CL_each(node, certList) {
@@ -284,12 +288,19 @@ static CERTCertificate *findCert(const CERTCertList *certList,
     return NULL;
 }
 
-bool keyfile_getBase64Chain(const char *data, const int datalen,
+/**
+ * Returns a list of DER-BASE64 encoded certificates, from the subject
+ * to the root CA. This is actually wrong, since the root CA that's
+ * returned could be untrusted. However, at least my P12 has only one
+ * possible chain and the validation is done server-side, so this shouldn't
+ * be a problem.
+ */
+bool keyfile_getBase64Chain(const char *p12Data, const int p12Length,
                             const KeyfileSubject *person,
                             const unsigned int certMask,
                             char ***certs, int *count) {
     
-    CERTCertList *certList = pkcs12_listCerts(data, datalen);
+    CERTCertList *certList = pkcs12_listCerts(p12Data, p12Length);
     if (!certList) return false;
     
     CERTCertificate *cert = findCert(certList, person, certMask);
@@ -314,7 +325,9 @@ bool keyfile_getBase64Chain(const char *data, const int datalen,
     return true;
 }
 
-
+/**
+ * This function is needed by NSS
+ */
 static SECItem *nicknameCollisionFunction(SECItem *oldNick, PRBool *cancel, void *wincx) {
     CERTCertificate* cert = (CERTCertificate*)wincx;
     
@@ -340,14 +353,14 @@ static SECItem *nicknameCollisionFunction(SECItem *oldNick, PRBool *cancel, void
 }
 
 
-bool keyfile_sign(const char *data, const int datalen,
+bool keyfile_sign(const char *p12Data, const int p12Length,
                   const KeyfileSubject *person,
                   const unsigned int certMask,
                   const char *password,
                   const char *message, const int messagelen,
                   char **signature, int *siglen) {
     
-    assert(data != NULL);
+    assert(p12Data != NULL);
     assert(person != NULL);
     assert(message != NULL);
     assert(password != NULL);
@@ -355,7 +368,7 @@ bool keyfile_sign(const char *data, const int datalen,
     assert(siglen != NULL);
     
     SECItem *pwitem;
-    SEC_PKCS12DecoderContext *decoder = pkcs12_open(data, datalen, password, &pwitem);
+    SEC_PKCS12DecoderContext *decoder = pkcs12_open(p12Data, p12Length, password, &pwitem);
     if (!decoder) return false;
     
     if (SEC_PKCS12DecoderValidateBags(decoder, nicknameCollisionFunction) != SECSuccess) {

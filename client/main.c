@@ -35,6 +35,11 @@
 
 static const char *version = PACKAGEVERSION;
 
+/**
+ * pipeData is called when the plugin has sent some data.
+ * This happens when one of the Javascript methods of an
+ * plugin object is called.
+ */
 void pipeData() {
     int command = pipe_readCommand(stdin);
     switch (command) {
@@ -145,7 +150,10 @@ void pipeData() {
     }
 }
 
-
+/**
+ * Processes some command line options that neither require a GUI or the NSS
+ * libraries.
+ */
 int process_non_ui_args(int argc, char **argv) {
     for (int i = 1; i < argc; i++) {
         if (!strcmp(argv[i], "--internal--bankid-version-string")) {

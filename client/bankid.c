@@ -50,6 +50,11 @@ static const char *emulatedVersion = "4.10.2.16";
 #define EXPIRY_RAND (rand() % 65535)
 #define DEFAULT_EXPIRY (RELEASE_TIME + 30*24*3600)
 
+/**
+ * Returns the version string. The version string is identical to that of
+ * Nexus Personal for Linux in order to be compatible with all servers, which
+ * may or may not accept unofficial version strings.
+ */
 static char *getVersionString() {
     static const char *template =
         "Personal=4.10.2.16&libtokenapi_so=4.10.2.16&libBranding_so=4.10.2.16&libCardSetec_so=4.10.2.16&libCardPrisma_so=4.10.2.16&libCardSiemens_so=4.10.2.16&libplugins_so=4.10.2.16&libP11_so=4.10.2.16&libai_so=4.10.2.16&personal_bin=4.10.2.16&"
@@ -71,12 +76,26 @@ static char *getVersionString() {
     return result;
 }
 
+/*
+ * Since we attempt to emulate a version of Nexus Personal, we have
+ * avoid using any expired version strings, because such behaviour would
+ * be unexpected by the server and could create weird errors.
+ *
+ * Currently, FriBID doesn't check it's own version for expiry.
+ */
 static const char *checkHost = "159.72.128.183";
 
 static void connectionError() {
     fprintf(stderr, BINNAME ": failed to connect to %s and check version validity\n", checkHost);
 }
 
+/**
+ * Checks the validity of the emulated version.
+ *
+ * @param valid  This variable will receive the status.
+ *
+ * @return  true if successful, false if not.
+ */
 static bool checkValidity(bool *valid) {
     static const char *template =
         "POST / HTTP/1.1\r\n"
@@ -181,7 +200,11 @@ static bool checkValidity(bool *valid) {
     return true;
 }
 
-static void versionCheckFunction(void *param) {
+/**
+ * Checks the validity of the emulated version and stores the status
+ * in the configuration file.
+ */
+static void versionCheckFunction(void *ignored) {
     PlatformConfig *cfg = platform_openConfig(BINNAME, "expiry");
     bool valid;
     
@@ -198,6 +221,12 @@ static void versionCheckFunction(void *param) {
     platform_freeConfig(cfg);
 }
 
+/**
+ * This function checks the validity of the emulated version. If the current
+ * version needs checking immidiatly, then this function blocks until it has
+ * received an answer from the server (see above). If the current version will
+ * need checking within 14 days, then the check will be asynchronous.
+ */
 void bankid_checkVersionValidity() {
     PlatformConfig *cfg = platform_openConfig(BINNAME, "expiry");
     
@@ -280,7 +309,26 @@ static const char *signedText_template =
 
 static const char *signobj_id = "bidSignedData";
 
-
+/**
+ * Creates a BankID-compatible xmldsig signature
+ *
+ * @param p12Data    Contents of the P12 file
+ * @param p12Length  Length of the P12 file in bytes
+ * @param person     The subject who signs the data
+ * @param password   The password the P12 is encrypted with
+ * @param challenge  The nonce sent by the server
+ * @param hostname   Hostname of the server that requested the signature
+ * @param ip         IP address of the server
+ * @param certMask   Which certificates to use. See keyfile.h
+ * @param purpose    Either "Identification" or "Signing"
+ * @param extra      Extra data to include. This is generally a
+ *                   usrVisibleData tag
+ *
+ * @param signature  The resulting signature. It's allocated and
+ *                   is null-terminated.
+ *
+ * @return  A status code (see bankid.h)
+ */
 static BankIDError sign(const char *p12Data, const int p12Length,
                         const KeyfileSubject *person,
                         const char *password,
