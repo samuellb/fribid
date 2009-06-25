@@ -21,7 +21,7 @@
                 <child>
                   <object class="GtkLabel" id="header_op">
                     <property name="visible">True</property>
-                    <property name="label" translatable="yes">&lt;big&gt;&lt;b&gt;Log in to: &lt;/b&gt;&lt;/big&gt;
+                    <property name="label">&lt;big&gt;&lt;b&gt;Log in to: &lt;/b&gt;&lt;/big&gt;
 &lt;small&gt; &lt;/small&gt;</property>
                     <property name="use_markup">True</property>
                   </object>
@@ -170,7 +170,7 @@
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="receives_default">True</property>
-                <property name="label" translatable="yes">gtk-cancel</property>
+                <property name="label">gtk-cancel</property>
                 <property name="use_stock">True</property>
               </object>
               <packing>

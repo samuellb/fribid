@@ -30,6 +30,9 @@
 #include <glib.h>
 #include <assert.h>
 
+#include <locale.h>
+#include <libintl.h>
+
 #include <unistd.h> // For STDIN_FILENO
 
 #include "../common/defines.h"
@@ -37,7 +40,12 @@
 #include "keyfile.h"
 #include "platform.h"
 
+#define _(string) gettext(string)
+
 void platform_init(int *argc, char ***argv) {
+    setlocale(LC_ALL, "");
+    bindtextdomain(BINNAME, LOCALEDIR);
+    textdomain(BINNAME);
     gtk_init(argc, argv);
 }
 
@@ -216,9 +224,9 @@ void platform_setMessage(const char *message) {
         gtk_widget_hide(signLabel);
         gtk_widget_hide(signScroller);
         
-        gtk_window_set_title(GTK_WINDOW(signDialog), "Authentication");
-        gtk_label_set_label(GTK_LABEL(operationLabel), "<big><b>Log in to: </b></big>");
-        gtk_label_set_label(signButtonLabel, "_Log in");
+        gtk_window_set_title(GTK_WINDOW(signDialog), _("Authentication"));
+        gtk_label_set_label(GTK_LABEL(operationLabel), _("<big><b>Log in to: </b></big>"));
+        gtk_label_set_label(signButtonLabel, _("_Log in"));
     } else {
         GtkTextBuffer *textBuffer = gtk_text_view_get_buffer(signText);
         gtk_text_buffer_set_text(textBuffer, message, strlen(message));
@@ -226,9 +234,9 @@ void platform_setMessage(const char *message) {
         gtk_widget_show(signLabel);
         gtk_widget_show(signScroller);
         
-        gtk_window_set_title(GTK_WINDOW(signDialog), "Signing");
-        gtk_label_set_label(GTK_LABEL(operationLabel), "<big><b>Site: </b></big>");
-        gtk_label_set_label(GTK_LABEL(signButtonLabel), "_Sign");
+        gtk_window_set_title(GTK_WINDOW(signDialog), _("Signing"));
+        gtk_label_set_label(GTK_LABEL(operationLabel), _("<big><b>Site: </b></big>"));
+        gtk_label_set_label(GTK_LABEL(signButtonLabel), _("_Sign"));
     }
 }
 
@@ -236,7 +244,7 @@ void platform_setMessage(const char *message) {
 static void selectExternalFile() {
     bool ok = true;
     GtkFileChooser *chooser = GTK_FILE_CHOOSER(gtk_file_chooser_dialog_new(
-            "Select external identity file", GTK_WINDOW(signDialog),
+            _("Select external identity file"), GTK_WINDOW(signDialog),
             GTK_FILE_CHOOSER_ACTION_OPEN,
             GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
             GTK_STOCK_OPEN, GTK_RESPONSE_ACCEPT,
@@ -257,8 +265,8 @@ static void selectExternalFile() {
     if (!ok) {
         // TODO check the real reason for the error
         showMessage(GTK_MESSAGE_ERROR, (currentSubjectFilter != NULL ?
-            "No matching identities found" :
-            "Invalid file format"));
+            _("No matching identities found") :
+            _("Invalid file format")));
     }
 }
 
@@ -307,15 +315,15 @@ bool platform_sign(char **signature, int *siglen, KeyfileSubject **person, char 
 }
 
 void platform_signError() {
-    showMessage(GTK_MESSAGE_ERROR, "Signing/authentication failed. Maybe the password is incorrect?");
+    showMessage(GTK_MESSAGE_ERROR, _("Signing/authentication failed. Maybe the password is incorrect?"));
 }
 
 void platform_versionExpiredError() {
-    showMessage(GTK_MESSAGE_ERROR, "This software version has expired, and "
+    showMessage(GTK_MESSAGE_ERROR, _("This software version has expired, and "
                 "will probably not be accepted on all web sites.\n"
                 "\n"
                 "Please download a newer version (if available), or use "
-                "the officially supported software (Nexus Personal) instead.");
+                "the officially supported software (Nexus Personal) instead."));
 }
 
 

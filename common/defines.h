@@ -3,11 +3,15 @@
 
 #include "config.h"
 
+#define PACKAGENAME         "FriBID"
+#define PACKAGEVERSION      "0.1.0"
+
 #define BINNAME             "fribid"
 #define RELEASE_TIME        1245853443
 
 #define LIB_PATH            EPREFIX "/lib/" BINNAME
 #define SHARE_PATH          PREFIX "/share/" BINNAME
+#define LOCALEDIR           PREFIX "/share/locale"
 
 #define SIGNING_EXECUTABLE  LIB_PATH "/sign"
 #define UI_PATH             SHARE_PATH "/ui"

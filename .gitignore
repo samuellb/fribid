@@ -1,5 +1,7 @@
 *.o
 *.so
+*.mo
+*.pot
 *~
 *#
 crap

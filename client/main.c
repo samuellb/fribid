@@ -33,7 +33,7 @@
 #include "platform.h"
 #include "misc.h"
 
-static const char *version = "0.1.0";
+static const char *version = PACKAGEVERSION;
 
 void pipeData() {
     int command = pipe_readCommand(stdin);
