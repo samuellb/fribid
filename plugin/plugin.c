@@ -102,7 +102,7 @@ bool sign_setParam(Plugin *plugin, const char *name, const char *value) {
 }
 
 static bool hasSignParams(const Plugin *plugin) {
-    return (plugin->info.auth.challenge && plugin->info.auth.policys);
+    return (plugin->info.auth.challenge);
 }
 
 int sign_performAction(Plugin *plugin, const char *action) {

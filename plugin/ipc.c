@@ -114,7 +114,8 @@ char *version_getVersion(Plugin *plugin) {
 
 static void sendSignCommon(const Plugin *plugin) {
     pipe_sendString(pipeout, plugin->info.auth.challenge);
-    pipe_sendString(pipeout, plugin->info.auth.policys);
+    pipe_sendString(pipeout, (plugin->info.auth.policys != NULL ?
+                              plugin->info.auth.policys : ""));
     pipe_sendString(pipeout, plugin->url);
     pipe_sendString(pipeout, plugin->hostname);
     pipe_sendString(pipeout, plugin->ip);
