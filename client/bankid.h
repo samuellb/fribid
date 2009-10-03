@@ -33,7 +33,10 @@ typedef enum {
     BIDERR_OK =               0,
     BIDERR_InternalError =    1,
     BIDERR_UserCancel =    8002,
+    BIDERR_InvalidPIN =    8013,
     BIDERR_NotSSL =        8015,
+    BIDERR_HostnameIsIP =  8019,
+    BIDERR_BlockedPIN =    8102,
 } BankIDError;
 
 void bankid_init();
