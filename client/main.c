@@ -34,6 +34,7 @@
 #include "misc.h"
 
 static const char *version = PACKAGEVERSION;
+static int browserWindowId = -1;
 
 /**
  * pipeData is called when the plugin has sent some data.
@@ -95,7 +96,8 @@ void pipeData() {
                 free(subjectFilter);
             }
             
-            platform_startSign(url, hostname, ip, decodedSubjectFilter);
+            platform_startSign(url, hostname, ip, decodedSubjectFilter,
+                               browserWindowId);
             free(decodedSubjectFilter);
             
             if (message != NULL) {
@@ -184,6 +186,14 @@ int main(int argc, char **argv) {
     for (int i = 1; i < argc; i++) {
         if (!strcmp(argv[i], "--internal--ipc")) {
             ipc = true;
+        } else if (!strcmp(argv[i], "--internal--window-id")) {
+            i++;
+            if (i == argc) {
+                fprintf(stderr, BINNAME ": Missing window id\n");
+                error = true;
+                break;
+            }
+            browserWindowId = atoi(argv[i]);
         } else {
             fprintf(stderr, BINNAME ": Invalid option: %s\n", argv[i]);
             error = true;

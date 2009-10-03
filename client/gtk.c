@@ -137,7 +137,7 @@ static bool addSignatureFile(GtkListStore *signatures, const char *filename,
 }
 
 void platform_startSign(const char *url, const char *hostname, const char *ip,
-                        const char *subjectFilter) {
+                        const char *subjectFilter, int parentWindowId) {
     
     currentSubjectFilter = (subjectFilter != NULL ?
                             strdup(subjectFilter) : NULL);
@@ -194,8 +194,28 @@ void platform_startSign(const char *url, const char *hostname, const char *ip,
     passwordEntry = GTK_ENTRY(gtk_builder_get_object(builder, "password_entry"));
     
     signDialog = GTK_DIALOG(gtk_builder_get_object(builder, "dialog_sign"));
-    //gtk_window_set_transient_for(GTK_WINDOW(signDialog), ???);
-    gtk_window_set_keep_above(GTK_WINDOW(signDialog), TRUE);
+    
+    bool transientOk = false;
+    if (parentWindowId != -1) {
+        GdkWindow *parent = gdk_window_foreign_new((GdkNativeWindow)parentWindowId);
+        if (parent != NULL) {
+            gtk_widget_realize(GTK_WIDGET(signDialog));
+            // Only available in GTK 2.14+
+            //GdkWindow *ourWindow = gtk_widget_get_window(GTK_WINDOW(signDialog));
+            GdkWindow *ourWindow = GTK_WIDGET(signDialog)->window;
+            if (ourWindow != NULL) {
+                gdk_window_set_transient_for(ourWindow, parent);
+                gdk_window_set_modal_hint(ourWindow, TRUE);
+                transientOk = true;
+                //g_object_unref(G_OBJECT(ourWindow));
+            }
+            g_object_unref(G_OBJECT(parent));
+        }
+    }
+    
+    if (!transientOk) {
+        gtk_window_set_keep_above(GTK_WINDOW(signDialog), TRUE);
+    }
     
     platform_setMessage(NULL);
     validateDialog(NULL, NULL);

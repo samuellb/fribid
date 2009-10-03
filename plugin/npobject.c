@@ -144,6 +144,17 @@ static char *getDocumentIP(NPP instance) {
     return strdup(ip);
 }
 
+/**
+ * Returns the native ID of the browser window, or -1 on error.
+ */
+int getWindowId(NPP instance) {
+    int id;
+    if (NPN_GetValue(instance, NPNVnetscapeWindow, &id) == NPERR_NO_ERROR) {
+        return id;
+    } else {
+        return -1;
+    }
+}
 
 /* Object methods */
 static NPObject *objAllocate(NPP npp, NPClass *aClass) {
@@ -310,10 +321,12 @@ static NPObject *npobject_new(NPP instance, PluginType pluginType) {
     char *url = getDocumentURL(instance);
     char *hostname = getDocumentHostname(instance);
     char *ip = getDocumentIP(instance);
+    int windowId = getWindowId(instance);
     obj->plugin = plugin_new(pluginType,
                              (url != NULL ? url : ""),
                              (hostname != NULL ? hostname : ""),
-                             (ip != NULL ? ip : ""));
+                             (ip != NULL ? ip : ""),
+                             windowId);
     free(ip);
     free(hostname);
     free(url);

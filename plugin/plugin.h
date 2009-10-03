@@ -42,6 +42,7 @@ typedef struct {
     char *url;
     char *hostname;
     char *ip;
+    int windowId;
     PluginError lastError;
     
     union {
@@ -68,7 +69,8 @@ typedef struct {
 
 /* Plugin creation */
 Plugin *plugin_new(PluginType pluginType, const char *url,
-                   const char *hostname, const char *ip);
+                   const char *hostname, const char *ip,
+                   int windowId);
 void plugin_free(Plugin *plugin);
 
 /* Javascript API */

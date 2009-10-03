@@ -30,12 +30,14 @@
 #include "plugin.h"
 
 Plugin *plugin_new(PluginType pluginType, const char *url,
-                   const char *hostname, const char *ip) {
+                   const char *hostname, const char *ip,
+                   int windowId) {
     Plugin *plugin = calloc(1, sizeof(Plugin));
     plugin->type = pluginType;
     plugin->url = strdup(url);
     plugin->hostname = strdup(hostname);
     plugin->ip = strdup(ip);
+    plugin->windowId = windowId;
     return plugin;
 }
 

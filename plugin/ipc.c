@@ -39,6 +39,7 @@
 static const char *mainBinary = SIGNING_EXECUTABLE;
 static const char *versionOption = "--internal--bankid-version-string";
 static const char *ipcOption = "--internal--ipc";
+static const char *windowIdOption = "--internal--window-id";
 
 static int savedOut;
 static int savedIn;
@@ -56,7 +57,7 @@ static FILE *pipeout;
 
 static pid_t child;
 
-static void openPipes(const char *option) {
+static void openPipes(const char *argv[]) {
     savedOut = dup(STDOUT_FILENO);
     savedIn = dup(STDIN_FILENO);
     close(STDOUT_FILENO);
@@ -77,7 +78,7 @@ static void openPipes(const char *option) {
         //close(pipeIn[PIPE_WRITE_END]);
         //close(pipeOut[PIPE_READ_END]);
         
-        execlp(mainBinary, mainBinary, option, (char *)NULL);
+        execvp(mainBinary, (char *const *)argv);
         perror(BINNAME ": Failed to execute main binary");
         exit(1);
     } else {
@@ -90,6 +91,23 @@ static void openPipes(const char *option) {
     }
 }
 
+static void openVersionPipes() {
+    const char *argv[] = {
+        mainBinary, versionOption, (char *)NULL,
+    };
+    openPipes(argv);
+}
+
+static void openInteractivePipes(Plugin *plugin) {
+    char windowId[11]; // This holds a native window id (such as an XID)
+    const char *argv[] = {
+        mainBinary, ipcOption, windowIdOption, windowId, (char *)NULL,
+    };
+    
+    snprintf(windowId, 11, "%d", plugin->windowId);
+    openPipes(argv);
+}
+
 static void closePipes() {
     close(PIPEOUT);
     close(PIPEIN);
@@ -100,7 +118,7 @@ static void closePipes() {
 char *version_getVersion(Plugin *plugin) {
     char buff[1000];
     
-    openPipes(versionOption);
+    openVersionPipes();
     if (fgets(buff, sizeof(buff), pipein) != NULL) {
         buff[strlen(buff)-1] = '\0';
     } else {
@@ -122,7 +140,7 @@ static void sendSignCommon(const Plugin *plugin) {
 }
 
 int sign_performAction_Authenticate(Plugin *plugin) {
-    openPipes(ipcOption);
+    openInteractivePipes(plugin);
     pipe_sendCommand(pipeout, PMC_Authenticate);
     
     sendSignCommon(plugin);
@@ -136,7 +154,7 @@ int sign_performAction_Authenticate(Plugin *plugin) {
 }
 
 int sign_performAction_Sign(Plugin *plugin) {
-    openPipes(ipcOption);
+    openInteractivePipes(plugin);
     pipe_sendCommand(pipeout, PMC_Sign);
     
     sendSignCommon(plugin);
