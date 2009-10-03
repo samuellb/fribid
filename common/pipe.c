@@ -23,6 +23,7 @@
 */
 
 #define _BSD_SOURCE 1
+#include <assert.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -60,7 +61,7 @@ void pipe_readData(FILE *in, char **data, int *length) {
         *length = 0;
     }
     *data = malloc(*length);
-    if (fread(*data, *length, 1, in) != 1) {
+    if ((*data == NULL) || (fread(*data, *length, 1, in) != 1)) {
         pipeError();
         *data = realloc(*data, 0);
         *length = 0;
@@ -76,6 +77,11 @@ char *pipe_readString(FILE *in) {
     }
     
     char *data = malloc(length +1);
+    if (!data) {
+        pipeError();
+        return strdup("");
+    }
+    
     data[length] = '\0';
     if (fread(data, length, 1, in) == 1) {
         return data;
@@ -95,11 +101,13 @@ int pipe_readInt(FILE *in) {
 }
 
 void pipe_sendData(FILE *out, const char *data, int length) {
+    assert(data != NULL);
     fprintf(out, "%d;", length);
     fwrite(data, length, 1, out);
 }
 
 void pipe_sendString(FILE *out, const char *str) {
+    assert(str != NULL);
     pipe_sendData(out, str, strlen(str));
 }
 
