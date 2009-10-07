@@ -23,15 +23,46 @@
 */
 
 #define _BSD_SOURCE 1
+#define _POSIX_C_SOURCE 200112
 #include <assert.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdbool.h>
+
+#include <glib.h>
 
 #include "../common/defines.h"
 #include "../common/pipe.h"
 
 static void pipeError() {
     fprintf(stderr, BINNAME ": pipe error\n");
+}
+
+static gboolean stopWaiting(GIOChannel *source,
+                            GIOCondition condition, gpointer data) {
+    *((bool*)data) = true;
+    return FALSE;
+}
+
+/**
+ * Waits in the event loop until there's data to read.
+ * 
+ * Data may be buffered by stdio so only call this function
+ * when you know that the other side will send data since
+ * the last time this function was called.
+ */
+void pipe_waitData(FILE *file) {
+    bool hasData = false;
+    GIOChannel *channel = g_io_channel_unix_new(fileno(file));
+    assert(channel != NULL);
+    g_io_channel_set_encoding(channel, NULL, NULL);
+    g_io_add_watch(channel, G_IO_IN | G_IO_HUP | G_IO_ERR,
+                   stopWaiting, &hasData);
+    g_io_channel_unref(channel);
+    
+    while (!hasData) {
+        g_main_context_iteration(NULL, TRUE);
+    }
 }
 
 int pipe_readCommand(FILE *in) {

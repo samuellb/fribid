@@ -1,6 +1,8 @@
 
 COMMONCFLAGS=-O2 -g -Wall -Wextra -std=c99 -pedantic -Wno-unused-parameter
-CCFLAGS=$(COMMONCFLAGS) -I../npapi -fPIC -fvisibility=hidden
+CCFLAGS=$(COMMONCFLAGS) -I../npapi -fPIC -fvisibility=hidden `pkg-config --cflags glib-2.0` -DG_DISABLE_DEPRECATED=1
+LINKFLAGS=-Wl,-z,defs,-soname,libplugins.so
+LIBS=-lc `pkg-config --libs glib-2.0`
 
 # Files to be installed
 LIB_PATH=`../configure --internal--get-define=LIB_PATH`
@@ -21,7 +23,7 @@ plugin.o: plugin.h
 	$(CC) $(CCFLAGS) -c $< -o $@
 
 libplugins.so: $(OBJECTS)
-	$(CC) -shared -Wl,-z,defs,-soname,libplugins.so -o $@ $(OBJECTS) -lc
+	$(CC) -shared $(LINKFLAGS) -o $@ $(OBJECTS) $(LIBS)
 
 .PHONY: all clean install uninstall
 clean:

@@ -38,6 +38,8 @@ void pipe_sendCommand(FILE *out, int command);
 void pipe_finishCommand(FILE *out);
 void pipe_flush(FILE *out);
 
+void pipe_waitData(FILE *file);
+
 void pipe_readData(FILE *in, char **data, int *length);
 char *pipe_readString(FILE *in);
 int pipe_readInt(FILE *in);
