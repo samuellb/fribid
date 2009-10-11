@@ -31,7 +31,7 @@ clean:
 
 install:
 	install -d $(DESTDIR)$(LIB_PATH)
-	install -s -m 644 libplugins.so $(DESTDIR)$(LIB_PATH)
+	install -m 644 libplugins.so $(DESTDIR)$(LIB_PATH)
 	for path in $(NPAPI_PLUGIN_PATHS); do \
 	    (../configure --internal--remove-link $(DESTDIR)$$path/libplugins.so $(NPAPI_PLUGIN_LIB) || exit 1) && \
 	    install -d $(DESTDIR)$$path && \

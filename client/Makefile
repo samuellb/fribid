@@ -38,7 +38,7 @@ clean:
 install: sign gtk/sign.xml
 	install -d $(DESTDIR)$(LIB_PATH)
 	install -d $(DESTDIR)$(UI_PATH)
-	install -s sign $(DESTDIR)$(LIB_PATH)
+	install sign $(DESTDIR)$(LIB_PATH)
 	install -m 644 gtk/sign.xml $(DESTDIR)$(UI_PATH)
 
 uninstall:
