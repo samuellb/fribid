@@ -136,6 +136,18 @@ static bool addSignatureFile(GtkListStore *signatures, const char *filename,
     return (personCount != 0);
 }
 
+static void selectDefaultSignature() {
+    GtkTreeModel *model = gtk_combo_box_get_model(signaturesCombo);
+    GtkTreeIter iter = { .stamp = 0 };
+    
+    if (gtk_tree_model_get_iter_first(model, &iter) &&
+        !gtk_tree_model_iter_next(model, &iter)) {
+        // There's only one item, select it
+        gtk_tree_model_get_iter_first(model, &iter);
+        gtk_combo_box_set_active_iter(signaturesCombo, &iter);
+    }
+}
+
 void platform_startSign(const char *url, const char *hostname, const char *ip,
                         const char *subjectFilter, int parentWindowId) {
     
@@ -190,6 +202,8 @@ void platform_startSign(const char *url, const char *hostname, const char *ip,
     // Used to dim the "Sign" button when no signature has been selected
     g_signal_connect(G_OBJECT(signaturesCombo), "changed",
                      G_CALLBACK(validateDialog), NULL);
+    
+    selectDefaultSignature();
     
     passwordEntry = GTK_ENTRY(gtk_builder_get_object(builder, "password_entry"));
     
