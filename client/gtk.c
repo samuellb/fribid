@@ -205,7 +205,6 @@ void platform_startSign(const char *url, const char *hostname, const char *ip,
             GdkWindow *ourWindow = GTK_WIDGET(signDialog)->window;
             if (ourWindow != NULL) {
                 gdk_window_set_transient_for(ourWindow, parent);
-                gdk_window_set_modal_hint(ourWindow, TRUE);
                 transientOk = true;
                 //g_object_unref(G_OBJECT(ourWindow));
             }
@@ -220,6 +219,7 @@ void platform_startSign(const char *url, const char *hostname, const char *ip,
     platform_setMessage(NULL);
     validateDialog(NULL, NULL);
     
+    gtk_window_set_modal(GTK_WINDOW(signDialog), TRUE);
     gtk_widget_show(GTK_WIDGET(signDialog));
 }
 
