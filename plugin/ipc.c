@@ -41,34 +41,28 @@ static const char *versionOption = "--internal--bankid-version-string";
 static const char *ipcOption = "--internal--ipc";
 static const char *windowIdOption = "--internal--window-id";
 
-static int savedOut;
-static int savedIn;
-
 #define PIPE_READ_END  0
 #define PIPE_WRITE_END 1
-static int pipeIn[2];
-static int pipeOut[2];
 
-#define PIPEOUT (pipeOut[1])
-#define PIPEIN (pipeIn[0])
+typedef struct {
+    FILE *in;
+    FILE *out;
 
-static FILE *pipein;
-static FILE *pipeout;
+    pid_t child;
+} PipeInfo;
 
-static pid_t child;
-
-static void openPipes(const char *argv[]) {
-    savedOut = dup(STDOUT_FILENO);
-    savedIn = dup(STDIN_FILENO);
-    close(STDOUT_FILENO);
-    close(STDIN_FILENO);
+static void openPipes(PipeInfo *pipeinfo, const char *argv[]) {
+    int pipeIn[2];
+    int pipeOut[2];
     
     pipe(pipeIn);
     pipe(pipeOut);
     
-    child = fork();
-    if (child == 0) {
+    pipeinfo->child = fork();
+    if (pipeinfo->child == 0) {
         // Child process
+        close(STDOUT_FILENO);
+        close(STDIN_FILENO);
         close(pipeIn[PIPE_READ_END]);
         close(pipeOut[PIPE_WRITE_END]);
         dup2(pipeIn[PIPE_WRITE_END], STDOUT_FILENO);
@@ -86,88 +80,93 @@ static void openPipes(const char *argv[]) {
         close(pipeOut[PIPE_READ_END]);
         close(pipeIn[PIPE_WRITE_END]);
         
-        pipein = fdopen(PIPEIN, "r");
-        pipeout = fdopen(PIPEOUT, "w");
+        pipeinfo->in = fdopen(pipeIn[PIPE_READ_END], "r");
+        pipeinfo->out = fdopen(pipeOut[PIPE_WRITE_END], "w");
     }
 }
 
-static void openVersionPipes() {
+static void openVersionPipes(PipeInfo *pipeinfo) {
     const char *argv[] = {
         mainBinary, versionOption, (char *)NULL,
     };
-    openPipes(argv);
+    openPipes(pipeinfo, argv);
 }
 
-static void openInteractivePipes(Plugin *plugin) {
+static void openInteractivePipes(PipeInfo *pipeinfo, Plugin *plugin) {
     char windowId[11]; // This holds a native window id (such as an XID)
     const char *argv[] = {
         mainBinary, ipcOption, windowIdOption, windowId, (char *)NULL,
     };
     
     snprintf(windowId, 11, "%d", plugin->windowId);
-    openPipes(argv);
+    openPipes(pipeinfo, argv);
 }
 
-static void closePipes() {
-    close(PIPEOUT);
-    close(PIPEIN);
-    waitpid(child, NULL, WNOHANG);
+static void closePipes(PipeInfo *pipeinfo) {
+    fclose(pipeinfo->out);
+    fclose(pipeinfo->in);
+    waitpid(pipeinfo->child, NULL, WNOHANG);
 }
 
 
 char *version_getVersion(Plugin *plugin) {
     char buff[1000];
+    PipeInfo pipeinfo;
     
-    openVersionPipes();
-    if (fgets(buff, sizeof(buff), pipein) != NULL) {
+    openVersionPipes(&pipeinfo);
+    if (fgets(buff, sizeof(buff), pipeinfo.in) != NULL) {
         buff[strlen(buff)-1] = '\0';
     } else {
         buff[0] = '\0';
     }
-    closePipes();
+    closePipes(&pipeinfo);
     
     return strdup(buff);
 }
 
 
-static void sendSignCommon(const Plugin *plugin) {
-    pipe_sendString(pipeout, plugin->info.auth.challenge);
-    pipe_sendString(pipeout, (plugin->info.auth.policys != NULL ?
+static void sendSignCommon(PipeInfo pipeinfo, Plugin *plugin) {
+    pipe_sendString(pipeinfo.out, plugin->info.auth.challenge);
+    pipe_sendString(pipeinfo.out, (plugin->info.auth.policys != NULL ?
                               plugin->info.auth.policys : ""));
-    pipe_sendString(pipeout, plugin->url);
-    pipe_sendString(pipeout, plugin->hostname);
-    pipe_sendString(pipeout, plugin->ip);
+    pipe_sendString(pipeinfo.out, plugin->url);
+    pipe_sendString(pipeinfo.out, plugin->hostname);
+    pipe_sendString(pipeinfo.out, plugin->ip);
 }
 
 int sign_performAction_Authenticate(Plugin *plugin) {
-    openInteractivePipes(plugin);
-    pipe_sendCommand(pipeout, PMC_Authenticate);
+    PipeInfo pipeinfo;
     
-    sendSignCommon(plugin);
+    openInteractivePipes(&pipeinfo, plugin);
+    pipe_sendCommand(pipeinfo.out, PMC_Authenticate);
     
-    pipe_finishCommand(pipeout);
+    sendSignCommon(pipeinfo, plugin);
     
-    pipe_waitData(pipein);
-    plugin->lastError = pipe_readInt(pipein);
-    plugin->info.auth.signature = pipe_readString(pipein);
-    closePipes();
+    pipe_finishCommand(pipeinfo.out);
+    
+    pipe_waitData(pipeinfo.in);
+    plugin->lastError = pipe_readInt(pipeinfo.in);
+    plugin->info.auth.signature = pipe_readString(pipeinfo.in);
+    closePipes(&pipeinfo);
     return plugin->lastError;
 }
 
 int sign_performAction_Sign(Plugin *plugin) {
-    openInteractivePipes(plugin);
-    pipe_sendCommand(pipeout, PMC_Sign);
+    PipeInfo pipeinfo;
     
-    sendSignCommon(plugin);
-    pipe_sendString(pipeout, plugin->info.sign.message);
-    pipe_sendString(pipeout, plugin->info.sign.subjectFilter);
+    openInteractivePipes(&pipeinfo, plugin);
+    pipe_sendCommand(pipeinfo.out, PMC_Sign);
     
-    pipe_finishCommand(pipeout);
+    sendSignCommon(pipeinfo, plugin);
+    pipe_sendString(pipeinfo.out, plugin->info.sign.message);
+    pipe_sendString(pipeinfo.out, plugin->info.sign.subjectFilter);
     
-    pipe_waitData(pipein);
-    plugin->lastError = pipe_readInt(pipein);
-    plugin->info.auth.signature = pipe_readString(pipein);
-    closePipes();
+    pipe_finishCommand(pipeinfo.out);
+    
+    pipe_waitData(pipeinfo.in);
+    plugin->lastError = pipe_readInt(pipeinfo.in);
+    plugin->info.auth.signature = pipe_readString(pipeinfo.in);
+    closePipes(&pipeinfo);
     return plugin->lastError;
 }
 
