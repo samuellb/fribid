@@ -22,7 +22,7 @@
                 <child>
                   <widget class="GtkLabel" id="header_op">
                     <property name="visible">True</property>
-                    <property name="label">&lt;big&gt;&lt;b&gt;Log in to: &lt;/b&gt;&lt;/big&gt;
+                    <property name="label">&lt;big&gt;&lt;b&gt;Prove identity to: &lt;/b&gt;&lt;/big&gt;
 &lt;small&gt; &lt;/small&gt;</property>
                     <property name="use_markup">True</property>
                   </widget>
@@ -62,7 +62,7 @@
               <widget class="GtkLabel" id="sign_label">
                 <property name="visible">True</property>
                 <property name="xalign">0</property>
-                <property name="label" translatable="yes">Information to sign:</property>
+                <property name="label" translatable="yes">Text to sign:</property>
               </widget>
               <packing>
                 <property name="expand">False</property>
@@ -101,7 +101,7 @@
                   <widget class="GtkLabel" id="label_signature">
                     <property name="visible">True</property>
                     <property name="xalign">0</property>
-                    <property name="label" translatable="yes">Signature:</property>
+                    <property name="label" translatable="yes">Identity:</property>
                     <property name="use_underline">True</property>
                     <property name="mnemonic_widget">signature_combo</property>
                   </widget>
@@ -209,7 +209,7 @@
                           <widget class="GtkLabel" id="buttonlabel_sign">
                             <property name="visible">True</property>
                             <property name="xalign">0</property>
-                            <property name="label" translatable="yes">_Log in</property>
+                            <property name="label" translatable="yes">_Prove identity</property>
                             <property name="use_underline">True</property>
                           </widget>
                         </child>

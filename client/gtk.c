@@ -287,9 +287,9 @@ void platform_setMessage(const char *message) {
         gtk_widget_hide(signLabel);
         gtk_widget_hide(signScroller);
         
-        gtk_window_set_title(GTK_WINDOW(signDialog), _("Authentication"));
-        gtk_label_set_label(GTK_LABEL(operationLabel), _("<big><b>Log in to: </b></big>"));
-        gtk_label_set_label(signButtonLabel, _("_Log in"));
+        gtk_window_set_title(GTK_WINDOW(signDialog), _("Identification"));
+        gtk_label_set_label(GTK_LABEL(operationLabel), _("<big><b>Prove identity to: </b></big>"));
+        gtk_label_set_label(signButtonLabel, _("_Prove identity"));
     } else {
         GtkTextBuffer *textBuffer = gtk_text_view_get_buffer(signText);
         gtk_text_buffer_set_text(textBuffer, message, strlen(message));
@@ -298,7 +298,7 @@ void platform_setMessage(const char *message) {
         gtk_widget_show(signScroller);
         
         gtk_window_set_title(GTK_WINDOW(signDialog), _("Signing"));
-        gtk_label_set_label(GTK_LABEL(operationLabel), _("<big><b>Site: </b></big>"));
+        gtk_label_set_label(GTK_LABEL(operationLabel), _("<big><b>Signing on: </b></big>"));
         gtk_label_set_label(GTK_LABEL(signButtonLabel), _("_Sign"));
     }
 }
@@ -383,7 +383,7 @@ bool platform_sign(char **signature, int *siglen, KeyfileSubject **person, char 
 }
 
 void platform_signError() {
-    showMessage(GTK_MESSAGE_ERROR, _("Signing/authentication failed. Maybe the password is incorrect?"));
+    showMessage(GTK_MESSAGE_ERROR, _("The identity file couldn't be decoded. Maybe the password is incorrect?"));
 }
 
 void platform_versionExpiredError() {
