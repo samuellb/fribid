@@ -136,6 +136,33 @@ static bool addSignatureFile(GtkListStore *signatures, const char *filename,
     return (personCount != 0);
 }
 
+static bool removeSignatureFile(GtkTreeModel *signatures, const char *filename) {
+    GtkTreeIter iter = { .stamp = 0 };
+    
+    bool valid = gtk_tree_model_get_iter_first(signatures, &iter);
+    while (valid) {
+        char *displayName;
+        char *otherFilename;
+        KeyfileSubject *person;
+        
+        gtk_tree_model_get(signatures, &iter,
+                           0, &displayName,
+                           1, &person,
+                           2, &otherFilename, -1);
+        if (!strcmp(filename, otherFilename)) {
+            // Remove this signature
+            free(displayName);
+            free(otherFilename);
+            keyfile_freeSubject(person);
+            valid = gtk_list_store_remove(GTK_LIST_STORE(signatures), &iter);
+        } else {
+            valid = gtk_tree_model_iter_next(signatures, &iter);
+        }
+    }
+    
+    return false;
+}
+
 static void selectDefaultSignature() {
     GtkTreeModel *model = gtk_combo_box_get_model(signaturesCombo);
     GtkTreeIter iter = { .stamp = 0 };
@@ -287,9 +314,11 @@ static void selectExternalFile() {
             NULL));
     if (gtk_dialog_run(GTK_DIALOG(chooser)) == GTK_RESPONSE_ACCEPT) {
         gchar *filename = gtk_file_chooser_get_filename(chooser);
+        GtkTreeModel *signatures = gtk_combo_box_get_model(signaturesCombo);
+        
+        removeSignatureFile(signatures, filename);
         
         // Add an item to the signatures list and select it
-        GtkTreeModel *signatures = gtk_combo_box_get_model(signaturesCombo);
         GtkTreeIter iter = { .stamp = 0 };
         ok = addSignatureFile(GTK_LIST_STORE(signatures), filename, &iter);
         if (ok) gtk_combo_box_set_active_iter(signaturesCombo, &iter);
