@@ -33,9 +33,11 @@ LOCALEDIR=`../configure --internal--get-define=LOCALEDIR`
 MOFILES=sv.mo
 LANGUAGES=sv
 
+DEFINES=../common/config.h ../common/defines.h
+
 all: template.pot $(MOFILES)
 
-template.pot: $(POTFILES)
+template.pot: $(POTFILES) $(DEFINES)
 	xgettext -k_ -d $(DOMAIN) --package-name=$(PACKAGENAME) --package-version=$(PACKAGEVERSION) --copyright-holder='YOUR NAME' -o $@ $(POTFILES)
 
 .po.mo:
@@ -56,4 +58,8 @@ uninstall:
 	done 
 
 .PHONY: all clean install uninstall
+
+../common/config.h:
+	@echo "You must run ./configure first." >&2 && false
+../common/defines.h:
 
