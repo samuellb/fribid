@@ -20,9 +20,10 @@
 #  THE SOFTWARE.
 #
 
-COMMONCFLAGS=-O2 -g -Wall -Wextra -std=c99 -pedantic -Wno-unused-parameter
+CFLAGS ?= -O2 -g
+COMMONCFLAGS=$(CFLAGS) -Wall -Wextra -std=c99 -pedantic -Wno-unused-parameter
 CCFLAGS=$(COMMONCFLAGS) -I../npapi/include `pkg-config --cflags 'gtk+-2.0 >= 2.12' glib-2.0 'nss >= 3.10' nspr` -DGTK_DISABLE_DEPRECATED=1 -DGDK_DISABLE_DEPRECATED=1 -DG_DISABLE_DEPRECATED=1
-LINKFLAGS=-Wl,--as-needed
+LINKFLAGS=$(CFLAGS) $(LDFLAGS) -Wl,--as-needed
 LIBS=`pkg-config --libs 'gtk+-2.0 >= 2.12' glib-2.0 'nss >= 3.10' nspr`
 
 # Files to be installed

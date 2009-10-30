@@ -20,9 +20,10 @@
 #  THE SOFTWARE.
 #
 
-COMMONCFLAGS=-O2 -g -Wall -Wextra -std=c99 -pedantic -Wno-unused-parameter
+CFLAGS ?= -O2 -g
+COMMONCFLAGS=$(CFLAGS) -Wall -Wextra -std=c99 -pedantic -Wno-unused-parameter
 CCFLAGS=$(COMMONCFLAGS) -I../npapi -fPIC -fvisibility=hidden `pkg-config --cflags glib-2.0` -DG_DISABLE_DEPRECATED=1
-LINKFLAGS=-Wl,-z,defs,-soname,libplugins.so
+LINKFLAGS=$(CFLAGS) $(LDFLAGS) -Wl,-z,defs,-soname,libplugins.so
 LIBS=-lc `pkg-config --libs glib-2.0`
 
 # Files to be installed
