@@ -193,81 +193,33 @@ void platform_asyncCall(AsyncCallFunction *function, void *param) {
     }
 }
 
-struct PlatformSocket {
-    int sock;
-};
-
-PlatformSocket *platform_connectToHost(const char *hostname, bool isNumeric, int port) {
-    assert((port > 0) && (port <= 65535));
+/**
+ * Looks up an A record, and returns it as an 32-bit integer.
+ * Useful for API:s that use DNS.
+ */
+uint32_t platform_lookupTypeARecord(const char *hostname) {
+    assert(hostname != NULL);
     
     const struct addrinfo hints = {
-        .ai_flags = (isNumeric ? AI_NUMERICHOST : 0),
-        // FIXME: Autodetection (isNumeric==false) won't work
-        .ai_family = (!isNumeric || strchr(hostname, ':') ? AF_INET6 : AF_INET),
+        .ai_flags = 0,
+        .ai_family = AF_INET,
         .ai_socktype = SOCK_STREAM,
     };
     struct addrinfo *ai;
-    const struct addrinfo *currentAddr;
     
-    char service[6];
-    sprintf(service, "%d", port);
-    if (getaddrinfo(hostname, service, &hints, &ai) != 0) {
-        return NULL;
+    if (getaddrinfo(hostname, NULL, &hints, &ai) != 0) {
+        return 0;
     }
     
-    // Try all matching addresses
-    int sock;
-    for (currentAddr = ai; currentAddr != NULL; currentAddr = currentAddr->ai_next) {       
-        sock = socket(currentAddr->ai_family, currentAddr->ai_socktype,
-                          currentAddr->ai_protocol);
-        if (sock == -1) continue;
-        
-        if (connect(sock, currentAddr->ai_addr, currentAddr->ai_addrlen) != -1) {
-            // Connected
-            break;
-        }
-        close(sock);
+    if (ai == NULL) return 0;
+    
+    uint32_t arecord = 0;
+    if (ai->ai_addr && ai->ai_addr->sa_family == AF_INET) {
+        arecord = ntohl(((struct sockaddr_in*)ai->ai_addr)->sin_addr.s_addr);
     }
     
     freeaddrinfo(ai);
-    if (currentAddr) {
-        PlatformSocket *ps = malloc(sizeof(PlatformSocket));
-        ps->sock = sock;
-        return ps;
-    } else {
-        return NULL;
-    }
+    return arecord;
 }
 
-bool platform_socketSend(PlatformSocket *ps, const char *data, int length) {
-    return (send(ps->sock, data, length, 0) == length);
-}
-
-bool platform_socketReceive(PlatformSocket *ps, char **data, int *length) {
-    // Wait for data
-    char dummy;
-    recv(ps->sock, &dummy, 1, MSG_PEEK);
-    
-    if (ioctl(ps->sock, FIONREAD, length) == -1) {
-        *data = NULL;
-        *length = 0;
-        return false;
-    }
-    
-    *data = malloc((*length)+1);
-    if (recv(ps->sock, *data, *length, 0) == *length) {
-        (*data)[*length] = '\0';
-        return true;
-    } else {
-        free(*data);
-        *data = NULL;
-        *length = 0;
-        return false;
-    }
-}
-
-void platform_closeSocket(PlatformSocket *socket) {
-    close(socket->sock);
-    free(socket);
-}
 

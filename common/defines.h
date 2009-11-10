@@ -9,6 +9,10 @@
 #define BINNAME             "fribid"
 #define RELEASE_TIME        1245853443
 
+#define EMULATED_VERSION    "4.10.2.16"
+#define DNSVERSION          "1"
+#define STATUSDOMAIN        ".status.fribid.se"
+
 #define LIB_PATH            EPREFIX "/lib/" BINNAME
 #define SHARE_PATH          PREFIX "/share/" BINNAME
 #define LOCALEDIR           PREFIX "/share/locale"

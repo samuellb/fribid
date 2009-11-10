@@ -26,6 +26,7 @@
 #define __PLATFORM_H__
 
 #include <stdbool.h>
+#include <stdint.h>
 
 /* Initialization */
 void platform_init(int *argc, char ***argv);
@@ -77,11 +78,7 @@ typedef void (AsyncCallFunction) (void *);
 void platform_asyncCall(AsyncCallFunction *function, void *param);
 
 /* Network */
-typedef struct PlatformSocket PlatformSocket;
-PlatformSocket *platform_connectToHost(const char *hostname, bool isNumeric, int port);
-bool platform_socketSend(PlatformSocket *ps, const char *data, int length);
-bool platform_socketReceive(PlatformSocket *ps, char **data, int *length);
-void platform_closeSocket(PlatformSocket *ps);
+uint32_t platform_lookupTypeARecord(const char *hostname);
 
 /* User interface */
 void platform_mainloop();

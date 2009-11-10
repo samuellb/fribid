@@ -45,7 +45,7 @@ void bankid_shutdown() {
     keyfile_shutdown();
 }
 
-static const char *emulatedVersion = "4.10.2.16";
+static const char *defaultEmulatedVersion = EMULATED_VERSION;
 
 #define EXPIRY_RAND (rand() % 65535)
 #define DEFAULT_EXPIRY (RELEASE_TIME + 30*24*3600)
@@ -57,146 +57,70 @@ static const char *emulatedVersion = "4.10.2.16";
  */
 static char *getVersionString() {
     static const char *template =
-        "Personal=4.10.2.16&libtokenapi_so=4.10.2.16&libBranding_so=4.10.2.16&libCardSetec_so=4.10.2.16&libCardPrisma_so=4.10.2.16&libCardSiemens_so=4.10.2.16&libplugins_so=4.10.2.16&libP11_so=4.10.2.16&libai_so=4.10.2.16&personal_bin=4.10.2.16&"
-        "platform=linux&distribution=ubuntu&os_version=8.04&best_before=%" PRId64 "&";
+        "Personal=%1$s&libtokenapi_so=%1$s&libBranding_so=%1$s&libCardSetec_so=%1$s&libCardPrisma_so=%1$s&libCardSiemens_so=%1$s&libplugins_so=%1$s&libP11_so=%1$s&libai_so=%1$s&personal_bin=%1$s&"
+        "platform=linux&distribution=ubuntu&os_version=8.04&best_before=%2$" PRId64 "&";
     
     long lexpiry;
     int64_t expiry;
+    char *versionToEmulate;
     
     PlatformConfig *cfg = platform_openConfig(BINNAME, "expiry");
+    
     if (platform_getConfigInteger(cfg, "expiry", "best-before", &lexpiry)) {
         expiry = lexpiry;
     } else {
         expiry = DEFAULT_EXPIRY;
     }
+    
+    if (!platform_getConfigString(cfg, "expiry", "version-to-emulate", &versionToEmulate)) {
+        versionToEmulate = (char *)defaultEmulatedVersion;
+    }
+    
     platform_freeConfig(cfg);
     
-    char *result = malloc(strlen(template) -1 + 21 + 1);
-    sprintf(result, template, expiry);
+    char *result = malloc(strlen(template) -11*4 +
+                          10*strlen(versionToEmulate) + 1*21 + 1);
+    sprintf(result, template, versionToEmulate, expiry);
+    
+    if (versionToEmulate != defaultEmulatedVersion) {
+        free(versionToEmulate);
+    }
     return result;
 }
 
-/*
- * Since we attempt to emulate a version of Nexus Personal, we have
- * avoid using any expired version strings, because such behaviour would
- * be unexpected by the server and could create weird errors.
- *
- * Currently, FriBID doesn't check it's own version for expiry.
- */
-static const char *checkHost = "159.72.128.183";
-
-static void connectionError() {
-    fprintf(stderr, BINNAME ": failed to connect to %s and check version validity\n", checkHost);
-}
-
 /**
- * Checks the validity of the emulated version.
+ * Checks the validity of the current version and gets the maximum version
+ * that we can emulate. This works by sending a DNS A request and parsing
+ * the result. The left-most octet is always 127. The remaining octets make
+ * up a 24-bit integer, where the octet to the left is the most significant.
+ * The highest two bits make up a status code. The following 4, 6, 6 and 6
+ * bits make up components of the version, in from the left to the right.
  *
  * @param valid  This variable will receive the status.
  *
  * @return  true if successful, false if not.
  */
-static bool checkValidity(bool *valid) {
-    static const char *template =
-        "POST / HTTP/1.1\r\n"
-        "Host: 159.72.128.183\r\n"
-        "Content-Length: %d\r\n"
-        "User-Agent: "BINNAME"\r\n"
-        "Cache-Control: no-cache\r\n"
-        "Content-Type: application/xml; charset=utf-8\r\n"
-        "\r\n"
-        "<?xml version=\"1.0\"?>"
-        "<autoUpdateRequest>"
-            "<requestVersion>1.0</requestVersion>"
-            "<versionString>%s</versionString>"
-        "</autoUpdateRequest>";
+static bool checkValidity(bool *valid, char **versionToEmulate) {
+    uint32_t response = platform_lookupTypeARecord(DNSVERSION STATUSDOMAIN);
+    fprintf(stderr, "checkValidity %" PRIu32 "\n", response);
     
+    if (response >> 24 != 127) return false;
     
-    char *versionString = getVersionString();
-    char *request = malloc(strlen(template) - 2*2 +
-                           10 + strlen(versionString) + 1);
-    sprintf(request, template, 127+strlen(versionString), versionString);
-    free(versionString);
+    enum { OK = 1, EXPIRED = 2 } status = (response >> 22) & 0x3;
     
-    PlatformSocket *sock = platform_connectToHost(checkHost, true, 80);
+    if ((status != OK) && (status != EXPIRED)) return false;
     
-    if (!sock) {
-        connectionError();
-        free(request);
-        return false;
-    }
+    *valid = (status == OK);
     
-    if (!platform_socketSend(sock, request, strlen(request))) {
-        connectionError();
-        free(request);
-        platform_closeSocket(sock);
-        return false;
-    }
-    free(request);
+    *versionToEmulate = malloc(4*3*sizeof(char));
+    if (!*versionToEmulate) return false;
     
-    char *response;
-    int responseLen;
-    // FIXME: The server could send the response in multiple packets...
-    // Note that this function zero-terminates the buffer
-    if (!platform_socketReceive(sock, &response, &responseLen)) {
-        connectionError();
-        platform_closeSocket(sock);
-        return false;
-    }
-    platform_closeSocket(sock);
+    sprintf(*versionToEmulate, "%d.%d.%d.%d",
+            (response >> 18) & 0xF,
+            (response >> 12) & 0x3F,
+            (response >> 6) & 0x3F,
+            response & 0x3F);
     
-    static const char *httpOk = "HTTP/1.1 200 ";
-    
-    const bool httpIsOk = (strncmp(response, httpOk, strlen(httpOk)) == 0);
-    const char *headersEnd = strstr(response, "\r\n\r\n");
-    if (!httpIsOk || !headersEnd) {
-        // Not OK
-        connectionError();
-        free(response);
-        platform_closeSocket(sock);
-        return false;
-    }
-    
-    // Skip needless "Byte Order Mark"
-    const char *ZWSP = "\357\273\277";
-    const char *xml = headersEnd+4;
-    if (strncmp(xml, ZWSP, 3) == 0) {
-        xml += 3;
-    }
-    
-    static const char *start =
-        "<?xml version=\"1.0\" encoding=\"utf-8\"?>"
-        "<autoUpdateResponse><responseVersion>1.0</responseVersion><action>";
-    
-    static const char *end =
-        "</action></autoUpdateResponse>";
-    
-    if ((strlen(xml) <= strlen(start) + strlen(end)) ||
-        (strncmp(xml, start, strlen(start)) != 0)) {
-        connectionError();
-        free(response);
-        return false;
-    }
-    
-    const char *status = xml + strlen(start);
-    const int statusLength = strcspn(status, "<");
-    
-    if (strcmp(status+statusLength, end) != 0) {
-        connectionError();
-        free(response);
-        return false;
-    }
-    
-    if (strncmp(status, "OK", statusLength) == 0) {
-        *valid = true;
-    } else if (strncmp(status, "Revoked", statusLength) == 0) {
-        *valid = false;
-    } else {
-        free(response);
-        return false;
-    }
-    
-    free(response);
     return true;
 }
 
@@ -207,15 +131,18 @@ static bool checkValidity(bool *valid) {
 static void versionCheckFunction(void *ignored) {
     PlatformConfig *cfg = platform_openConfig(BINNAME, "expiry");
     bool valid;
+    char *versionToEmulate;
     
-    if (checkValidity(&valid)) {
+    if (checkValidity(&valid, &versionToEmulate)) {
         if (valid) {
             platform_setConfigInteger(cfg, "expiry", "best-before",
                                       time(NULL) - EXPIRY_RAND + 30*24*3600);
         }
         platform_setConfigBool(cfg, "expiry", "still-valid", valid);
-        platform_setConfigString(cfg, "expiry", "checked-with-emulated-version", emulatedVersion);
+        platform_setConfigString(cfg, "expiry", "version-to-emulate", versionToEmulate);
+        platform_setConfigString(cfg, "expiry", "checked-with-version", DNSVERSION);
         platform_saveConfig(cfg);
+        free(versionToEmulate);
     }
     
     platform_freeConfig(cfg);
@@ -244,11 +171,11 @@ void bankid_checkVersionValidity() {
     }
     
     char *checkedWithVersion = NULL;
-    if (!platform_getConfigString(cfg, "expiry", "checked-with-emulated-version", &checkedWithVersion)) {
+    if (!platform_getConfigString(cfg, "expiry", "checked-with-version", &checkedWithVersion)) {
         maybeValid = true;
-    } else if (strcmp(checkedWithVersion, emulatedVersion) != 0) {
+    } else if (strcmp(checkedWithVersion, DNSVERSION) != 0) {
         // The check was done with another version, so the current version
-        // might still not have expired even if the old version has.
+        // might not have expired even if the old version has expired.
         maybeValid = true;
     }
     free(checkedWithVersion);
