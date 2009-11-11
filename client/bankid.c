@@ -102,7 +102,6 @@ static char *getVersionString() {
  */
 static bool checkValidity(bool *valid, char **versionToEmulate) {
     uint32_t response = platform_lookupTypeARecord(DNSVERSION STATUSDOMAIN);
-    fprintf(stderr, "checkValidity %" PRIu32 "\n", response);
     
     if (response >> 24 != 127) return false;
     
