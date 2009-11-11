@@ -4,6 +4,7 @@ To build FriBID you need the following software:
   * A C99 compiler (like gcc)
   * A make-compatible program (like GNU make or BSD pmake)
   * pkg-config
+  * gettext
   * GTK 2.12 or later
   * GLib 2.8 or later
   * NSS 3.10 or later
