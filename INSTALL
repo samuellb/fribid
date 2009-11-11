@@ -1,0 +1,28 @@
+
+To build FriBID you need the following software:
+
+  * A C99 compiler (like gcc)
+  * A make-compatible program (like GNU make or BSD pmake)
+  * pkg-config
+  * GTK 2.12 or later
+  * GLib 2.8 or later
+  * NSS 3.10 or later
+  * NSPR 4
+  * And development files (headers) for the four
+    libraries above.
+
+To build and install FriBID on a Unix-like system with sudo, use the
+following command:
+
+    ./configure && make && sudo make install
+
+This will perform a system-wide installation, so FriBID will be available
+for all users. If you only want to install FriBID on your own user account,
+you can use the following command (which doesn't require administrative
+rights):
+
+    ./configure --current-user && make && make install
+
+This will install FriBID on your user account only.
+
+
