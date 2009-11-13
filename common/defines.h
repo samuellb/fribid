@@ -31,7 +31,7 @@
 #define PACKAGEVERSION      "0.1.0"
 
 #define BINNAME             "fribid"
-#define RELEASE_TIME        1245853443
+#define RELEASE_TIME        1258109626
 
 #define EMULATED_VERSION    "4.10.2.16"
 #define DNSVERSION          "1"
