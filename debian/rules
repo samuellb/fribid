@@ -1,0 +1,53 @@
+#!/usr/bin/make -f
+# -*- makefile -*-
+
+# Uncomment this to turn on verbose mode.
+#export DH_VERBOSE=1
+
+configure:
+configure-stamp:
+	dh_testdir
+	./configure --prefix=/usr --plugin-path=/usr/lib/iceweasel/plugins --plugin-path=/usr/lib/mozilla/plugins --plugin-path=/usr/lib/midbrowser/plugins --plugin-path=/usr/lib/xulrunner-addons/plugins --plugin-path=/usr/lib/firefox/plugins --plugin-path=/usr/lib/xulrunner/plugins --plugin-path=/usr/lib/iceape/plugins
+	touch $@
+
+build: build-stamp
+build-stamp: configure-stamp
+	dh_testdir
+	$(MAKE)
+	touch $@
+
+clean:
+	dh_testdir
+	dh_testroot
+	rm -f configure-stamp build-stamp
+	rm -rf $(CURDIR)/debian/fribid
+	$(MAKE) clean
+	dh_clean
+
+install: build
+	dh_testdir
+	dh_testroot
+	dh_prep
+	dh_installdirs
+	$(MAKE) DESTDIR=$(CURDIR)/debian/fribid install
+
+build-indep: build install
+
+binary-arch: build install
+	dh_testdir
+	dh_testroot
+	dh_installchangelogs
+	dh_installdocs
+	dh_link
+	dh_strip
+	dh_compress
+	dh_fixperms
+	dh_installdeb
+	dh_shlibdeps /usr/lib/fribid/libplugins.so /usr/lib/fribid/sign
+	dh_gencontrol
+	dh_md5sums
+	dh_builddeb
+
+binary: binary-indep binary-arch
+.PHONY: build clean binary-indep binary-arch binary install configure
+

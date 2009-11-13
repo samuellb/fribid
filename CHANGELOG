@@ -1,4 +1,9 @@
 
+0.1.0 - 2009-11-13
+  * Fixed a couple of non-critical errors in the makefiles.
+  * Added build files for the Debian package format.
+
+
 0.0.9a - 2009-11-13
   * Added license headers to a few files that lacked this information.
 
