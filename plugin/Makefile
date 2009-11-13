@@ -23,7 +23,7 @@
 CFLAGS ?= -O2 -g
 COMMONCFLAGS=$(CFLAGS) -Wall -Wextra -std=c99 -pedantic -Wno-unused-parameter
 CCFLAGS=$(COMMONCFLAGS) -I../npapi -fPIC -fvisibility=hidden `pkg-config --cflags glib-2.0` -DG_DISABLE_DEPRECATED=1
-LINKFLAGS=$(CFLAGS) $(LDFLAGS) -Wl,-z,defs,-soname,libplugins.so
+LINKFLAGS=$(CFLAGS) $(LDFLAGS) -Wl,-z,defs,-soname,libfribidplugin.so
 LIBS=-lc `pkg-config --libs glib-2.0`
 
 # Files to be installed
@@ -33,7 +33,7 @@ NPAPI_PLUGIN_PATHS=`../configure --internal--get-define=NPAPI_PLUGIN_PATHS`
 
 OBJECTS=ipc.o npmain.o npobject.o plugin.o pipe.o npn_gate.o np_entry.o
 
-all: libplugins.so
+all: libfribidplugin.so
 
 ipc.o: ../common/pipe.h plugin.h
 npmain.o: npobject.h plugin.h
@@ -46,27 +46,27 @@ npn_gate.o: ../npapi/npn_gate.c
 .c.o:
 	$(CC) $(CCFLAGS) -c $< -o $@
 
-libplugins.so: $(OBJECTS)
+libfribidplugin.so: $(OBJECTS)
 	$(CC) -shared $(LINKFLAGS) -o $@ $(OBJECTS) $(LIBS)
 
 .PHONY: all clean install uninstall
 clean:
-	rm -f $(OBJECTS) libplugins.so
+	rm -f $(OBJECTS) libfribidplugin.so
 
 install:
 	install -d $(DESTDIR)$(LIB_PATH)
-	install -m 644 libplugins.so $(DESTDIR)$(LIB_PATH)
+	install -m 644 libfribidplugin.so $(DESTDIR)$(LIB_PATH)
 	for path in $(NPAPI_PLUGIN_PATHS); do \
-	    (../configure --internal--remove-link $(DESTDIR)$$path/libplugins.so $(NPAPI_PLUGIN_LIB) || exit 1) && \
+	    (../configure --internal--remove-link $(DESTDIR)$$path/libfribidplugin.so $(NPAPI_PLUGIN_LIB) || exit 1) && \
 	    install -d $(DESTDIR)$$path && \
-	    ln -s $(NPAPI_PLUGIN_LIB) $(DESTDIR)$$path/libplugins.so; \
+	    ln -s $(NPAPI_PLUGIN_LIB) $(DESTDIR)$$path/libfribidplugin.so; \
 	done
 
 uninstall:
 	rm -f $(DESTDIR)$(NPAPI_PLUGIN_LIB)
 	[ ! -d $(DESTDIR)$(LIB_PATH) ] || rmdir $(DESTDIR)$(LIB_PATH) 2> /dev/null || true
 	for path in $(NPAPI_PLUGIN_PATHS); do \
-	    ../configure --internal--remove-link $(DESTDIR)$$path/libplugins.so $(NPAPI_PLUGIN_LIB) || exit 1; \
+	    ../configure --internal--remove-link $(DESTDIR)$$path/libfribidplugin.so $(NPAPI_PLUGIN_LIB) || exit 1; \
 	done
 
 $(OBJECTS): ../common/defines.h ../common/config.h

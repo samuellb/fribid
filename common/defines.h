@@ -45,7 +45,7 @@
 #define SIGNING_EXECUTABLE  LIB_PATH "/sign"
 #define UI_PATH             SHARE_PATH "/ui"
 #define UI_GTK_XML          UI_PATH "/sign.xml"
-#define NPAPI_PLUGIN_LIB    LIB_PATH "/libplugins.so"
+#define NPAPI_PLUGIN_LIB    LIB_PATH "/libfribidplugin.so"
 
 #endif
 

@@ -43,7 +43,7 @@ binary-arch: build install
 	dh_compress
 	dh_fixperms
 	dh_installdeb
-	dh_shlibdeps /usr/lib/fribid/libplugins.so /usr/lib/fribid/sign
+	dh_shlibdeps /usr/lib/fribid/libfribidplugin.so /usr/lib/fribid/sign
 	dh_gencontrol
 	dh_md5sums
 	dh_builddeb
