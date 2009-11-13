@@ -1,5 +1,5 @@
 
-2009-11-13  Samuel Lidén Borell:
+2009-11-13. Changed by Samuel Lidén Borell:
 
   * Added a dummy function for compatibility with Opera
   * Changed the syntax mode in the header to C, and changed
