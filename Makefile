@@ -30,8 +30,28 @@ all clean install uninstall:
 distclean: clean
 	rm -f common/config.h
 
+# Package creation
+dist-all: distsig distdebsig
+
 dist:
-	git archive --format=tar --prefix=$(DISTNAME)/ HEAD | bzip2 > $(DISTNAME).tar.bz2  
+	git archive --format=tar --prefix=$(DISTNAME)/ HEAD | bzip2 > $(DISTDESTDIR)$(DISTNAME).tar.bz2
+
+distsig: dist
+	gpg --sign $(DISTDESTDIR)$(DISTNAME).tar.bz2
+
+distdeb: dist
+	distname=$(DISTNAME) && \
+	distdest=$(DISTDESTDIR) && \
+	tdir=`mktemp -d` && \
+	(cp $$distdest$$distname.tar.bz2 $$tdir && cd $$tdir && \
+	    tar xjf $$distname.tar.bz2 && \
+	    cd $$distname && dpkg-buildpackage -rfakeroot) && \
+	cp $$tdir/*.deb $$distdest && \
+	rm -rf $$tdir
+
+distdebsig: distdeb
+	# FIXME should not use *
+	for deb in $(DISTDESTDIR)*.deb; do gpg -o $$deb.sig --sign $$deb; done
 
 .PHONY: all clean dist distclean install uninstall $(SUBDIRS)
 
