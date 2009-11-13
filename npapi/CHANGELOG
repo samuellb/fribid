@@ -1,0 +1,8 @@
+
+2009-11-13  Samuel Lidén Borell:
+
+  * Added a dummy function for compatibility with Opera
+  * Changed the syntax mode in the header to C, and changed
+    the indentation to 4 spaces.
+  * Disabled Java support (didn't compile and wasn't needed)
+
