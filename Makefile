@@ -45,8 +45,8 @@ distdeb: dist
 	tdir=`mktemp -d` && \
 	(cp $$distdest$$distname.tar.bz2 $$tdir && cd $$tdir && \
 	    tar xjf $$distname.tar.bz2 && \
-	    cd $$distname && dpkg-buildpackage -rfakeroot) && \
-	cp $$tdir/*.deb $$distdest && \
+	    cd $$distname && dpkg-buildpackage -uc -us -rfakeroot) && \
+	cp $$tdir/*.deb $$distdest./ && \
 	rm -rf $$tdir
 
 distdebsig: distdeb
