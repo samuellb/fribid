@@ -70,7 +70,7 @@ PlatformConfig *platform_openConfig(const char *appname,
 bool platform_saveConfig(PlatformConfig *config) {
     if (!config->changed) return true;
     
-    guint length;
+    gsize length;
     gchar *data = g_key_file_to_data(config->keyfile, &length, NULL);
     if (!data) return false;
     
