@@ -29,6 +29,7 @@
 #include <npapi.h>
 #include <npruntime.h>
 
+#include "../common/defines.h"
 #include "plugin.h"
 #include "npobject.h"
 
@@ -51,10 +52,10 @@ NPError NPP_Destroy(NPP instance, NPSavedData **save) {
 NPError NPP_GetValue(NPP instance, NPPVariable variable, void *value) {
     switch (variable) {
         case NPPVpluginNameString:
-            *((const char**)value) = "FriBID e-legitimation";
+            *((const char**)value) = PACKAGENAME;
             return NPERR_NO_ERROR;
         case NPPVpluginDescriptionString:
-            *((const char**)value) = "Insticksmodul för FriBID e-legitimation";
+            *((const char**)value) = PACKAGENAME " version " PACKAGEVERSION;
             return NPERR_NO_ERROR;
         case NPPVpluginScriptableNPObject:
             *((NPObject**)value) = (NPObject*)instance->pdata;
