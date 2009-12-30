@@ -45,7 +45,7 @@ void bankid_shutdown() {
     keyfile_shutdown();
 }
 
-static const char *defaultEmulatedVersion = EMULATED_VERSION;
+static const char defaultEmulatedVersion[] = EMULATED_VERSION;
 
 #define EXPIRY_RAND (rand() % 65535)
 #define DEFAULT_EXPIRY (RELEASE_TIME + 30*24*3600)
@@ -56,7 +56,7 @@ static const char *defaultEmulatedVersion = EMULATED_VERSION;
  * may or may not accept unofficial version strings.
  */
 static char *getVersionString() {
-    static const char *template =
+    static const char template[] =
         "Personal=%1$s&libtokenapi_so=%1$s&libBranding_so=%1$s&libCardSetec_so=%1$s&libCardPrisma_so=%1$s&libCardSiemens_so=%1$s&libplugins_so=%1$s&libP11_so=%1$s&libai_so=%1$s&personal_bin=%1$s&"
         "platform=linux&distribution=ubuntu&os_version=8.04&best_before=%2$" PRId64 "&";
     
@@ -212,7 +212,7 @@ char *bankid_getVersion() {
 }
 
 /* Authentication and signing objects */
-static const char *sign_template =
+static const char sign_template[] =
     "<bankIdSignedData xmlns=\"http://www.bankid.com/signature/v1.0.0/types\" Id=\"bidSignedData\">"
         "%s"
         "<srvInfo>"
@@ -228,12 +228,12 @@ static const char *sign_template =
         "</clientInfo>"
     "</bankIdSignedData>";
 
-static const char *signedText_template =
+static const char signedText_template[] =
     "<usrVisibleData charset=\"UTF-8\" visible=\"wysiwys\">"
         "%s"
     "</usrVisibleData>";
 
-static const char *signobj_id = "bidSignedData";
+static const char signobj_id[] = "bidSignedData";
 
 /**
  * Creates a BankID-compatible xmldsig signature

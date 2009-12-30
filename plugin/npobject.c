@@ -51,7 +51,7 @@ static char *strndup(const char *source, int maxLength) {
 }
 
 // Re-allocates a string with NPN_MemAlloc instead of malloc
-char *npstr(char *source) {
+static char *npstr(char *source) {
     int size = strlen(source)+1;
     char *dest = NPN_MemAlloc(size);
     memcpy(dest, source, size);
@@ -64,12 +64,12 @@ static bool getProperty(NPP instance, NPObject *obj, const char *name, NPVariant
     return NPN_GetProperty(instance, obj, ident, result);
 }
 
-static char *getWindowProperty(NPP instance, const char const *identifiers[]) {
+static char *getWindowProperty(NPP instance, const char *const identifiers[]) {
     NPObject *obj;
     
     NPN_GetValue(instance, NPNVWindowNPObject, &obj);
     
-    const char **identifier = &identifiers[0];
+    const char *const *identifier = &identifiers[0];
     while (1) {
         NPVariant value;
         
@@ -100,14 +100,14 @@ static char *getWindowProperty(NPP instance, const char const *identifiers[]) {
 }
 
 static char *getDocumentURL(NPP instance) {
-    static const char const *identifiers[] = {
+    static const char *const identifiers[] = {
         "document", "location", "href", NULL
     };
     return getWindowProperty(instance, identifiers);
 }
 
 static char *getDocumentHostname(NPP instance) {
-    static const char const *identifiers[] = {
+    static const char *const identifiers[] = {
         "document", "location", "hostname", NULL
     };
     return getWindowProperty(instance, identifiers);
@@ -147,7 +147,7 @@ static char *getDocumentIP(NPP instance) {
 /**
  * Returns the native ID of the browser window, or -1 on error.
  */
-int getWindowId(NPP instance) {
+static int getWindowId(NPP instance) {
     int id;
     if (NPN_GetValue(instance, NPNVnetscapeWindow, &id) == NPERR_NO_ERROR) {
         return id;

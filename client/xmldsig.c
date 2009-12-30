@@ -33,7 +33,7 @@
 #include "xmldsig.h"
 #include "misc.h"
 
-static const char *xmldsig_template = 
+static const char xmldsig_template[] = 
     "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>"
     "<Signature xmlns=\"http://www.w3.org/2000/09/xmldsig#\">"
         "%s"
@@ -42,7 +42,7 @@ static const char *xmldsig_template =
         "<Object>%s</Object>"
     "</Signature>";
 
-static const char *signedinfo_template =
+static const char signedinfo_template[] =
     "<SignedInfo xmlns=\"http://www.w3.org/2000/09/xmldsig#\">"
         "<CanonicalizationMethod Algorithm=\"http://www.w3.org/TR/2001/REC-xml-c14n-20010315\">"
         "</CanonicalizationMethod>"
@@ -65,12 +65,12 @@ static const char *signedinfo_template =
     "</SignedInfo>";
 
 
-static const char *keyinfo_template =
+static const char keyinfo_template[] =
     "<KeyInfo xmlns=\"http://www.w3.org/2000/09/xmldsig#\" Id=\"bidKeyInfo\">"
         "<X509Data>%s</X509Data>"
     "</KeyInfo>";
 
-static const char *cert_template =
+static const char cert_template[] =
     "<X509Certificate>%s</X509Certificate>";
 
 static char *sha_base64(const char *str) {

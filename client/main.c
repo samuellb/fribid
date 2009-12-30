@@ -33,7 +33,7 @@
 #include "platform.h"
 #include "misc.h"
 
-static const char *version = PACKAGEVERSION;
+static const char version[] = PACKAGEVERSION;
 static int browserWindowId = -1;
 
 /**

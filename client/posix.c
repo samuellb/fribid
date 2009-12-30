@@ -119,7 +119,7 @@ void platform_closeDir(PlatformDirIter *iter) {
 }
 
 PlatformDirIter *platform_openKeysDir() {
-    static const char *suffix = "/cbt";
+    static const char suffix[] = "/cbt";
     
     char *path = malloc(strlen(getenv("HOME")) + strlen(suffix) +1);
     strcpy(path, getenv("HOME"));
@@ -131,7 +131,7 @@ PlatformDirIter *platform_openKeysDir() {
 }
 
 void platform_makeRandomString(char *buff, int length) {
-    static const char *randChars =
+    static const char randChars[] =
         "0123456789_-ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
     
     for (int i = 0; i < length; i++) {
@@ -164,13 +164,13 @@ static char *makeTempDir(const char *template) {
 }
 
 char *platform_makeMemTempDir() {
-    static const char *paths[] = {
+    static const char *const paths[] = {
         "/dev/shm/" BINNAME "-%s.tmp",
         "/tmp/" BINNAME "-%s.tmp",
         NULL
     };
     
-    for (const char **path = paths; *path; path++) {
+    for (const char *const *path = paths; *path; path++) {
         char *dir = makeTempDir(*path);
         if (dir) return dir;
     }

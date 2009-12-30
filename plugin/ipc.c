@@ -36,10 +36,10 @@
 #include "../common/pipe.h"
 #include "plugin.h"
 
-static const char *mainBinary = SIGNING_EXECUTABLE;
-static const char *versionOption = "--internal--bankid-version-string";
-static const char *ipcOption = "--internal--ipc";
-static const char *windowIdOption = "--internal--window-id";
+static const char mainBinary[] = SIGNING_EXECUTABLE;
+static const char versionOption[] = "--internal--bankid-version-string";
+static const char ipcOption[] = "--internal--ipc";
+static const char windowIdOption[] = "--internal--window-id";
 
 #define PIPE_READ_END  0
 #define PIPE_WRITE_END 1

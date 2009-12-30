@@ -85,12 +85,12 @@ bool is_canonical_base64(const char *encoded) {
 }
 
 bool is_valid_domain_name(const char *domain) {
-    static const char *allowed = "abcdefghijklmnopqrstuvwxyz0123456789-.";
+    static const char allowed[] = "abcdefghijklmnopqrstuvwxyz0123456789-.";
     return (strspn(domain, allowed) == strlen(domain));
 }
 
 bool is_valid_ip_address(const char *ip) {
-    static const char *allowed = "0123456789abcdef.[]:";
+    static const char allowed[] = "0123456789abcdef.[]:";
     return (strspn(ip, allowed) == strlen(ip));
 }
 
