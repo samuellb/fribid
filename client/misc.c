@@ -69,11 +69,14 @@ char *base64_decode(const char *encoded) {
 }
 
 bool is_canonical_base64(const char *encoded) {
-    char *decoded = base64_decode(encoded);
+    /* Try to decode */
+    unsigned int length;
+    char *decoded = (char*)ATOB_AsciiToData(encoded, &length);
     if (!decoded) return false;
     
-    char *recoded = base64_encode(decoded, strlen(decoded));
-    
+    /* Recode and verify that it's equal to the encoded data */
+    char *recoded = BTOA_DataToAscii((const unsigned char*)decoded, length);
+    removeNewlines(recoded);
     bool equal = !strcmp(recoded, encoded);
     
     free(recoded);
