@@ -114,7 +114,7 @@ char *pipe_readString(FILE *in) {
     }
     
     data[length] = '\0';
-    if (fread(data, length, 1, in) == 1) {
+    if ((length == 0) || (fread(data, length, 1, in) == 1)) {
         return data;
     } else {
         pipeError();

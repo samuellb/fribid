@@ -1,7 +1,12 @@
 
-0.1.0 - 2009-11-13
+0.1.0 - 2009-??-??
+  * Fixed the cause of the harmless but annoying "pipe error" messages.
+  * Renamed the plugin filename to libfribidplugin.so to prevent
+    installation conflicts with Nexus Personal.
+  * Fixed two compile errors on 64-bit platforms.
   * Fixed a couple of non-critical errors in the makefiles.
-  * Added build files for the Debian package format.
+  * Added build files for the Debian package format, and makefile rules
+    for .deb and .tar package creation.
 
 
 0.0.9a - 2009-11-13
