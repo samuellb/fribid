@@ -22,35 +22,20 @@
 
 */
 
-#ifndef __BANKID_H__
-#define __BANKID_H__
+#ifndef __BIDERROR_H__
+#define __BIDERROR_H__
 
-#include <stdbool.h>
-
-#include "keyfile.h"
-#include "../common/biderror.h"
-
-void bankid_init();
-void bankid_shutdown();
-void bankid_checkVersionValidity();
-bool bankid_versionHasExpired();
-char *bankid_getVersion();
-
-
-BankIDError bankid_authenticate(const char *p12Data, const int p12Length,
-                                const KeyfileSubject *person,
-                                const char *password,
-                                const char *challenge,
-                                const char *hostname, const char *ip,
-                                char **signature);
-
-BankIDError bankid_sign(const char *p12Data, const int p12Length,
-                        const KeyfileSubject *person,
-                        const char *password,
-                        const char *challenge,
-                        const char *hostname, const char *ip,
-                        const char *message,
-                        char **signature);
+typedef enum {
+    BIDERR_OK =                  0,
+    BIDERR_InternalError =       1,
+    BIDERR_UserCancel =       8002,
+    BIDERR_InvalidAction =    8008,
+    BIDERR_InvalidPIN =       8013,
+    BIDERR_NotSSL =           8015,
+    BIDERR_MissingParameter = 8016,
+    BIDERR_HostnameIsIP =     8019,
+    BIDERR_BlockedPIN =       8102,
+} BankIDError;
 
 #endif
 

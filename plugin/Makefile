@@ -39,7 +39,7 @@ ipc.o: ../common/pipe.h plugin.h
 npmain.o: npobject.h plugin.h
 npobject.o: npobject.h plugin.h
 pipe.o: ../common/pipe.h ../common/pipe.c
-plugin.o: plugin.h
+plugin.o: ../common/biderror.h plugin.h
 np_entry.o: ../npapi/np_entry.c
 npn_gate.o: ../npapi/npn_gate.c
 

@@ -37,11 +37,11 @@ OBJECTS=bankid.o keyfile.o main.o misc.o pipe.o posix.o glibconfig.o gtk.o xmlds
 
 all: sign
 
-bankid.o: bankid.h keyfile.h misc.h xmldsig.h
+bankid.o: ../common/biderror.h bankid.h keyfile.h misc.h xmldsig.h
 keyfile.o: keyfile.h misc.h platform.h
 glibconfig.o: platform.h
-gtk.o: platform.h bankid.h keyfile.h
-main.o: bankid.h misc.h platform.h ../common/pipe.h
+gtk.o: ../common/biderror.h platform.h bankid.h keyfile.h
+main.o: ../common/biderror.h bankid.h misc.h platform.h ../common/pipe.h
 misc.o: misc.h
 pipe.o: ../common/pipe.h ../common/pipe.c
 posix.o: platform.h

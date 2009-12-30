@@ -26,6 +26,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdbool.h>
+#include "../common/biderror.h"
 
 #include "plugin.h"
 
@@ -111,19 +112,19 @@ int sign_performAction(Plugin *plugin, const char *action) {
     plugin->lastError = PE_UnknownError;
     if ((plugin->type == PT_Authentication) && !strcmp(action, "Authenticate")) {
         if (!hasSignParams(plugin)) {
-            return 1;
+            return BIDERR_MissingParameter;
         } else {
             return sign_performAction_Authenticate(plugin);
         }
     } else if ((plugin->type == PT_Signer) && !strcmp(action, "Sign")) {
         if (!hasSignParams(plugin) || !plugin->info.sign.subjectFilter ||
             !plugin->info.sign.message) {
-            return 1;
+            return BIDERR_MissingParameter;
         } else {
             return sign_performAction_Sign(plugin);
         }
     } else {
-        return 1;
+        return BIDERR_InvalidAction;
     }
 }
 
