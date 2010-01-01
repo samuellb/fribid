@@ -38,6 +38,10 @@ binary-arch: build install
 	dh_testroot
 	dh_installchangelogs
 	dh_installdocs
+	# dh_installdocs doesn't support renaming of files,
+	# so these files are installed manually.
+	cp npapi/MPL-1.1.txt $(CURDIR)/debian/fribid/usr/share/doc/fribid/MPL
+	cp npapi/NPL-1.1.txt $(CURDIR)/debian/fribid/usr/share/doc/fribid/NPL
 	dh_link
 	dh_strip
 	dh_compress
