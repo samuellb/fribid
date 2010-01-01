@@ -1,6 +1,6 @@
 /*
 
-  Copyright (c) 2009 Samuel Lidén Borell <samuel@slbdata.se>
+  Copyright (c) 2009-2010 Samuel Lidén Borell <samuel@slbdata.se>
  
   Permission is hereby granted, free of charge, to any person obtaining a copy
   of this software and associated documentation files (the "Software"), to deal
@@ -373,6 +373,8 @@ bool platform_sign(char **signature, int *siglen, KeyfileSubject **person, char 
             free(filename);
         }
         
+        // The contents of the text field is automatically cleared when the
+        // GtkEntry widget is destroyed, so the password won't stay in memory.
         *password = strdup(gtk_entry_get_text(passwordEntry));
         return true;
         

@@ -1,6 +1,6 @@
 /*
 
-  Copyright (c) 2009 Samuel Lidén Borell <samuel@slbdata.se>
+  Copyright (c) 2009-2010 Samuel Lidén Borell <samuel@slbdata.se>
  
   Permission is hereby granted, free of charge, to any person obtaining a copy
   of this software and associated documentation files (the "Software"), to deal
@@ -168,7 +168,8 @@ static SEC_PKCS12DecoderContext *pkcs12_open(const char *p12Data, const int p12L
 
 static void pkcs12_close(SEC_PKCS12DecoderContext *decoder, SECItem *pwitem) {
     SEC_PKCS12DecoderFinish(decoder);
-    SECITEM_FreeItem(pwitem, PR_TRUE);
+    // Clear and free the password
+    SECITEM_ZfreeItem(pwitem, PR_TRUE);
 }
 
 static CERTCertList *pkcs12_listCerts(const char *p12Data, const int p12Length) {
