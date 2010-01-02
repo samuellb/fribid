@@ -1,5 +1,5 @@
 #
-#  Copyright (c) 2009 Samuel Lidén Borell <samuel@slbdata.se>
+#  Copyright (c) 2009-2010 Samuel Lidén Borell <samuel@slbdata.se>
 # 
 #  Permission is hereby granted, free of charge, to any person obtaining a copy
 #  of this software and associated documentation files (the "Software"), to deal
@@ -54,11 +54,17 @@ distdebsig: distdeb
 	for deb in $(DISTDESTDIR)*.deb; do gpg -o $$deb.sig --sign $$deb; done
 
 # Release management
-prepare-release: refresh-release-time
+prepare-release: refresh-release-time set-version
+
+need-version:
+	@[ -n "$$version" ] || (echo "The \`version' environment variable is not set" > /dev/stderr; false)
 
 refresh-release-time:
 	date=`date '+%s'` && \
 	sed -ri 's/(#define RELEASE_TIME\s+)([0-9]+)/\1'$$date'/' common/defines.h
+
+set-version: need-version
+	sed -ri 's/(#define PACKAGEVERSION\s+")([^"]+)(")/\1'$$version'\3/' common/defines.h
 
 .PHONY: all clean dist distdeb distdebsig distclean distsig install prepare-release refresh-release-time uninstall $(SUBDIRS)
 
