@@ -39,7 +39,7 @@
 
 #define LIB_PATH            EPREFIX "/lib/" BINNAME
 #define SHARE_PATH          PREFIX "/share/" BINNAME
-#define DIR_PATH            PREFIX "/share/doc/" BINNAME
+#define DOC_PATH            PREFIX "/share/doc/" BINNAME
 #define LOCALEDIR           PREFIX "/share/locale"
 
 #define SIGNING_EXECUTABLE  LIB_PATH "/sign"
