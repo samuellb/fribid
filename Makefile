@@ -53,5 +53,12 @@ distdebsig: distdeb
 	# FIXME should not use *
 	for deb in $(DISTDESTDIR)*.deb; do gpg -o $$deb.sig --sign $$deb; done
 
-.PHONY: all clean dist distclean install uninstall $(SUBDIRS)
+# Release management
+prepare-release: refresh-release-time
+
+refresh-release-time:
+	date=`date '+%s'` && \
+	sed -ri 's/(#define RELEASE_TIME\s+)([0-9]+)/\1'$$date'/' common/defines.h
+
+.PHONY: all clean dist distdeb distdebsig distclean distsig install prepare-release refresh-release-time uninstall $(SUBDIRS)
 
