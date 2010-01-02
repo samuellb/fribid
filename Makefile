@@ -57,7 +57,7 @@ distdebsig: distdeb
 	for deb in $(DISTDESTDIR)*.deb; do gpg -o $$deb.sig --sign $$deb; done
 
 # Release management
-prepare-release: refresh-release-time set-version sync-changelog
+prepare-release: refresh-release-time refresh-changelog-time set-version sync-changelog
 
 need-version:
 	@[ -n "$$version" ] || (echo "The \`version' environment variable is not set" > /dev/stderr; false)
@@ -88,6 +88,11 @@ sync-changelog: need-version
 	    && mv ch-all.tmp debian/changelog \
 	    || echo "Debian versions entries are not synced from CHANGELOG"
 	rm -f ch-all.tmp ch-entry.tmp ch-other.tmp
+
+refresh-changelog-time: need-version
+	date=`date '+%F'` && \
+	sed -ri "s/^($$version - )([0-9?-]+)(.*)/\1$$date\3/" CHANGELOG
+
 
 .PHONY: all clean dist distdeb distdebsig distclean distsig install need-version prepare-release refresh-release-time set-version subdirs-clean sync-changelog uninstall $(SUBDIRS)
 
