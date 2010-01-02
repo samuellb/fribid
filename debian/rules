@@ -4,6 +4,19 @@
 # Uncomment this to turn on verbose mode.
 #export DH_VERBOSE=1
 
+# Support cross-compiling
+ifneq ($(DEB_HOST_GNU_SYSTEM),$(DEB_BUILD_GNU_SYSTEM))
+    CC=$(DEB_HOST_GNU_SYSTEM)-gcc
+endif
+
+# Disable optimizations if "noopt" is set
+ifneq ($(findstring noopt,$(DEB_BUILD_OPTIONS)),)
+    CFLAGS += -O0 -g
+else
+    CFLAGS += -O2 -g
+endif
+
+
 configure:
 configure-stamp:
 	dh_testdir
