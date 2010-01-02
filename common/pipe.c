@@ -1,6 +1,6 @@
 /*
 
-  Copyright (c) 2009 Samuel Lidén Borell <samuel@slbdata.se>
+  Copyright (c) 2009-2010 Samuel Lidén Borell <samuel@slbdata.se>
  
   Permission is hereby granted, free of charge, to any person obtaining a copy
   of this software and associated documentation files (the "Software"), to deal
@@ -54,7 +54,10 @@ static gboolean stopWaiting(GIOChannel *source,
 void pipe_waitData(FILE *file) {
     bool hasData = false;
     GIOChannel *channel = g_io_channel_unix_new(fileno(file));
-    assert(channel != NULL);
+    if (!channel) {
+        fprintf(stderr, BINNAME ": failed to create I/O channel\n");
+        return;
+    }
     g_io_channel_set_encoding(channel, NULL, NULL);
     g_io_add_watch(channel, G_IO_IN | G_IO_HUP | G_IO_ERR,
                    stopWaiting, &hasData);
@@ -94,7 +97,7 @@ void pipe_readData(FILE *in, char **data, int *length) {
     *data = malloc(*length);
     if ((*data == NULL) || (fread(*data, *length, 1, in) != 1)) {
         pipeError();
-        *data = realloc(*data, 0);
+        free(*data);
         *length = 0;
     }
 }

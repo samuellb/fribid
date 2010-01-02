@@ -1,6 +1,6 @@
 /*
 
-  Copyright (c) 2009 Samuel Lidén Borell <samuel@slbdata.se>
+  Copyright (c) 2009-2010 Samuel Lidén Borell <samuel@slbdata.se>
  
   Permission is hereby granted, free of charge, to any person obtaining a copy
   of this software and associated documentation files (the "Software"), to deal
@@ -27,6 +27,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <assert.h>
+#include <stdint.h>
 
 #include <sys/types.h>
 #include <sys/socket.h>
@@ -38,13 +39,14 @@
 #include "npobject.h"
 
 
-static char *strndup(const char *source, int maxLength) {
-    int i;
+static char *strndup(const char *source, size_t maxLength) {
+    size_t i;
     for (i = 0;; i++) {
         if ((i >= maxLength) || (source[i] == '\0')) break;
     }
     
     char *ret = malloc(i+1);
+    if (!ret) return NULL;
     memcpy(ret, source, i);
     ret[i] = '\0';
     return ret;
@@ -52,15 +54,18 @@ static char *strndup(const char *source, int maxLength) {
 
 // Re-allocates a string with NPN_MemAlloc instead of malloc
 static char *npstr(char *source) {
-    int size = strlen(source)+1;
-    char *dest = NPN_MemAlloc(size);
-    memcpy(dest, source, size);
+    size_t size = strlen(source)+1;
+    char *dest = NULL;
+    if (size <= INT32_MAX && (dest = NPN_MemAlloc(size)) != NULL) {
+        memcpy(dest, source, size);
+    }
     free(source);
     return dest;
 }
 
 static bool getProperty(NPP instance, NPObject *obj, const char *name, NPVariant *result) {
     NPIdentifier ident = NPN_GetStringIdentifier(name);
+    if (!ident) return NULL;
     return NPN_GetProperty(instance, obj, ident, result);
 }
 
@@ -68,6 +73,7 @@ static char *getWindowProperty(NPP instance, const char *const identifiers[]) {
     NPObject *obj;
     
     NPN_GetValue(instance, NPNVWindowNPObject, &obj);
+    if (!obj) return NULL;
     
     const char *const *identifier = &identifiers[0];
     while (1) {
@@ -120,6 +126,7 @@ static char *getDocumentIP(NPP instance) {
     //       since the browser might have loaded a maliciuous page while
     //       the plugin authenticates with the real IP.
     char *hostname = getDocumentHostname(instance);
+    if (!hostname) return NULL;
     
     struct addrinfo *firstAddrInfo;
     int ret = getaddrinfo(hostname, NULL, NULL, &firstAddrInfo);
@@ -167,11 +174,11 @@ static void objDeallocate(NPObject *npobj) {
     free(this);
 }
 
-static bool copyIdentifierName(NPIdentifier ident, char *name, int maxLength) {
+static bool copyIdentifierName(NPIdentifier ident, char *name, size_t maxLength) {
     char *heapStr = NPN_UTF8FromIdentifier(ident);
     if (!heapStr) return false;
-    int len = strlen(heapStr);
-    if (len+1 >= maxLength) return false;
+    size_t len = strlen(heapStr);
+    if (len >= maxLength-1) return false;
     memcpy(name, heapStr, len+1);
     NPN_MemFree(heapStr);
     return true;
@@ -206,7 +213,10 @@ static bool objInvoke(NPObject *npobj, NPIdentifier ident,
     switch (this->plugin->type) {
         case PT_Version:
             if (!strcmp(name, "GetVersion") && (argCount == 0)) {
-                char *s = npstr(version_getVersion(this->plugin));
+                char *version = version_getVersion(this->plugin);
+                if (!version) return false;
+                char *s = npstr(version);
+                if (!s) return false;
                 STRINGZ_TO_NPVARIANT(s, *result);
                 return true;
             }
@@ -217,7 +227,7 @@ static bool objInvoke(NPObject *npobj, NPIdentifier ident,
                 NPVARIANT_IS_STRING(args[0])) {
                 // Get parameter
                 char *param = strndup(NPVARIANT_TO_STRING(args[0]).utf8characters, NPVARIANT_TO_STRING(args[0]).utf8length);
-                
+                if (!param) return false;
                 char *value = sign_getParam(this->plugin, param);
                 
                 free(param);
@@ -225,6 +235,7 @@ static bool objInvoke(NPObject *npobj, NPIdentifier ident,
                     // The macro below evaluates it's first parameter twice
                     // and npstr frees it's input...
                     value = npstr(value);
+                    if (!value) return false;
                     STRINGZ_TO_NPVARIANT(value, *result);
                 } else NULL_TO_NPVARIANT(*result);
                 
@@ -239,17 +250,21 @@ static bool objInvoke(NPObject *npobj, NPIdentifier ident,
                 
                 char *param = strndup(NPVARIANT_TO_STRING(args[0]).utf8characters, NPVARIANT_TO_STRING(args[0]).utf8length);
                 char *value = strndup(NPVARIANT_TO_STRING(args[1]).utf8characters, NPVARIANT_TO_STRING(args[1]).utf8length);
+                bool ok = (param && value);
                 
-                sign_setParam(this->plugin, param, value);
+                if (ok) {
+                    sign_setParam(this->plugin, param, value);
+                    VOID_TO_NPVARIANT(*result);
+                }
                 
                 free(param);
                 free(value);
-                VOID_TO_NPVARIANT(*result);
-                return true;
+                return ok;
             } else if (!strcmp(name, "PerformAction") && (argCount == 1) &&
                        NPVARIANT_IS_STRING(args[0])) {
                 // Perform action
                 char *action = strndup(NPVARIANT_TO_STRING(args[0]).utf8characters, NPVARIANT_TO_STRING(args[0]).utf8length);
+                if (!action) return false;
                 
                 int ret = sign_performAction(this->plugin, action);
                 
@@ -316,6 +331,7 @@ static NPClass baseClass = {
 /* Object construction */
 static NPObject *npobject_new(NPP instance, PluginType pluginType) {
     PluginObject *obj = (PluginObject*)NPN_CreateObject(instance, &baseClass);
+    if (!obj) return NULL;
     assert(obj->base._class != NULL);
     
     char *url = getDocumentURL(instance);
@@ -330,6 +346,12 @@ static NPObject *npobject_new(NPP instance, PluginType pluginType) {
     free(ip);
     free(hostname);
     free(url);
+    
+    if (!obj->plugin) {
+        NPN_ReleaseObject((NPObject*)obj);
+        return NULL;
+    }
+    
     return (NPObject*)obj;
 }
 

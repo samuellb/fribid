@@ -1,6 +1,6 @@
 /*
 
-  Copyright (c) 2009 Samuel Lidén Borell <samuel@slbdata.se>
+  Copyright (c) 2009-2010 Samuel Lidén Borell <samuel@slbdata.se>
  
   Permission is hereby granted, free of charge, to any person obtaining a copy
   of this software and associated documentation files (the "Software"), to deal
@@ -34,11 +34,18 @@ Plugin *plugin_new(PluginType pluginType, const char *url,
                    const char *hostname, const char *ip,
                    int windowId) {
     Plugin *plugin = calloc(1, sizeof(Plugin));
+    if (!plugin) return NULL;
     plugin->type = pluginType;
     plugin->url = strdup(url);
     plugin->hostname = strdup(hostname);
     plugin->ip = strdup(ip);
     plugin->windowId = windowId;
+    
+    if (!plugin->url || !plugin->hostname || !plugin->ip) {
+        plugin_free(plugin);
+        return NULL;
+    }
+    
     return plugin;
 }
 
@@ -101,7 +108,7 @@ bool sign_setParam(Plugin *plugin, const char *name, const char *value) {
     
     free(*valuePtr);
     *valuePtr = strdup(value);
-    return true;
+    return (*valuePtr != NULL);
 }
 
 static bool hasSignParams(const Plugin *plugin) {

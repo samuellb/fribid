@@ -4,7 +4,7 @@
     no longer needed.
   * Fixed an error that occurred on sites that were sending null bytes in
     the challenge parameter.
-  * Fixed the cause of the harmless but annoying "pipe error" messages.
+  * Better error handling.
   * Renamed the plugin filename to libfribidplugin.so to prevent
     installation conflicts with Nexus Personal.
   * Fixed two compile errors on 64-bit platforms.
