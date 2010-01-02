@@ -1,5 +1,7 @@
 
-0.1.0 - 2009-??-??
+0.1.0 - 2009-01-01
+  * All occurances of the password in RAM are now cleared when they are
+    no longer needed.
   * Fixed an error that occurred on sites that were sending null bytes in
     the challenge parameter.
   * Fixed the cause of the harmless but annoying "pipe error" messages.
