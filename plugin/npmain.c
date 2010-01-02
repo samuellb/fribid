@@ -1,6 +1,6 @@
 /*
 
-  Copyright (c) 2009 Samuel Lidén Borell <samuel@slbdata.se>
+  Copyright (c) 2009-2010 Samuel Lidén Borell <samuel@slbdata.se>
  
   Permission is hereby granted, free of charge, to any person obtaining a copy
   of this software and associated documentation files (the "Software"), to deal
@@ -32,6 +32,9 @@
 #include "../common/defines.h"
 #include "plugin.h"
 #include "npobject.h"
+
+// Change to "/" to make this plugin work with Opera
+#define NO_FILE_EXTENSIONS ""
 
 NPError NPP_New(NPMIMEType pluginType, NPP instance, uint16 mode,
                 int16 argc, char *argn[], char *argv[], NPSavedData *data) {
@@ -71,9 +74,9 @@ NPError NPP_GetValue(NPP instance, NPPVariable variable, void *value) {
 }
 
 char *NPP_GetMIMEDescription() {
-    return MIME_VERSION "::Version;"
-           MIME_AUTHENTICATION "::Authentication;"
-           MIME_SIGNER "::Signer2";
+    return MIME_VERSION ":" NO_FILE_EXTENSIONS ":Version;"
+           MIME_AUTHENTICATION ":" NO_FILE_EXTENSIONS ":Authentication;"
+           MIME_SIGNER ":" NO_FILE_EXTENSIONS ":Signer2";
 }
 
 NPError NPP_Initialize() {
