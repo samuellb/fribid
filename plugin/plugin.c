@@ -26,9 +26,13 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdbool.h>
+#include <assert.h>
 #include "../common/biderror.h"
 
 #include "plugin.h"
+
+#define MAX_WINDOWS 20  // safety limit to avoid "popup storms"
+static const char *activeURLs[MAX_WINDOWS];
 
 Plugin *plugin_new(PluginType pluginType, const char *url,
                    const char *hostname, const char *ip,
@@ -72,6 +76,36 @@ void plugin_free(Plugin *plugin) {
     free(plugin);
 }
 
+static bool findURLSlot(const char *url, int *index) {
+    for (int i = 0; i < MAX_WINDOWS; i++) {
+        const char *other = activeURLs[i];
+        if ((other == url) || (other && url && !strcmp(other, url))) {
+            if (index) *index = i;
+            return true;
+        }
+    }
+    return false;
+}
+
+static bool lockURL(const char *url) {
+    int index;
+    
+    // The URL has a window already
+    if (findURLSlot(url, NULL)) return false;
+    
+    // Reached MAX_WINDOWS
+    if (!findURLSlot(NULL, &index)) return false;
+    
+    activeURLs[index] = url;
+    return true;
+}
+
+static void unlockURL(const char *url) {
+    int index;
+    bool ok = findURLSlot(url, &index);
+    assert(ok);
+    activeURLs[index] = NULL;
+}
 
 static char **getCommonParamPointer(Plugin *plugin, const char *name) {
     if (!strcmp(name, "Policys")) return &plugin->info.auth.policys;
@@ -121,14 +155,20 @@ int sign_performAction(Plugin *plugin, const char *action) {
         if (!hasSignParams(plugin)) {
             return BIDERR_MissingParameter;
         } else {
-            return sign_performAction_Authenticate(plugin);
+            if (!lockURL(plugin->url)) return BIDERR_InternalError;
+            int ret = sign_performAction_Authenticate(plugin);
+            unlockURL(plugin->url);
+            return ret;
         }
     } else if ((plugin->type == PT_Signer) && !strcmp(action, "Sign")) {
         if (!hasSignParams(plugin) || !plugin->info.sign.subjectFilter ||
             !plugin->info.sign.message) {
             return BIDERR_MissingParameter;
         } else {
-            return sign_performAction_Sign(plugin);
+            if (!lockURL(plugin->url)) return BIDERR_InternalError;
+            int ret = sign_performAction_Sign(plugin);
+            unlockURL(plugin->url);
+            return ret;
         }
     } else {
         return BIDERR_InvalidAction;
