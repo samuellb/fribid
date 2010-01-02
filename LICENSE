@@ -3,7 +3,7 @@ The license below applies to all files EXCEPT those in the "npapi"
 directory. The files in the "npapi" directory are not specific to
 this project, and have license terms in the file headers.
 
-Copyright (C) 2009 Samuel Lidén Borell <samuel@slbdata.se>
+Copyright (C) 2009-2010 Samuel Lidén Borell <samuel@slbdata.se>
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
