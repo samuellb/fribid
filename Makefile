@@ -24,8 +24,11 @@ SUBDIRS=client plugin translations
 
 DISTNAME=`./configure --internal--get-define=BINNAME`-`./configure --internal--get-define=PACKAGEVERSION`
 
-all clean install uninstall:
+all subdirs-clean install uninstall:
 	for dir in $(SUBDIRS); do (cd $$dir && $(MAKE) $@) || exit $?; done
+
+clean: subdirs-clean
+	rm -f ch-all.tmp ch-entry.tmp ch-other.tmp
 
 distclean: clean
 	rm -f common/config.h
@@ -54,7 +57,7 @@ distdebsig: distdeb
 	for deb in $(DISTDESTDIR)*.deb; do gpg -o $$deb.sig --sign $$deb; done
 
 # Release management
-prepare-release: refresh-release-time set-version
+prepare-release: refresh-release-time set-version sync-changelog
 
 need-version:
 	@[ -n "$$version" ] || (echo "The \`version' environment variable is not set" > /dev/stderr; false)
@@ -66,5 +69,25 @@ refresh-release-time:
 set-version: need-version
 	sed -ri 's/(#define PACKAGEVERSION\s+")([^"]+)(")/\1'$$version'\3/' common/defines.h
 
-.PHONY: all clean dist distdeb distdebsig distclean distsig install prepare-release refresh-release-time uninstall $(SUBDIRS)
+sync-changelog: need-version
+	# This rule syncs debian/changelog with CHANGELOG
+	# Remove the current version (if present)
+	cp debian/changelog ch-other.tmp
+	[ `head -n 1 debian/changelog | sed -r 's/[^\s]+ \(([^)]+)\).*/\1/'` != "$$version" ] || \
+	    sed '/--/{:x n;bx}; d' debian/changelog | tail -n +3 > ch-other.tmp # is there a better way?
+	# Debianize the changelog entry for the current version
+	echo "fribid ($$version) unstable; urgency=$${urgency:-low}" > ch-entry.tmp
+	echo >> ch-entry.tmp
+	sed "/^$$version - /{:x /^\n*$$/Q; n;bx };d" CHANGELOG | tail -n +2 >> ch-entry.tmp
+	echo >> ch-entry.tmp
+	echo " -- "`git config --get user.name`" <"`git config --get user.email`">  "`date -R` >> ch-entry.tmp
+	echo >> ch-entry.tmp
+	# Merge and add the changelog entry
+	cat ch-entry.tmp ch-other.tmp > ch-all.tmp
+	echo "$$version" | grep -qvF '-' \
+	    && mv ch-all.tmp debian/changelog \
+	    || echo "Debian versions entries are not synced from CHANGELOG"
+	rm -f ch-all.tmp ch-entry.tmp ch-other.tmp
+
+.PHONY: all clean dist distdeb distdebsig distclean distsig install need-version prepare-release refresh-release-time set-version subdirs-clean sync-changelog uninstall $(SUBDIRS)
 
