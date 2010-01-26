@@ -114,9 +114,7 @@ char *version_getVersion(Plugin *plugin) {
     PipeInfo pipeinfo;
     
     openVersionPipes(&pipeinfo);
-    if (fgets(buff, sizeof(buff), pipeinfo.in) != NULL) {
-        buff[strlen(buff)-1] = '\0';
-    } else {
+    if (fgets(buff, sizeof(buff), pipeinfo.in) == NULL) {
         buff[0] = '\0';
     }
     closePipes(&pipeinfo);
