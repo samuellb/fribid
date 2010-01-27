@@ -11,8 +11,10 @@
   * Fixed a couple of non-critical errors in the makefiles.
   * Added build files for the Debian package format, and makefile rules
     for .deb and .tar package creation.
+  * Better error handling.
+  * Made it impossible for a single web page to open multiple log in windows.
   * Made person filtering work when authenticating. This is used on web sites
-    that let you enter your personal number as a separate step in the log-in
+    that let you enter your personal number as a separate step in the log in
     process.
 
 
