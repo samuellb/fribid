@@ -35,8 +35,8 @@ OBJECTS=ipc.o npmain.o npobject.o plugin.o pipe.o npn_gate.o np_entry.o
 
 all: libfribidplugin.so
 
-ipc.o: ../common/pipe.h plugin.h
-npmain.o: npobject.h plugin.h
+ipc.o: ../common/defines.h ../common/pipe.h plugin.h
+npmain.o: ../common/defines.h npobject.h plugin.h
 npobject.o: npobject.h plugin.h
 pipe.o: ../common/pipe.h ../common/pipe.c
 plugin.o: ../common/biderror.h plugin.h
