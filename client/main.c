@@ -47,16 +47,14 @@ void pipeData() {
         case PMC_Authenticate:
         case PMC_Sign: {
             char *challenge = pipe_readString(stdin);
-            free(pipe_readString(stdin)); // Just ignore the policies list for now
+            free(pipe_readOptionalString(stdin)); // Just ignore the policies list for now
+            char *subjectFilter = pipe_readOptionalString(stdin);
             char *url = pipe_readString(stdin);
             char *hostname = pipe_readString(stdin);
             char *ip = pipe_readString(stdin);
-            
             char *message = NULL;
-            char *subjectFilter = NULL;
             if (command == PMC_Sign) {
                 message = pipe_readString(stdin);
-                subjectFilter = pipe_readString(stdin);
             }
             
             // Validate input
@@ -67,9 +65,9 @@ void pipeData() {
             } else if (!is_canonical_base64(challenge) ||
                        !is_valid_hostname(hostname) ||
                        !is_valid_ip_address(ip) ||
+                       (subjectFilter && !is_canonical_base64(subjectFilter)) ||
                        (command == PMC_Sign && (
-                           !is_canonical_base64(message) ||
-                           !is_canonical_base64(subjectFilter)
+                           !is_canonical_base64(message)
                        ))) {
                 error = BIDERR_InternalError;
             }
@@ -184,8 +182,13 @@ int main(int argc, char **argv) {
     bankid_init();
     
     for (int i = 1; i < argc; i++) {
-        if (!strcmp(argv[i], "--internal--ipc")) {
+        if (!strcmp(argv[i], "--internal--ipc=" IPCVERSION)) {
             ipc = true;
+        } else if (!strncmp(argv[i], "--internal--ipc", 15)) {
+            fprintf(stderr, BINNAME ": Version mismatch. "
+                    "Plugin version: %s,  Signer version: " IPCVERSION "\n",
+                    (argv[i][15] != '\0' ? &argv[i][16] : "1"));
+            error = true;
         } else if (!strcmp(argv[i], "--internal--window-id")) {
             i++;
             if (i == argc) {

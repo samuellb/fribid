@@ -50,8 +50,8 @@ typedef struct {
             /* Input parameters */
             char *challenge;
             char *policys;
-            void *dummy1; // To be compatible with .sign below
-            void *dummy0;
+            char *subjectFilter;
+            void *dummy0; // To be compatible with .sign below
             /* Output parameters */
             char *signature;
         } auth;

@@ -38,7 +38,7 @@
 
 static const char mainBinary[] = SIGNING_EXECUTABLE;
 static const char versionOption[] = "--internal--bankid-version-string";
-static const char ipcOption[] = "--internal--ipc";
+static const char ipcOption[] = "--internal--ipc=" IPCVERSION;
 static const char windowIdOption[] = "--internal--window-id";
 
 #define PIPE_READ_END  0
@@ -125,8 +125,8 @@ char *version_getVersion(Plugin *plugin) {
 
 static void sendSignCommon(PipeInfo pipeinfo, Plugin *plugin) {
     pipe_sendString(pipeinfo.out, plugin->info.auth.challenge);
-    pipe_sendString(pipeinfo.out, (plugin->info.auth.policys != NULL ?
-                              plugin->info.auth.policys : ""));
+    pipe_sendOptionalString(pipeinfo.out, plugin->info.auth.policys);
+    pipe_sendOptionalString(pipeinfo.out, plugin->info.auth.subjectFilter);
     pipe_sendString(pipeinfo.out, plugin->url);
     pipe_sendString(pipeinfo.out, plugin->hostname);
     pipe_sendString(pipeinfo.out, plugin->ip);
@@ -157,7 +157,6 @@ int sign_performAction_Sign(Plugin *plugin) {
     
     sendSignCommon(pipeinfo, plugin);
     pipe_sendString(pipeinfo.out, plugin->info.sign.message);
-    pipe_sendString(pipeinfo.out, plugin->info.sign.subjectFilter);
     
     pipe_finishCommand(pipeinfo.out);
     

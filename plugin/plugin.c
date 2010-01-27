@@ -60,6 +60,7 @@ void plugin_free(Plugin *plugin) {
         case PT_Authentication:
             free(plugin->info.auth.challenge);
             free(plugin->info.auth.policys);
+            free(plugin->info.sign.subjectFilter);
             free(plugin->info.auth.signature);
             break;
         case PT_Signer:
@@ -110,6 +111,7 @@ static void unlockURL(const char *url) {
 static char **getCommonParamPointer(Plugin *plugin, const char *name) {
     if (!strcmp(name, "Policys")) return &plugin->info.auth.policys;
     if (!strcmp(name, "Signature")) return &plugin->info.auth.signature;
+    if (!strcmp(name, "Subjects")) return &plugin->info.sign.subjectFilter;
     return NULL;
 }
 
@@ -120,7 +122,6 @@ static char **getParamPointer(Plugin *plugin, const char *name) {
             return getCommonParamPointer(plugin, name);
         case PT_Signer:
             if (!strcmp(name, "Nonce")) return &plugin->info.sign.challenge;
-            if (!strcmp(name, "Subjects")) return &plugin->info.sign.subjectFilter;
             if (!strcmp(name, "TextToBeSigned")) return &plugin->info.sign.message;
             return getCommonParamPointer(plugin, name);
         default:

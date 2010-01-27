@@ -126,6 +126,15 @@ char *pipe_readString(FILE *in) {
     }
 }
 
+char *pipe_readOptionalString(FILE *in) {
+    char *str = pipe_readString(in);
+    if (str && str[0] == '\0') {
+        free(str);
+        return NULL;
+    }
+    return str;
+}
+
 int pipe_readInt(FILE *in) {
     int value = -1;
     if (fscanf(in, "%d;", &value) != 1) {
@@ -143,6 +152,10 @@ void pipe_sendData(FILE *out, const char *data, int length) {
 void pipe_sendString(FILE *out, const char *str) {
     assert(str != NULL);
     pipe_sendData(out, str, strlen(str));
+}
+
+void pipe_sendOptionalString(FILE *out, const char *str) {
+    pipe_sendString(out, str ? str : "");
 }
 
 void pipe_sendInt(FILE *out, int value) {

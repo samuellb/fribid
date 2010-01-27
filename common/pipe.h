@@ -42,10 +42,12 @@ void pipe_waitData(FILE *file);
 
 void pipe_readData(FILE *in, char **data, int *length);
 char *pipe_readString(FILE *in);
+char *pipe_readOptionalString(FILE *in);
 int pipe_readInt(FILE *in);
 
 void pipe_sendData(FILE *out, const char *data, int length);
 void pipe_sendString(FILE *out, const char *str);
+void pipe_sendOptionalString(FILE *out, const char *str);
 void pipe_sendInt(FILE *out, int value);
 
 #endif
