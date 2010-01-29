@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<!--
+
+  Copyright (c) 2009 Samuel Lidén Borell <samuel@slbdata.se>
+ 
+  Permission is hereby granted, free of charge, to any person obtaining a copy
+  of this software and associated documentation files (the "Software"), to deal
+  in the Software without restriction, including without limitation the rights
+  to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+  copies of the Software, and to permit persons to whom the Software is
+  furnished to do so, subject to the following conditions:
+  
+  The above copyright notice and this permission notice shall be included in
+  all copies or substantial portions of the Software.
+  
+  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+  THE SOFTWARE.
+
+-->
+<title>BankID certificate request test</title>
+<script type="text/javascript">
+
+var output;
+var pluginVersion;
+
+function getPar(key) {
+    output = document.getElementById('output');
+    plugin = document.getElementById('plugin');
+    output.value += "Calling GetParam("+key+")\n";
+    var value = plugin.GetParam(key);
+    output.value += "    value = "+value+"\n";
+    output.value += "    GetLastError() = "+plugin.GetLastError()+"\n";
+    return value;
+}
+
+function setPar(key, value) {
+    /*if (value == '') {
+    getPar(key);
+    return;
+    }*/
+    output = document.getElementById('output');
+    plugin = document.getElementById('plugin');
+    /*output.value += "Calling SetParam(\""+key+"\", ...)\n";
+    output.value += "    return value = "+plugin.SetParam(key, value)+"\n";
+    output.value += "    GetLastError() = "+plugin.GetLastError()+"\n";*/
+    
+    plugin.SetParam(key, value);
+    output.value += "result "+plugin.GetLastError()+" from parameter "+key+"\n";
+    // 8012 = invalid value?
+}
+
+function init() {
+    output = document.getElementById('output');
+    pluginVersion = document.getElementById('pluginVersion');
+    output.value = "";
+    /*output.value += "Version: >";
+    output.value += pluginVersion.GetVersion()+"<\n\n";*/
+    
+    plugin = document.getElementById('plugin');
+    
+    // init 1
+    setPar('KeySize', '1024');
+    setPar('KeyUsage', 'digitalSignature');
+    setPar('SubjectDN', 'CN=TEST PERSON,OID.2.5.4.41=(090102 12.30) TEST PERSON - BankID på fil,SN=197711223334,G=TEST,S=PERSON');
+    
+    setPar('MinLen', '12');
+    setPar('MaxLen', '30');
+    setPar('MinChars', '4');
+    setPar('MinDigits', '1');
+    
+    output.value += "InitRequest('pkcs10')\n";
+    output.value += "    retval = "+plugin.InitRequest('pkcs10');
+    output.value += "    GetLastError() = "+plugin.GetLastError()+"\n";
+    
+    // init 2
+    setPar('KeyUsage', 'nonRepudiation');
+    output.value += "InitRequest('pkcs10')\n";
+    output.value += "    retval = "+plugin.InitRequest('pkcs10');
+    output.value += "    GetLastError() = "+plugin.GetLastError()+"\n";
+    
+    // init 3
+    setPar('OneTimePassword', 'Not Applicable');
+    setPar('rfc2797cmcoid', 'true');
+    output.value += "InitRequest('cmc')\n";
+    output.value += "    retval = "+plugin.InitRequest('cmc');
+    output.value += "    GetLastError() = "+plugin.GetLastError()+"\n";
+    
+    // create
+    output.value += "CreateRequest()\n";
+    output.value += "    retval = "+plugin.CreateRequest()+"\n";
+    output.value += "    GetLastError() = "+plugin.GetLastError()+"\n";
+    
+    /* gives this output (this appears to be a P7S or DER file):
+    
+    MIID7AYJKoZIhvcNAQcCoIID3TCCA9kCAQExADCCA84GCCsGAQUFBwwCoIIDwDCCA7wwADCCA5GgggHsAgQBAAACMIIB4jCCAUsCAQAwgYMxDzANBgNVBAQTBlBFUlNPTjENMAsGA1UEKhMEVEVTVDEVMBMGA1UEBRMMMTk3NzExMjIzMzM0MTQwMgYDVQQpDCsoMDkwMTAyIDEyLjMwKSBURVNUIFBFUlNPTiAtIEJhbmtJRCBww6UgZmlsMRQwEgYDVQQDEwtURVNUIFBFUlNPTjCBnzANBgkqhkiG9w0BAQEFAAOBjQAwgYkCgYEAoIt3EKr52/O44PMwwF+fPbREhE6QOmczazal3qs8H9ZpbA/RhTXYuzJY4nFfPN2KpmOfCa3rO+m6rWPS0MhIR+Nd7+y9SnR+z///p7e63YMnFOJIvUyWyPp/s84/xVlfVLRz7wnrU3EGX/Xucd9P/O/fOuLABoRII/r9TPlkzesCAwEAAaAeMBwGCSqGSIb3DQEJDjEPMA0wCwYDVR0PBAQDAgeAMA0GCSqGSIb3DQEBBQUAA4GBAADoQKj0kYWyYiju01LrS44vT0deBEqqW8Byn3nEHiJOE1iKZCkQUksMqVC1xK+DCMeOT7+R8swaLt/1C9IcLPwNe40c2uvCSNLbVzyIvpabzJw0SuwMoo7YLt2sSb954oV4sEpv+1ITFeU8Gnw9md6CLWU3F9xJd+VaSxpGmcIUoIIBnQIEAQAAAzCCAZMwgf0CAQAwNjE0MDIGA1UEKQwrKDA5MDEwMiAxMi4zMCkgVEVTVCBQRVJTT04gLSBCYW5rSUQgcMOlIGZpbDCBnzANBgkqhkiG9w0BAQEFAAOBjQAwgYkCgYEA1VIIVtMUJLt5m+bMbD9V7PkaclxG7UhBVQUTEMwe1n5iv0J+JZU9NCDrmohxAyalatZ8nrcdTFpl3xtxHvxIWrZBcwta9kneVVA+G0issMj83YcWqv6trJcXU0tUCR97JE8r3xfFi0laZ9yQmTIp565vOl8J8ahSzDeo3d+vSEkCAwEAAaAeMBwGCSqGSIb3DQEJDjEPMA0wCwYDVR0PBAQDAgZAMA0GCSqGSIb3DQEBBQUAA4GBAIFl5EBp80RervVf+e8w6Tn/ZKCZZRigOa3aIbNVCgqyX/BIO4MJjOUovlVJDVRKm4hIm+PU9Kts3FHWH9bpD759aC93LU2zaXxuaPqouMDsZIHbqsEnQ3a5JXyQopM/M9XnnG+Ai++nCKMzpi6sfuWqHQBvPdeydFO6pEYALv/+MAAwITAfAgQBAAABBgcqhXAkBAEBFg5Ob3QgQXBwbGljYWJsZTEA
+    
+    */
+}
+
+</script>
+</head>
+<body onload="init()" style="background: #FFFFDD">
+<p> Plugin installerad: 
+<script type="text/javascript">
+var pluginInstalled = false;
+
+var pluginInstalled = 
+   (navigator.mimeTypes &&
+    navigator.mimeTypes["application/x-personal-version"] &&
+    navigator.mimeTypes["application/x-personal-version"].enabledPlugin);
+
+document.write(pluginInstalled ? "Ja" : "Nej");
+</script>
+</p>
+
+<div>
+<textarea cols="80" rows="30" id="output">
+</textarea>
+</div>
+
+<div>
+<object id="pluginVersion" type="application/x-personal-version"></object>
+<object id="plugin" type="application/x-personal-regutil"></object>
+</div>
+
+</body>
+</html>
