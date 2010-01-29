@@ -1,3 +1,7 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
 <!--
 
   Copyright (c) 2009 Samuel Lidén Borell <samuel@slbdata.se>
@@ -21,8 +25,6 @@
   THE SOFTWARE.
 
 -->
-<html>
-<head>
 <title>BankID test</title>
 <script type="text/javascript">
 
@@ -33,8 +35,8 @@ function init() {
     output = document.getElementById('output');
     pluginVersion = document.getElementById('pluginVersion');
     output.value = "";
-    output.value += "Version: >";
-    output.value += pluginVersion.GetVersion()+"<\n\n";
+    output.value += "Version: \"";
+    output.value += pluginVersion.GetVersion()+"\"\n\n";
     
     pluginAuth = document.getElementById('pluginAuth');
     output.value += "Calling SetParam(Challenge)\n";
@@ -44,16 +46,16 @@ function init() {
     
     output.value += "retval of sp = "+retval+"\n";
     output.value += "\nGetParam:\n";
-    output.value += "    Challenge: >"+pluginAuth.GetParam("Challenge")+"<\n";
-    output.value += "    Policys: >"+pluginAuth.GetParam("Policys")+"<\n";
-    output.value += "    Signature: >"+pluginAuth.GetParam("Signature")+"<\n";
+    output.value += "    Challenge: \""+pluginAuth.GetParam("Challenge")+"\"\n";
+    output.value += "    Policys: \""+pluginAuth.GetParam("Policys")+"\"\n";
+    output.value += "    Signature: \""+pluginAuth.GetParam("Signature")+"\"\n";
     
     output.value += "\nInvoking PerformAction(Authenticate):\n";
     output.value += "    return value = "+pluginAuth.PerformAction("Authenticate")+"\n";
     output.value += "    GetLastError() = "+pluginAuth.GetLastError()+"\n";
     
     output.value += "\nGetParam:\n";
-    output.value += "    Signature: >"+pluginAuth.GetParam("Signature")+"<\n";
+    output.value += "    Signature: \""+pluginAuth.GetParam("Signature")+"\"\n";
 }
 
 </script>
