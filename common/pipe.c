@@ -69,11 +69,7 @@ void pipe_waitData(FILE *file) {
 }
 
 int pipe_readCommand(FILE *in) {
-    int command = 0;
-    if (fscanf(in, " %d;", &command) != 1) {
-        pipeError();
-    }
-    return command;
+    return pipe_readInt(in);
 }
 
 void pipe_sendCommand(FILE *out, int command) {
@@ -90,10 +86,13 @@ void pipe_flush(FILE *out) {
 }
 
 void pipe_readData(FILE *in, char **data, int *length) {
-    if ((fscanf(in, "%d;", length) != 1) || (*length < 0)) {
-        pipeError();
+    *length = pipe_readInt(in);
+    if (*length <= 0) {
         *length = 0;
+        *data = NULL;
+        return;
     }
+    
     *data = malloc(*length);
     if ((*data == NULL) || (fread(*data, *length, 1, in) != 1)) {
         pipeError();
@@ -103,12 +102,8 @@ void pipe_readData(FILE *in, char **data, int *length) {
 }
 
 char *pipe_readString(FILE *in) {
-    int length = -1;
-    fscanf(in, "%d;", &length);
-    if (length < 0) {
-        pipeError();
-        return strdup("");
-    }
+    int length = pipe_readInt(in);
+    if (length <= 0) return strdup("");
     
     char *data = malloc(length +1);
     if (!data) {
@@ -117,7 +112,7 @@ char *pipe_readString(FILE *in) {
     }
     
     data[length] = '\0';
-    if ((length == 0) || (fread(data, length, 1, in) == 1)) {
+    if (fread(data, length, 1, in) == 1) {
         return data;
     } else {
         pipeError();
@@ -137,7 +132,7 @@ char *pipe_readOptionalString(FILE *in) {
 
 int pipe_readInt(FILE *in) {
     int value = -1;
-    if (fscanf(in, "%d;", &value) != 1) {
+    if (fscanf(in, " %d;", &value) != 1) {
         pipeError();
     }
     return value;
