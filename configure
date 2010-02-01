@@ -196,7 +196,7 @@ echo "
 #define PREFIX \"$prefixPath\"
 #define EPREFIX \"$execPath\"
 #define NPAPI_PLUGIN_PATHS \"$pluginPaths\"
-" > $CONFFILE
+" > "$CONFFILE"
 
 
 ### Display success message
