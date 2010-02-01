@@ -156,6 +156,36 @@ if [ -z "$hasPaths" ]; then
 fi
 
 
+### Check dependencies
+utilities="make pkg-config msgfmt"
+depError=""
+if ! type $utilities > /dev/null 2> /dev/null; then
+    echo "Error: Missing commands:" >&2
+    for utility in $utilities; do
+        if ! type "$utility" > /dev/null 2> /dev/null; then
+            echo "  $utility" >&2
+            depError=1
+        fi
+    done
+fi
+
+oldifs=IFS
+IFS=";"
+pkgconfigDeps="gtk+-2.0 >= 2.12;glib-2.0;nss >= 3.10;nspr"
+
+if ! pkg-config --exists $pkgconfigDeps; then
+    echo "Error: Unsatisfied dependencies: " >&2
+    for dep in $pkgconfigDeps; do
+        pkg-config --exists $dep || echo "  $dep" >&2
+    done
+    depError=1
+fi
+IFS=oldifs
+
+if [ -n "$depError" ]; then
+    exit 1
+fi
+
 ### Write configuration
 CONFFILE="$basedir/common/config.h"
 
