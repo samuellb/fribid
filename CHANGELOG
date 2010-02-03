@@ -1,5 +1,5 @@
 
-0.0.9b - 2010-01-26
+0.1.0 - 2010-02-03
   * All occurances of the password in RAM are now cleared when they are
     no longer needed.
   * Fixed an error that occurred on sites that were sending null bytes in
