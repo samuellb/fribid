@@ -27,6 +27,7 @@
 #include <base64.h>
 #include <glib.h>
 #include <stdarg.h>
+#include <sechash.h>
 
 #include "misc.h"
 
@@ -98,6 +99,13 @@ bool is_canonical_base64(const char *encoded) {
     free(recoded);
     free(decoded);
     return equal;
+}
+
+char *sha_base64(const char *str) {
+    char shasum[SHA256_LENGTH];
+    
+    HASH_HashBuf(HASH_AlgSHA256, (unsigned char*)shasum, (unsigned char*)str, strlen(str));
+    return base64_encode(shasum, sizeof(shasum));
 }
 
 bool is_valid_domain_name(const char *domain) {

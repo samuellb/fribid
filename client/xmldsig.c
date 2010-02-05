@@ -26,8 +26,7 @@
 
 #include <string.h>
 #include <stdlib.h>
-
-#include <sechash.h>
+#include <stdio.h>
 
 #include "keyfile.h"
 #include "xmldsig.h"
@@ -72,13 +71,6 @@ static const char keyinfo_template[] =
 
 static const char cert_template[] =
     "<X509Certificate>%s</X509Certificate>";
-
-static char *sha_base64(const char *str) {
-    char shasum[SHA256_LENGTH];
-    
-    HASH_HashBuf(HASH_AlgSHA256, (unsigned char*)shasum, (unsigned char*)str, strlen(str));
-    return base64_encode(shasum, sizeof(shasum));
-}
 
 /**
  * Creates a xmldsig signature. See the sign function in bankid.c.
