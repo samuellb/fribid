@@ -27,6 +27,8 @@
 
 #include <stdbool.h>
 
+char *rasprintf(const char *format, ...);
+
 char *base64_encode(const char *data, const int length);
 char *base64_decode(const char *encoded);
 bool is_canonical_base64(const char *encoded);

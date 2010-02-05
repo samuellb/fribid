@@ -25,8 +25,24 @@
 #define _BSD_SOURCE 1
 #include <string.h>
 #include <base64.h>
+#include <glib.h>
+#include <stdarg.h>
 
 #include "misc.h"
+
+/**
+ * Like sprintf, but allocates and returns a string instead of
+ * using a pre-allocated buffer.
+ */
+char *rasprintf(const char *format, ...) {
+    va_list args;
+    char *str;
+    
+    va_start(args, format);
+    str = (char*)g_strdup_vprintf((gchar*)format, args);
+    va_end(args);
+    return str;
+}
 
 // Removes newlines from base64 encoded data
 static void removeNewlines(char *s) {

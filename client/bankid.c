@@ -78,9 +78,7 @@ static char *getVersionString() {
     
     platform_freeConfig(cfg);
     
-    char *result = malloc(strlen(template) -11*4 +
-                          10*strlen(versionToEmulate) + 1*21 + 1);
-    sprintf(result, template, versionToEmulate, expiry);
+    char *result = rasprintf(template, versionToEmulate, expiry);
     
     if (versionToEmulate != defaultEmulatedVersion) {
         free(versionToEmulate);
@@ -111,14 +109,11 @@ static bool checkValidity(bool *valid, char **versionToEmulate) {
     
     *valid = (status == OK);
     
-    *versionToEmulate = malloc(4*3*sizeof(char));
-    if (!*versionToEmulate) return false;
-    
-    sprintf(*versionToEmulate, "%d.%d.%d.%d",
-            (response >> 18) & 0xF,
-            (response >> 12) & 0x3F,
-            (response >> 6) & 0x3F,
-            response & 0x3F);
+    *versionToEmulate = rasprintf("%d.%d.%d.%d",
+        (response >> 18) & 0xF,
+        (response >> 12) & 0x3F,
+        (response >> 6) & 0x3F,
+        response & 0x3F);
     
     return true;
 }
@@ -269,13 +264,8 @@ static BankIDError sign(const char *p12Data, const int p12Length,
     char *version = base64_encode(versionStr, strlen(versionStr));
     free(versionStr);
     
-    char *object = malloc(strlen(sign_template) - 6*2 +
-                          strlen(extra) +
-                          strlen(challenge) +
-                          strlen(purpose) +
-                          strlen(hostname) + strlen(ip) +
-                          strlen(version) +1);
-    sprintf(object, sign_template, extra, challenge, purpose, hostname, ip, version);
+    char *object = rasprintf(sign_template, extra, challenge,
+                             purpose, hostname, ip, version);
     free(version);
     
     // Sign
@@ -314,9 +304,7 @@ BankIDError bankid_sign(const char *p12Data, const int p12Length,
                         char **signature) {
     BankIDError error;
     
-    char *extra = malloc(strlen(signedText_template) - 1*2 +
-                         strlen(message) + 1);
-    sprintf(extra, signedText_template, message);
+    char *extra = rasprintf(signedText_template, message);
     
     error = sign(p12Data, p12Length, person, password, challenge,
                  hostname, ip, CERTUSE_SIGNING, "Signing", extra, signature);

@@ -111,17 +111,14 @@ char *xmldsig_sign(const char *p12Data, const int p12Length,
     }
     free(certs);
     
-    char *keyinfo = malloc(strlen(keyinfo_template) - 2 + certsLength +1);
-    sprintf(keyinfo, keyinfo_template, keyinfoInner);
+    char *keyinfo = rasprintf(keyinfo_template, keyinfoInner);
     free(keyinfoInner);
     
     // SignedInfo
     char *data_sha = sha_base64(data);
     char *keyinfo_sha = sha_base64(keyinfo);
     
-    char *signedinfo = malloc(strlen(signedinfo_template) - 2*2 +
-                              strlen(data_sha) + strlen(keyinfo_sha) +1);
-    sprintf(signedinfo, signedinfo_template, data_sha, keyinfo_sha);
+    char *signedinfo = rasprintf(signedinfo_template, data_sha, keyinfo_sha);
     free(keyinfo_sha);
     free(data_sha);
     
@@ -141,11 +138,8 @@ char *xmldsig_sign(const char *p12Data, const int p12Length,
     free(sigData);
     
     // Glue everything together
-    char *complete = malloc(strlen(xmldsig_template) - 4*2 +
-                            strlen(signedinfo) + strlen(signature) +
-                            strlen(keyinfo) + strlen(data) +1);
-    sprintf(complete, xmldsig_template,
-            signedinfo, signature, keyinfo, data);
+    char *complete = rasprintf(xmldsig_template,
+                               signedinfo, signature, keyinfo, data);
     
     free(keyinfo);
     free(signedinfo);
