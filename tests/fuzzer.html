@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<!--
+
+  Copyright (c) 2010 Samuel Lidén Borell <samuel@slbdata.se>
+ 
+  Permission is hereby granted, free of charge, to any person obtaining a copy
+  of this software and associated documentation files (the "Software"), to deal
+  in the Software without restriction, including without limitation the rights
+  to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+  copies of the Software, and to permit persons to whom the Software is
+  furnished to do so, subject to the following conditions:
+  
+  The above copyright notice and this permission notice shall be included in
+  all copies or substantial portions of the Software.
+  
+  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+  THE SOFTWARE.
+
+-->
+<title>Fuzzer</title>
+<script type="text/javascript">
+
+var output, container;
+
+var objCount = 4;
+
+var interactive = (document.location.search &&
+                    document.location.search.indexOf('interactive') != -1);
+
+var testsRun = 0;
+
+var verObj = [];
+var authObj = [];
+var signObj = [];
+var types = ["ver", "auth", "sign"];
+var base64test = "MTIzNA==";
+
+var paramList = [
+    "Challenge", "Nonce", "Policys", "Signature", "Subjects", "TextToBeSigned",
+];
+
+var actionList = [
+    "Authenticate", "Sign",
+];
+
+function debug(s) { output.value += s; }
+
+function createMany(mimeType, count) {
+    debug("createMany(\""+mimeType+"\", "+count+")... ");
+    var objs = [];
+    for (var i = 0; i < count; i++) {
+        var obj = document.createElement("object");
+        obj.setAttribute("type", mimeType);
+        container.appendChild(obj);
+        objs[i] = obj;
+    }
+    debug("done\n");
+    return objs;
+}
+
+function tryEval(e) {
+    //debug("eval: "+e+"\n");
+    eval("try { "+e+" } catch (e) { ; }");
+    testsRun++;
+}
+
+var fuzzParams = [
+    "null", "undefined", "''", "0", "'\\0'",
+    "'\\0"+base64test+"'", "[]", "document",
+    "'"+base64test+"'", "'"+base64test+" '", "' '",
+    "false", "true", "-1", "1",
+];
+
+function fuzz(f, start, count) {
+    //debug("fuzz: f("+start+")\n");
+    tryEval(f+"("+start+");");
+    if (count == 0) return;
+    
+    var sep = (start == "" ? "" : ", ");
+    for (var j = 0; j < fuzzParams.length; j++) {
+        fuzz(f, start+sep+fuzzParams[j], count -1);
+    }
+}
+
+function fuzzFunction(f) {
+    fuzz(f, "", 2);
+}
+
+var staticTestCount = 4;
+
+function performStaticTest(test, i) {
+    //debug("performTest("+test+", "+i+")... ");
+    switch (test) {
+        case 0: // Basic fuzzing on version object
+            fuzzFunction("verObj["+i+"].GetVersion");
+            break;
+        case 1: // Basic fuzzing on auth object
+        case 2: // Basic fuzzing on sign object
+            var obj = (test == 1 ? "auth" : "sign") + "Obj";
+            fuzzFunction(obj+".GetLastError");
+            fuzzFunction(obj+".GetParam");
+            fuzzFunction(obj+".SetParam");
+            fuzzFunction(obj+".PerformAction");
+            break;
+        case 3: // Non-existant methods
+            for (var j = 0; j < types.length; j++) {
+                tryEval(types[j]+"["+i+"].NonExistent;");
+                tryEval(types[j]+"["+i+"].NonExistent();");
+            }
+            break;
+    }
+    //debug("done\n");
+}
+
+function fuzzGetSetParam(n, f, p, v, i) {
+    var type = (n % 2 == 0 ? "authObj" : "signObj");
+    var func = (f % 2 == 0 ? "GetParam" : "SetParam");
+    
+    tryEval(type+"["+i+"]."+func+"(\""+paramList[p]+
+            "\", "+fuzzParams[v]+")");
+}
+
+function fuzzPerformAction(n, a, i) {
+    var type = (n % 2 == 0 ? "authObj" : "signObj");
+    
+    tryEval(type+"["+i+"].PerformAction(\""+actionList[a]+"\");");
+}
+
+function runStaticTests() {
+    for (var t = 0; t < staticTestCount; t++) {
+        performStaticTest(t, 0);
+    }
+}
+
+function random(below) {
+    return Math.floor(Math.random()*below);
+}
+
+function fuzzOne() {
+    var numTests = 2;
+    var t = random(numTests);
+    
+    if (!interactive && t in [1]) return;
+    
+    switch (t) {
+        case 0: // GetParam / SetParam
+            fuzzGetSetParam(random(2), random(2),
+                         random(paramList.length),
+                         random(fuzzParams.length), random(objCount));
+            break;
+        case 1: // PerformAction
+            fuzzPerformAction(random(2),
+                         random(actionList.length),
+                         random(objCount));
+            break;
+    }
+    
+    if (random(600) == 0) {
+        performStaticTest(random(staticTestCount), random(objCount));
+    }
+    
+    if (random(6000) == 0) {
+        // Recreate some plugins
+        // TODO
+    }
+}
+
+var lastTestCount = -1;
+
+function fuzzTick() {
+    var before = (random(3) == 0);
+    
+    if (before) window.setTimeout(fuzzTick, 50);
+    
+    for (var t = 0 ; t <= 300; t++) {
+        fuzzOne();
+    }
+    
+    if (!before) window.setTimeout(fuzzTick, 50);
+    
+    var newTestCount = Math.floor(testsRun / 1000);
+    if (newTestCount != lastTestCount) {
+        document.title = "Tests run: "+newTestCount+" k";
+        lastTestCount = newTestCount;
+    }
+}
+
+function init() {
+    output = document.getElementById('output');
+    output.value = "started\n";
+    container = document.getElementById('container');
+    
+    verObj = createMany("application/x-personal-version", objCount);
+    authObj = createMany("application/x-personal-authentication", objCount);
+    signObj = createMany("application/x-personal-signer2", objCount);
+    
+    runStaticTests();
+    
+    fuzzTick();
+}
+
+</script>
+</head>
+<body onload="init()" style="background: #FFFFDD">
+
+<p>This page sends all kinds of bad input to the FriBID plugin.
+It's purpose is to detect bugs and security holes.</p>
+
+<script type="text/javascript">
+if (!interactive) {
+    document.write('<p><a href="?interactive">Enable tests that require user interaction</a></p>');
+}
+</script>
+
+<p></p>
+
+<div>
+<textarea cols="80" rows="30" id="output">
+</textarea>
+</div>
+
+<div id="container">
+</div>
+
+</body>
+</html>
+
+
+
