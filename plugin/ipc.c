@@ -105,7 +105,7 @@ static void openInteractivePipes(PipeInfo *pipeinfo, Plugin *plugin) {
 static void closePipes(PipeInfo *pipeinfo) {
     fclose(pipeinfo->out);
     fclose(pipeinfo->in);
-    waitpid(pipeinfo->child, NULL, WNOHANG);
+    waitpid(pipeinfo->child, NULL, 0);
 }
 
 

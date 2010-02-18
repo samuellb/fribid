@@ -1,4 +1,8 @@
 
+0.1.1 - 2010-??-??
+  * Fixed a bug that sometimes caused PIDs of exited child processes
+    ("zombies") to be left around.
+
 0.1.0 - 2010-02-03
   * All occurances of the password in RAM are now cleared when they are
     no longer needed.
