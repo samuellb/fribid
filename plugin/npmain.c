@@ -68,6 +68,9 @@ NPError NPP_GetValue(NPP instance, NPPVariable variable, void *value) {
         case NPPVpluginTransparentBool:
             *(bool*)value = false;
             return NPERR_NO_ERROR;
+        case NPPVpluginNeedsXEmbed:
+            *(bool*)value = true;
+            return NPERR_NO_ERROR;
         default:
             return NPERR_INVALID_PARAM;
     }
