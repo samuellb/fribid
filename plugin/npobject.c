@@ -36,6 +36,8 @@
 #include <npapi.h>
 #include <npruntime.h>
 
+#include <X11/X.h>
+
 #include "npobject.h"
 
 
@@ -76,6 +78,7 @@ static char *getWindowProperty(NPP instance, const char *const identifiers[]) {
     if (!obj) return NULL;
     
     const char *const *identifier = &identifiers[0];
+
     while (1) {
         NPVariant value;
         
@@ -154,12 +157,14 @@ static char *getDocumentIP(NPP instance) {
 /**
  * Returns the native ID of the browser window, or -1 on error.
  */
-static int getWindowId(NPP instance) {
-    int id;
-    if (NPN_GetValue(instance, NPNVnetscapeWindow, &id) == NPERR_NO_ERROR) {
-        return id;
+static bool getWindowId(NPP instance, Window *id) {
+    if (id == NULL) {
+        return false;
+    }
+    if (NPN_GetValue(instance, NPNVnetscapeWindow, id) == NPERR_NO_ERROR) {
+        return true;
     } else {
-        return -1;
+        return false;
     }
 }
 
@@ -330,14 +335,18 @@ static NPClass baseClass = {
 
 /* Object construction */
 static NPObject *npobject_new(NPP instance, PluginType pluginType) {
-    PluginObject *obj = (PluginObject*)NPN_CreateObject(instance, &baseClass);
+    PluginObject *obj;
+    Window windowId;
+
+    obj = (PluginObject*)NPN_CreateObject(instance, &baseClass);
     if (!obj) return NULL;
     assert(obj->base._class != NULL);
     
     char *url = getDocumentURL(instance);
     char *hostname = getDocumentHostname(instance);
     char *ip = getDocumentIP(instance);
-    int windowId = getWindowId(instance);
+    getWindowId(instance, &windowId);
+
     obj->plugin = plugin_new(pluginType,
                              (url != NULL ? url : ""),
                              (hostname != NULL ? hostname : ""),

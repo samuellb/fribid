@@ -36,8 +36,9 @@ static const char *activeURLs[MAX_WINDOWS];
 
 Plugin *plugin_new(PluginType pluginType, const char *url,
                    const char *hostname, const char *ip,
-                   int windowId) {
+                   Window windowId) {
     Plugin *plugin = calloc(1, sizeof(Plugin));
+
     if (!plugin) return NULL;
     plugin->type = pluginType;
     plugin->url = strdup(url);

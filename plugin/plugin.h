@@ -25,6 +25,8 @@
 #ifndef __PLUGIN_H__
 #define __PLUGIN_H__
 
+#include <X11/X.h>
+
 typedef enum {
     PT_Version,
     PT_Authentication,
@@ -42,7 +44,7 @@ typedef struct {
     char *url;
     char *hostname;
     char *ip;
-    int windowId;
+    Window windowId;
     PluginError lastError;
     
     union {
@@ -70,7 +72,7 @@ typedef struct {
 /* Plugin creation */
 Plugin *plugin_new(PluginType pluginType, const char *url,
                    const char *hostname, const char *ip,
-                   int windowId);
+                   Window windowId);
 void plugin_free(Plugin *plugin);
 
 /* Javascript API */
