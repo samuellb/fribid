@@ -26,6 +26,7 @@
 #include <stdbool.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/mman.h> // For mlock()
 
 #include "../common/defines.h"
 #include "../common/pipe.h"
@@ -109,6 +110,9 @@ void pipeData() {
             }
             
             while (platform_sign(&p12Data, &p12Length, &person, &password)) {
+                // Lock the password memory to RAM so it cannot be spooled out to swap
+                mlock(password, strlen(password));
+
                 // Try to authenticate/sign
                 if (command == PMC_Authenticate) {
                     error = bankid_authenticate(p12Data, p12Length, person, password,
@@ -123,6 +127,7 @@ void pipeData() {
                 free(p12Data);
                 keyfile_freeSubject(person);
                 memset(password, 0, strlen(password));
+		munlock(password, strlen(password));
                 free(password);
                 
                 if (error == BIDERR_OK) break;
