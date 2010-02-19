@@ -93,12 +93,12 @@ static void openVersionPipes(PipeInfo *pipeinfo) {
 }
 
 static void openInteractivePipes(PipeInfo *pipeinfo, Plugin *plugin) {
-    char windowId[11]; // This holds a native window id (such as an XID)
+    char windowId[21]; // This holds a native window id (such as an XID)
     const char *argv[] = {
         mainBinary, ipcOption, windowIdOption, windowId, (char *)NULL,
     };
     
-    snprintf(windowId, 11, "%d", plugin->windowId);
+    snprintf(windowId, 21, "%ld", plugin->windowId);
     openPipes(pipeinfo, argv);
 }
 

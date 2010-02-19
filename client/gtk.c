@@ -176,7 +176,7 @@ static void selectDefaultSignature() {
 }
 
 void platform_startSign(const char *url, const char *hostname, const char *ip,
-                        const char *subjectFilter, int parentWindowId) {
+                        const char *subjectFilter, unsigned long parentWindowId) {
     
     currentSubjectFilter = (subjectFilter != NULL ?
                             strdup(subjectFilter) : NULL);
@@ -237,7 +237,7 @@ void platform_startSign(const char *url, const char *hostname, const char *ip,
     signDialog = GTK_DIALOG(gtk_builder_get_object(builder, "dialog_sign"));
     
     bool transientOk = false;
-    if (parentWindowId != -1) {
+    if (parentWindowId != PLATFORM_NO_WINDOW) {
         GdkWindow *parent = gdk_window_foreign_new((GdkNativeWindow)parentWindowId);
         if (parent != NULL) {
             gtk_widget_realize(GTK_WIDGET(signDialog));

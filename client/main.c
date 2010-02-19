@@ -35,7 +35,7 @@
 #include "misc.h"
 
 static const char version[] = PACKAGEVERSION;
-static int browserWindowId = -1;
+static unsigned long browserWindowId = PLATFORM_NO_WINDOW;
 
 /**
  * pipeData is called when the plugin has sent some data.
@@ -201,7 +201,7 @@ int main(int argc, char **argv) {
                 error = true;
                 break;
             }
-            browserWindowId = atoi(argv[i]);
+            browserWindowId = atol(argv[i]);
         } else {
             fprintf(stderr, BINNAME ": Invalid option: %s\n", argv[i]);
             error = true;

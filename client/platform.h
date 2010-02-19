@@ -81,11 +81,16 @@ void platform_asyncCall(AsyncCallFunction *function, void *param);
 uint32_t platform_lookupTypeARecord(const char *hostname);
 
 /* User interface */
+
+// This value has to match the value in the window system
+// (for example, None on X11)
+#define PLATFORM_NO_WINDOW 0
+
 void platform_mainloop();
 void platform_leaveMainloop();
 
 void platform_startSign(const char *url, const char *hostname, const char *ip,
-                        const char *subjectFilter, int parentWindowId);
+                        const char *subjectFilter, unsigned long parentWindowId);
 void platform_endSign();
 void platform_setMessage(const char *message);
 bool platform_sign(char **signature, int *siglen, char **person, char **password);
