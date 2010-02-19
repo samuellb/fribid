@@ -37,7 +37,7 @@ dist:
 	git archive --format=tar --prefix=$(DISTNAME)/ HEAD | bzip2 > $(DISTDESTDIR)$(DISTNAME).tar.bz2
 
 distsig: dist
-	gpg --sign $(DISTDESTDIR)$(DISTNAME).tar.bz2
+	gpg --detach-sign -a $(GPGFLAGS) $(DISTDESTDIR)$(DISTNAME).tar.bz2
 
 distdeb: dist
 	distname=$(DISTNAME) && \
@@ -51,7 +51,7 @@ distdeb: dist
 
 distdebsig: distdeb
 	# FIXME should not use *
-	for deb in $(DISTDESTDIR)*.deb; do gpg -o $$deb.sig --sign $$deb; done
+	for deb in $(DISTDESTDIR)*.deb; do gpg --detach-sign -a $(GPGFLAGS) $$deb; done
 
 # Release management
 prepare-release: refresh-release-time refresh-changelog-time set-version sync-changelog
