@@ -4,6 +4,8 @@
     ("zombies") to be left around.
   * Added a "fuzzer" script that can be used to check for bugs.
   * Compatibility with Google Chrome / Chromium.
+  * Prevent the password from getting swapped out. Thanks to Linus Walleij
+    for this patch!
 
 0.1.0 - 2010-02-03
   * All occurances of the password in RAM are now cleared when they are

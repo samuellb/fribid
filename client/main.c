@@ -127,7 +127,7 @@ void pipeData() {
                 free(p12Data);
                 keyfile_freeSubject(person);
                 memset(password, 0, strlen(password));
-		munlock(password, strlen(password));
+                munlock(password, strlen(password));
                 free(password);
                 
                 if (error == BIDERR_OK) break;
