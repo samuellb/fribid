@@ -224,7 +224,7 @@ void platform_startSign(const char *url, const char *hostname, const char *ip,
     gtk_cell_layout_pack_start(GTK_CELL_LAYOUT(signaturesCombo),
                                renderer, TRUE);
     gtk_cell_layout_set_attributes(GTK_CELL_LAYOUT(signaturesCombo),
-                                   renderer, "text", 0, NULL);
+                                   renderer, "text", 0, (char *)NULL);
     
     // Used to dim the "Sign" button when no signature has been selected
     g_signal_connect(G_OBJECT(signaturesCombo), "changed",
@@ -311,7 +311,7 @@ static void selectExternalFile() {
             GTK_FILE_CHOOSER_ACTION_OPEN,
             GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
             GTK_STOCK_OPEN, GTK_RESPONSE_ACCEPT,
-            NULL));
+            (char *)NULL));
     if (gtk_dialog_run(GTK_DIALOG(chooser)) == GTK_RESPONSE_ACCEPT) {
         gchar *filename = gtk_file_chooser_get_filename(chooser);
         GtkTreeModel *signatures = gtk_combo_box_get_model(signaturesCombo);
