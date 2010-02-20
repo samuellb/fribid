@@ -1,11 +1,16 @@
 
-0.1.1 - 2010-??-??
+0.1.1 - 2010-02-20
   * Fixed a bug that sometimes caused PIDs of exited child processes
     ("zombies") to be left around.
   * Added a "fuzzer" script that can be used to check for bugs.
   * Compatibility with Google Chrome / Chromium.
   * Prevent the password from getting swapped out. Thanks to Linus Walleij
     for this patch!
+  * Fixed some build problems completely on FreeBSD, and partially on
+    OpenBSD. Thanks to Markus Bergkvist!
+  * Fixed a browser crash on some 64-bit platforms. Thanks to Håkan Kvist
+    for this patch!
+    
 
 0.1.0 - 2010-02-03
   * All occurances of the password in RAM are now cleared when they are

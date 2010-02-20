@@ -1,3 +1,19 @@
+fribid (0.1.1) unstable; urgency=low
+
+  * Fixed a bug that sometimes caused PIDs of exited child processes
+    ("zombies") to be left around.
+  * Added a "fuzzer" script that can be used to check for bugs.
+  * Compatibility with Google Chrome / Chromium.
+  * Prevent the password from getting swapped out. Thanks to Linus Walleij
+    for this patch!
+  * Fixed some build problems completely on FreeBSD, and partially on
+    OpenBSD. Thanks to Markus Bergkvist!
+  * Fixed a browser crash on some 64-bit platforms. Thanks to Håkan Kvist
+    for this patch!
+    
+
+ -- Samuel Lidén Borell <samuel@slbdata.se>  Sat, 20 Feb 2010 15:26:31 +0100
+
 fribid (0.1.0) unstable; urgency=low
 
   * Initial Release.

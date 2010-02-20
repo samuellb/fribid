@@ -91,6 +91,8 @@ refresh-changelog-time: need-version
 	date=`date '+%F'` && \
 	sed -ri "s/^($$version - )([0-9?-]+)(.*)/\1$$date\3/" CHANGELOG
 
+tag-release: need-version
+	GIT_COMMITTER_NAME="FriBID Project" GIT_COMMITTER_EMAIL=releases@fribid.se git tag -u B21DF30E "v$$version"
 
-.PHONY: all clean dist distdeb distdebsig distclean distsig install need-version prepare-release refresh-release-time set-version sync-changelog uninstall $(SUBDIRS)
+.PHONY: all clean dist distdeb distdebsig distclean distsig install need-version prepare-release refresh-release-time set-version sync-changelog tag-release uninstall $(SUBDIRS)
 
