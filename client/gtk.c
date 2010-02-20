@@ -39,6 +39,7 @@
 #include "bankid.h"
 #include "keyfile.h"
 #include "platform.h"
+#include "misc.h"
 
 #define _(string) gettext(string)
 
@@ -130,7 +131,7 @@ static bool addSignatureFile(GtkListStore *signatures, const char *filename,
         }
     }
     free(people);
-    memset(fileData, 0, fileLen);
+    guaranteed_memset(fileData, 0, fileLen);
     free(fileData);
     
     return (personCount != 0);

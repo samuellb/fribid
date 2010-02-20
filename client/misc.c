@@ -45,6 +45,20 @@ char *rasprintf(const char *format, ...) {
     return str;
 }
 
+/**
+ * This is a modified memset(3) function to cover the
+ * problems documented by David Wheeler in:
+ * http://www.dwheeler.com/secure-programs/Secure-Programs-HOWTO/\
+ * protect-secrets.html
+ * Based on a Bugtraq issue filed by Andy Polyakov this
+ * workaround was suggested by Michael Howard
+ */
+void *guaranteed_memset(void *v, int c, size_t n) {
+    volatile char *p=v;
+    while (n--) *p++=c;
+    return v;
+}
+
 // Removes newlines from base64 encoded data
 static void removeNewlines(char *s) {
     const char *readp = s;
@@ -125,6 +139,3 @@ bool is_valid_hostname(const char *hostname) {
 bool is_https_url(const char *url) {
     return !strncmp(url, "https://", 8);
 }
-
-
-

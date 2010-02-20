@@ -135,7 +135,7 @@ void pipeData() {
                 
                 free(p12Data);
                 keyfile_freeSubject(person);
-                memset(password, 0, password_maxsize);
+                guaranteed_memset(password, 0, password_maxsize);
                 
                 if (error == BIDERR_OK) break;
                 

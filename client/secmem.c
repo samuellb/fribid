@@ -28,6 +28,7 @@
 #include <unistd.h> // For sysconf()
 #include <sys/mman.h> // For mmap()/mlock() etc
 
+#include "misc.h"
 #include "secmem.h"
 
 /*
@@ -135,7 +136,7 @@ void secmem_free_page(char *page)
     for (i = 0; i < SECPAGES; i++) {
         if (pool + (pagesize * i) == page) {
             pageindex[i] = 0;
-            memset(page, 0, pagesize);
+            guaranteed_memset(page, 0, pagesize);
             break;
         }
     }
@@ -153,7 +154,7 @@ void secmem_destroy_pool(void)
         return;
     for (i = 0; i < SECPAGES; i++)
         pageindex[i] = 0;
-    memset(pool, 0, poolsize);
+    guaranteed_memset(pool, 0, poolsize);
     munmap(pool, poolsize);
     poolsize = 0;
     pool = NULL;

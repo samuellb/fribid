@@ -28,6 +28,7 @@
 #include <stdbool.h>
 
 char *rasprintf(const char *format, ...);
+void *guaranteed_memset(void *v, int c, size_t n);
 
 char *base64_encode(const char *data, const int length);
 char *base64_decode(const char *encoded);
