@@ -26,13 +26,13 @@
 #include <stdbool.h>
 #include <stdlib.h>
 #include <string.h>
-#include <sys/mman.h> // For mlock()
 
 #include "../common/defines.h"
 #include "../common/pipe.h"
 #include "bankid.h"
 #include "platform.h"
 #include "misc.h"
+#include "secmem.h"
 
 static const char version[] = PACKAGEVERSION;
 static unsigned long browserWindowId = PLATFORM_NO_WINDOW;
@@ -86,10 +86,22 @@ void pipeData() {
             int p12Length;
             KeyfileSubject *person;
             char *password = NULL;
+            long password_maxsize = 0;
             char *signature = NULL;
             char *decodedSubjectFilter = NULL;
             error = BIDERR_UserCancel;
-            
+
+            // Allocate a secure page for the password
+            password = secmem_get_page(&password_maxsize);
+            if (!password || !password_maxsize) {
+                pipe_sendInt(stdout, BIDERR_InternalError);
+                pipe_sendString(stdout, "Out of secure memory!\n");
+                pipe_flush(stdout);
+                
+                platform_leaveMainloop();
+                return;
+            }
+
             if (subjectFilter) {
                 decodedSubjectFilter = base64_decode(subjectFilter);
                 free(subjectFilter);
@@ -108,11 +120,8 @@ void pipeData() {
             if (bankid_versionHasExpired()) {
                 platform_versionExpiredError();
             }
-            
-            while (platform_sign(&p12Data, &p12Length, &person, &password)) {
-                // Lock the password memory to RAM so it cannot be spooled out to swap
-                mlock(password, strlen(password));
 
+            while (platform_sign(&p12Data, &p12Length, &person, &password, password_maxsize)) {
                 // Try to authenticate/sign
                 if (command == PMC_Authenticate) {
                     error = bankid_authenticate(p12Data, p12Length, person, password,
@@ -126,16 +135,16 @@ void pipeData() {
                 
                 free(p12Data);
                 keyfile_freeSubject(person);
-                memset(password, 0, strlen(password));
-                munlock(password, strlen(password));
-                free(password);
+                memset(password, 0, password_maxsize);
                 
                 if (error == BIDERR_OK) break;
                 
                 platform_signError();
                 error = BIDERR_UserCancel;
             }
-            
+
+            secmem_free_page(password);
+
             platform_endSign();
             
             free(message);
@@ -182,7 +191,13 @@ int main(int argc, char **argv) {
     if (process_non_ui_args(argc, argv)) {
         return 0;
     }
-    
+
+    error = secmem_init_pool();
+    if (error) {
+        fprintf(stderr, BINNAME ": could not initialize secure memory");
+        return 2;
+    }
+
     platform_init(&argc, &argv);
     bankid_init();
     
@@ -208,18 +223,23 @@ int main(int argc, char **argv) {
         }
     }
     
-    if (error) return 2;
-    
+    if (error) {
+        secmem_destroy_pool();
+        return 2;
+    }
+
     /* Set up pipe */
     if (ipc) {
         platform_setupPipe(pipeData);
     } else {
         fprintf(stderr, "This is an internal program.\n");
+        secmem_destroy_pool();
         return 2;
     }
     
     platform_mainloop();
-    
+
+    secmem_destroy_pool();
     bankid_shutdown();
     return 0;
 }

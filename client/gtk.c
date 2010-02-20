@@ -343,9 +343,14 @@ static void selectExternalFile() {
  * Waits for the user to fill in the dialog, and loads the P12 file for
  * the selected subject.
  */
-bool platform_sign(char **signature, int *siglen, KeyfileSubject **person, char **password) {
+bool platform_sign(char **signature, int *siglen, KeyfileSubject **person,
+                   char **password, int password_maxlen) {
     guint response;
-    
+
+    // Restrict the password to the length of the preallocated
+    // password buffer
+    gtk_entry_set_max_length(passwordEntry, password_maxlen-1);
+
     while ((response = gtk_dialog_run(signDialog)) == RESPONSE_EXTERNAL) {
         // User pressed "External file..."
         selectExternalFile();
@@ -373,11 +378,11 @@ bool platform_sign(char **signature, int *siglen, KeyfileSubject **person, char 
             free(filename);
         }
         
-        // The contents of the text field is automatically cleared when the
-        // GtkEntry widget is destroyed, so the password won't stay in memory.
-        *password = strdup(gtk_entry_get_text(passwordEntry));
+        // Copy the password to the secure buffer
+        strncpy(*password, gtk_entry_get_text(passwordEntry), password_maxlen-1);
+        // Be sure to terminate this under all circumstances
+        *password[password_maxlen-1] = '\0';
         return true;
-        
     } else {
         // User pressed cancel or closed the dialog
         return false;
