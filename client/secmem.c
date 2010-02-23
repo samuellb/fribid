@@ -78,8 +78,10 @@ bool secmem_init_pool(void)
              PROT_READ | PROT_WRITE,
              MAP_PRIVATE | MAP_ANONYMOUS,
              -1, 0);
-    if (pool == MAP_FAILED)
+    if (pool == MAP_FAILED) {
+        pool = NULL;
         return true;
+    }
 
     // Lock this pool from any swapping!
     err = mlock(pool, poolsize);

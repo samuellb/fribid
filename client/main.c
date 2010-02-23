@@ -95,7 +95,7 @@ void pipeData() {
             password = secmem_get_page(&password_maxsize);
             if (!password || !password_maxsize) {
                 pipe_sendInt(stdout, BIDERR_InternalError);
-                pipe_sendString(stdout, "Out of secure memory!\n");
+                pipe_sendString(stdout, "");
                 pipe_flush(stdout);
                 
                 platform_leaveMainloop();
@@ -121,7 +121,7 @@ void pipeData() {
                 platform_versionExpiredError();
             }
 
-            while (platform_sign(&p12Data, &p12Length, &person, &password, password_maxsize)) {
+            while (platform_sign(&p12Data, &p12Length, &person, password, password_maxsize)) {
                 // Try to authenticate/sign
                 if (command == PMC_Authenticate) {
                     error = bankid_authenticate(p12Data, p12Length, person, password,

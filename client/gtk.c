@@ -345,7 +345,7 @@ static void selectExternalFile() {
  * the selected subject.
  */
 bool platform_sign(char **signature, int *siglen, KeyfileSubject **person,
-                   char **password, int password_maxlen) {
+                   char *password, int password_maxlen) {
     guint response;
 
     // Restrict the password to the length of the preallocated
@@ -380,9 +380,9 @@ bool platform_sign(char **signature, int *siglen, KeyfileSubject **person,
         }
         
         // Copy the password to the secure buffer
-        strncpy(*password, gtk_entry_get_text(passwordEntry), password_maxlen-1);
+        strncpy(password, gtk_entry_get_text(passwordEntry), password_maxlen-1);
         // Be sure to terminate this under all circumstances
-        *password[password_maxlen-1] = '\0';
+        password[password_maxlen-1] = '\0';
         return true;
     } else {
         // User pressed cancel or closed the dialog
