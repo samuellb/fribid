@@ -130,7 +130,7 @@ static SEC_PKCS12DecoderContext *pkcs12_open(const char *p12Data, const int p12L
         
         if (PK11_InitPin(slot, NULL, randomString) != SECSuccess) {
             fprintf(stderr, BINNAME ": failed to set PIN for NSS DB\n");
-            return false;
+            return NULL;
         }
     }
     
