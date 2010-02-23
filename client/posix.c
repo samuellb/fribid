@@ -44,6 +44,7 @@
 
 #include "../common/defines.h"
 #include "platform.h"
+#include "misc.h"
 
 void platform_seedRandom() {
     struct timeval tv;
@@ -133,9 +134,30 @@ PlatformDirIter *platform_openKeysDir() {
 }
 
 void platform_makeRandomString(char *buff, int length) {
+    // This array are characters for [0..63] i.e. a 6bit number
     static const char randChars[] =
         "0123456789_-ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
-    
+
+    // Attempt to use the /dev/urandom device first, as
+    // adviced by Wheeler. We cannot use /dev/random because
+    // we don't want the GUI to freeze
+    // http://www.dwheeler.com/secure-programs/Secure-Programs-HOWTO/
+    // random-numbers.html
+    FILE *file = fopen("/dev/urandom", "rb");
+    if (file) {
+        // Read directly into the buffer and modify
+        // since this may be a piece of secure memory
+        if ((int) fread(buff, 1, length, file) == length) {
+            for (int i = 0; i < length; i++)
+                buff[i] = randChars[buff[i] & 0x3f];
+            return;
+        }
+        // No, didn't work, fall through but cleanup first
+        guaranteed_memset(buff, 0, length);
+    }
+
+    // Else we fall back to the libc intrinsic rand() function
+    // so we *always* return something random
     for (int i = 0; i < length; i++) {
         int randVal = rand();
         buff[i] = randChars[(i ^ randVal ^ (randVal >> 6) ^
