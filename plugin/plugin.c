@@ -163,8 +163,7 @@ int sign_performAction(Plugin *plugin, const char *action) {
             return ret;
         }
     } else if ((plugin->type == PT_Signer) && !strcmp(action, "Sign")) {
-        if (!hasSignParams(plugin) || !plugin->info.sign.subjectFilter ||
-            !plugin->info.sign.message) {
+        if (!hasSignParams(plugin) || !plugin->info.sign.message) {
             return BIDERR_MissingParameter;
         } else {
             if (!lockURL(plugin->url)) return BIDERR_InternalError;
