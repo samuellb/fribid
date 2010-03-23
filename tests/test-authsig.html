@@ -4,7 +4,7 @@
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
 <!--
 
-  Copyright (c) 2009 Samuel Lidén Borell <samuel@slbdata.se>
+  Copyright (c) 2009-2010 Samuel Lidén Borell <samuel@slbdata.se>
  
   Permission is hereby granted, free of charge, to any person obtaining a copy
   of this software and associated documentation files (the "Software"), to deal
@@ -31,43 +31,54 @@
 var output;
 var pluginVersion;
 
-function init() {
+function test(sign, visibleText, nonVisibleText) {
     output = document.getElementById('output');
     pluginVersion = document.getElementById('pluginVersion');
     output.value = "";
     output.value += "Version: \"";
     output.value += pluginVersion.GetVersion()+"\"\n\n";
     
-    pluginAuth = document.getElementById('pluginAuth');
+    plugin = document.getElementById(sign ? 'pluginSign' : 'pluginAuth');
     output.value += "Calling SetParam(Challenge)\n";
-    pluginAuth.SetParam("Challenge", "MTI0MzYwMTMyOTk5NTU3MTI4OTg0MjkwMzY3OTYwODM=");
+    plugin.SetParam((sign ? "Nonce" : "Challenge"), "MTIzNDU2Nzg5");
+    plugin.SetParam("TextToBeSigned", visibleText);
+    plugin.SetParam("NonVisibleData", nonVisibleText);
     output.value += "Calling SetParam(Policys)\n";
-    var retval = pluginAuth.SetParam("Policys", "MS4yLjc1Mi43OC4xLjE7MS4yLjc1Mi43OC4xLjI7MS4yLjMuNC41OzEuMi4zLjQuMTA=");
+    var retval = plugin.SetParam("Policys", "MS4yLjc1Mi43OC4xLjE7MS4yLjc1Mi43OC4xLjI7MS4yLjMuNC41OzEuMi4zLjQuMTA=");
     
     output.value += "retval of sp = "+retval+"\n";
     output.value += "\nGetParam:\n";
-    output.value += "    Challenge: \""+pluginAuth.GetParam("Challenge")+"\"\n";
-    output.value += "    Policys: \""+pluginAuth.GetParam("Policys")+"\"\n";
-    output.value += "    Signature: \""+pluginAuth.GetParam("Signature")+"\"\n";
+    output.value += "    Challenge: \""+plugin.GetParam("Challenge")+"\"\n";
+    output.value += "    Nonce: \""+plugin.GetParam("Nonce")+"\"\n";
+    output.value += "    Policys: \""+plugin.GetParam("Policys")+"\"\n";
+    output.value += "    TextToBeSigned: \""+plugin.GetParam("TextToBeSigned")+"\"\n";
+    output.value += "    NonVisibleData: \""+plugin.GetParam("NonVisibleData")+"\"\n";
+    output.value += "    Subjects: \""+plugin.GetParam("Subjects")+"\"\n";
+    output.value += "    Signature: \""+plugin.GetParam("Signature")+"\"\n";
     
-    output.value += "\nInvoking PerformAction(Authenticate):\n";
-    output.value += "    return value = "+pluginAuth.PerformAction("Authenticate")+"\n";
-    output.value += "    GetLastError() = "+pluginAuth.GetLastError()+"\n";
+    command = (sign ? "Sign" : "Authenticate");
+    output.value += "\nInvoking PerformAction("+command+"):\n";
+    output.value += "    return value = "+plugin.PerformAction(command)+"\n";
+    output.value += "    GetLastError() = "+plugin.GetLastError()+"\n";
     
     output.value += "\nGetParam:\n";
-    output.value += "    Signature: \""+pluginAuth.GetParam("Signature")+"\"\n";
+    output.value += "    Signature: \""+plugin.GetParam("Signature")+"\"\n";
+}
+
+function testWithDefaults(sign) {
+    test(sign, "U3lubGlnIHRleHQgMTIzNA==", "T3N5bmxpZyBkYXRh");
 }
 
 </script>
 </head>
-<body onload="init()" style="background: #FFFFDD">
+<body style="background: #FFFFDD">
 
 <p>You can use this file to verify that FriBID works. To do so,
 put this file on an SSL-enabled server and open it in a web browser
 (you can use a self-signed SSL-certificate if you don't want to
 buy one).</p>
 
-<p> Plugin installerad: 
+<p> Plugin installed: 
 <script type="text/javascript">
 var pluginInstalled = false;
 
@@ -76,9 +87,12 @@ var pluginInstalled =
     navigator.mimeTypes["application/x-personal-version"] &&
     navigator.mimeTypes["application/x-personal-version"].enabledPlugin);
 
-document.write(pluginInstalled ? "Ja" : "Nej");
+document.write(pluginInstalled ? "Yes" : "No");
 </script>
 </p>
+
+<p><input type="button" value="Test authentication" onclick="testWithDefaults(false);" /></p>
+<p><input type="button" value="Test signing" onclick="testWithDefaults(true);" /></p>
 
 <div>
 <textarea cols="80" rows="30" id="output">
@@ -88,6 +102,7 @@ document.write(pluginInstalled ? "Ja" : "Nej");
 <div>
 <object id="pluginVersion" type="application/x-personal-version"></object>
 <object id="pluginAuth" type="application/x-personal-authentication"></object>
+<object id="pluginSign" type="application/x-personal-signer2"></object>
 </div>
 
 </body>
