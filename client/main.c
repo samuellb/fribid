@@ -53,9 +53,10 @@ void pipeData() {
             char *url = pipe_readString(stdin);
             char *hostname = pipe_readString(stdin);
             char *ip = pipe_readString(stdin);
-            char *message = NULL;
+            char *message = NULL, *invisibleMessage = NULL;
             if (command == PMC_Sign) {
                 message = pipe_readString(stdin);
+                invisibleMessage = pipe_readOptionalString(stdin);
             }
             
             // Validate input
@@ -68,7 +69,8 @@ void pipeData() {
                        !is_valid_ip_address(ip) ||
                        (subjectFilter && !is_canonical_base64(subjectFilter)) ||
                        (command == PMC_Sign && (
-                           !is_canonical_base64(message)
+                           !is_canonical_base64(message) ||
+                           (invisibleMessage && !is_canonical_base64(invisibleMessage))
                        ))) {
                 error = BIDERR_InternalError;
             }
@@ -130,7 +132,7 @@ void pipeData() {
                 } else {
                     error = bankid_sign(p12Data, p12Length, person, password,
                                         challenge, hostname, ip,
-                                        message, &signature);
+                                        message, invisibleMessage, &signature);
                 }
                 
                 free(p12Data);
@@ -148,6 +150,7 @@ void pipeData() {
             platform_endSign();
             
             free(message);
+            free(invisibleMessage);
             free(challenge);
             free(url);
             free(hostname);

@@ -1,6 +1,6 @@
 /*
 
-  Copyright (c) 2009 Samuel Lidén Borell <samuel@slbdata.se>
+  Copyright (c) 2009-2010 Samuel Lidén Borell <samuel@slbdata.se>
  
   Permission is hereby granted, free of charge, to any person obtaining a copy
   of this software and associated documentation files (the "Software"), to deal
@@ -42,6 +42,26 @@ char *rasprintf(const char *format, ...) {
     va_start(args, format);
     str = (char*)g_strdup_vprintf((gchar*)format, args);
     va_end(args);
+    return str;
+}
+
+/**
+ * Like rasprintf (above), but appends to an existing string instead of
+ * creating a new one. The original string is reallocated as a longer
+ * string, which is returned.
+ */
+char *rasprintf_append(char *str, const char *format, ...) {
+    va_list args;
+    
+    size_t oldlen = strlen(str);
+    va_start(args, format);
+    char *tail = (char*)g_strdup_vprintf((gchar*)format, args);
+    va_end(args);
+    size_t taillen = strlen(tail);
+    
+    str = realloc(str, oldlen+taillen+1);
+    memcpy(&str[oldlen], tail, taillen+1);
+    free(tail);
     return str;
 }
 

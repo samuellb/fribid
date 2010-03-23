@@ -1,6 +1,6 @@
 /*
 
-  Copyright (c) 2009 Samuel Lidén Borell <samuel@slbdata.se>
+  Copyright (c) 2009-2010 Samuel Lidén Borell <samuel@slbdata.se>
  
   Permission is hereby granted, free of charge, to any person obtaining a copy
   of this software and associated documentation files (the "Software"), to deal
@@ -157,6 +157,7 @@ int sign_performAction_Sign(Plugin *plugin) {
     
     sendSignCommon(pipeinfo, plugin);
     pipe_sendString(pipeinfo.out, plugin->info.sign.message);
+    pipe_sendOptionalString(pipeinfo.out, plugin->info.sign.invisibleMessage);
     
     pipe_finishCommand(pipeinfo.out);
     

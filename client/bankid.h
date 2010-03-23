@@ -49,7 +49,7 @@ BankIDError bankid_sign(const char *p12Data, const int p12Length,
                         const char *password,
                         const char *challenge,
                         const char *hostname, const char *ip,
-                        const char *message,
+                        const char *message, const char *invisibleMessage,
                         char **signature);
 
 #endif

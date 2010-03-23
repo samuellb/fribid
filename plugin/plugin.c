@@ -69,6 +69,7 @@ void plugin_free(Plugin *plugin) {
             free(plugin->info.sign.policys);
             free(plugin->info.sign.subjectFilter);
             free(plugin->info.sign.message);
+            free(plugin->info.sign.invisibleMessage);
             free(plugin->info.sign.signature);
             break;
     }
@@ -124,6 +125,7 @@ static char **getParamPointer(Plugin *plugin, const char *name) {
         case PT_Signer:
             if (!strcmp(name, "Nonce")) return &plugin->info.sign.challenge;
             if (!strcmp(name, "TextToBeSigned")) return &plugin->info.sign.message;
+            if (!strcmp(name, "NonVisibleData")) return &plugin->info.sign.invisibleMessage;
             return getCommonParamPointer(plugin, name);
         default:
             return NULL;

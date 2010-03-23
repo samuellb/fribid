@@ -1,6 +1,6 @@
 /*
 
-  Copyright (c) 2009 Samuel Lidén Borell <samuel@slbdata.se>
+  Copyright (c) 2009-2010 Samuel Lidén Borell <samuel@slbdata.se>
  
   Permission is hereby granted, free of charge, to any person obtaining a copy
   of this software and associated documentation files (the "Software"), to deal
@@ -28,6 +28,7 @@
 #include <stdbool.h>
 
 char *rasprintf(const char *format, ...);
+char *rasprintf_append(char *str, const char *format, ...);
 void *guaranteed_memset(void *v, int c, size_t n);
 
 char *base64_encode(const char *data, const int length);

@@ -228,6 +228,11 @@ static const char signedText_template[] =
         "%s"
     "</usrVisibleData>";
 
+static const char signedInvisibleText_template[] =
+    "<usrNonVisibleData>"
+        "%s"
+    "</usrNonVisibleData>";
+
 static const char signobj_id[] = "bidSignedData";
 
 /**
@@ -300,11 +305,15 @@ BankIDError bankid_sign(const char *p12Data, const int p12Length,
                         const char *password,
                         const char *challenge,
                         const char *hostname, const char *ip,
-                        const char *message,
+                        const char *message, const char *invisibleMessage,
                         char **signature) {
     BankIDError error;
     
     char *extra = rasprintf(signedText_template, message);
+    
+    if (invisibleMessage) {
+        extra = rasprintf_append(extra, signedInvisibleText_template, invisibleMessage);
+    }
     
     error = sign(p12Data, p12Length, person, password, challenge,
                  hostname, ip, CERTUSE_SIGNING, "Signing", extra, signature);

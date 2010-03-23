@@ -1,6 +1,6 @@
 /*
 
-  Copyright (c) 2009 Samuel Lidén Borell <samuel@slbdata.se>
+  Copyright (c) 2009-2010 Samuel Lidén Borell <samuel@slbdata.se>
  
   Permission is hereby granted, free of charge, to any person obtaining a copy
   of this software and associated documentation files (the "Software"), to deal
@@ -53,7 +53,7 @@ typedef struct {
             char *challenge;
             char *policys;
             char *subjectFilter;
-            void *dummy0; // To be compatible with .sign below
+            void *dummy0, *dummy1; // To be compatible with .sign below
             /* Output parameters */
             char *signature;
         } auth;
@@ -63,6 +63,7 @@ typedef struct {
             char *policys;
             char *subjectFilter;
             char *message;
+            char *invisibleMessage;
             /* Output parameters */
             char *signature;
         } sign;
