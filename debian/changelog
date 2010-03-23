@@ -1,3 +1,16 @@
+fribid (0.1.2) unstable; urgency=low
+
+  * Fixed a bug with optimized builds that caused passwords to not be
+    cleared from RAM when they where no longer needed.
+  * Fixed a compatibility problem with sites that request signing
+    without specifying a subject (personal number).
+  * Implemented "non-visible data", which is used in signatures at some
+    sites, such as Skatteverket.
+  * A better random source is now used for the encryption keys for the
+    temporary NSS database.
+
+ -- Samuel Lidén Borell <samuel@slbdata.se>  Wed, 24 Mar 2010 00:30:16 +0100
+
 fribid (0.1.1) unstable; urgency=low
 
   * Fixed a bug that sometimes caused PIDs of exited child processes

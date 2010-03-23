@@ -1,4 +1,15 @@
 
+0.1.2 - 2010-03-24
+  * Fixed a bug with optimized builds that caused passwords to not be
+    cleared from RAM when they where no longer needed.
+  * Fixed a compatibility problem with sites that request signing
+    without specifying a subject (personal number).
+  * Implemented "non-visible data", which is used in signatures at some
+    sites, such as Skatteverket.
+  * A better random source is now used for the encryption keys for the
+    temporary NSS database.
+
+
 0.1.1 - 2010-02-20
   * Fixed a bug that sometimes caused PIDs of exited child processes
     ("zombies") to be left around.
