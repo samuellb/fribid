@@ -76,7 +76,7 @@ void platform_mainloop() {
     gtk_main();
 }
 
-/* Authentication */
+/* Sign/Authenticate dialog controls and state */
 static GtkDialog *signDialog;
 static GtkLabel *operationLabel;
 static GtkTextView *signText;
@@ -89,7 +89,7 @@ static GtkWidget *signLabel;
 static GtkWidget *signScroller;
 
 static char *currentSubjectFilter;
-
+static bool dialogShown;
 
 static void showMessage(GtkMessageType type, const char *text) {
     GtkWidget *dialog = gtk_message_dialog_new(
@@ -262,7 +262,7 @@ void platform_startSign(const char *url, const char *hostname, const char *ip,
     validateDialog(NULL, NULL);
     
     gtk_window_set_modal(GTK_WINDOW(signDialog), TRUE);
-    gtk_widget_show(GTK_WIDGET(signDialog));
+    dialogShown = false;
 }
 
 void platform_endSign() {
@@ -351,7 +351,12 @@ bool platform_sign(char **signature, int *siglen, KeyfileSubject **person,
     // Restrict the password to the length of the preallocated
     // password buffer
     gtk_entry_set_max_length(passwordEntry, password_maxlen-1);
-
+    
+    if (!dialogShown) {
+        gtk_widget_show(GTK_WIDGET(signDialog));
+        dialogShown = true;
+    }
+    
     while ((response = gtk_dialog_run(signDialog)) == RESPONSE_EXTERNAL) {
         // User pressed "External file..."
         selectExternalFile();
