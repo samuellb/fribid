@@ -1,0 +1,49 @@
+#!/bin/sh
+
+if [ x"$#" != x1 ]; then
+    echo "Usage: asn1dump filename
+
+This program dumps the ASN1 structure and contents of a file. It will create
+textual and binary dumps of the file in the current directory.
+(currently $PWD).
+
+Individual \"blobs\" in the file are dumped to filename.1.2.3.4.bin/txt. Each
+such text file is appended to all.txt, and structure.txt which is filtered
+to not contain number sequences (such as keys and personal numbers).
+" >&2
+    exit 2
+fi
+
+BASE="`basename "$1"`"
+BASE="${BASE%.bin}"
+BASE="${BASE%.ngp}"
+BASE="${BASE%.nge}"
+BASE="${BASE%.p12}"
+OUT="$BASE.txt"
+
+ASN1DUMP_IS_CALLEE="$ASN1DUMP_INNER"
+if [ -z "$ASN1DUMP_IS_CALLEE" ]; then
+    # Start with empty all.txt and structure.txt files
+    printf "" > all.txt
+    printf "" > structure.txt
+fi
+export ASN1DUMP_INNER=1
+
+openssl asn1parse -inform DER -in "$1" > "$OUT" || { rm "$OUT"; exit 1; }
+cat "$OUT" >> all.txt
+# Remove keys, personal numbers, etc.
+sed -r 's/[0-9a-fA-F]{11,}/[hidden]/g' "$OUT" >> structure.txt
+
+# TODO Use "openssl asn1parse -strparse" instead?
+i=1
+prefix='[^:]*:[^:]*: OCTET STRING      \[HEX DUMP\]:'
+grep -E "$prefix" "$OUT" | sed s/"$prefix"// | while read line; do
+    printf "%s" "$line" | xxd -r -p > "$BASE.$i.bin"
+    "$0" "$BASE.$i.bin" || true
+    i=$((i+1))
+done
+
+if [ -z "$ASN1DUMP_IS_CALLEE" ]; then
+    printf "\nAny error messages above can most likely be ignored.\n"
+fi
+
