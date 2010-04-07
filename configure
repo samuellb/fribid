@@ -60,8 +60,7 @@ Options:
                           data. [PREFIX/share]
     --plugin-path=PATH    Sets the NPAPI plugin path [/usr/lib/mozilla/plugin]
                           This option may be repeated if you want to create
-                          plugin links in several places. Do not include the
-                          prefix in the path.
+                          plugin links in several places.
     --current-user        Selects a per-user installation. Equivalent to:
                               --prefix=$userPrefix
                               --plugin-path=$userPluginPath
