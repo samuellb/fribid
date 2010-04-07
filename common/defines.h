@@ -38,10 +38,10 @@
 #define DNSVERSION          "1"
 #define STATUSDOMAIN        ".status.fribid.se"
 
-#define LIB_PATH            EPREFIX "/lib/" BINNAME
-#define SHARE_PATH          PREFIX "/share/" BINNAME
-#define DOC_PATH            PREFIX "/share/doc/" BINNAME
-#define LOCALEDIR           PREFIX "/share/locale"
+#define LIB_PATH            LIBDIR "/" BINNAME
+#define SHARE_PATH          DATADIR "/" BINNAME
+#define DOC_PATH            DATADIR "/doc/" BINNAME
+#define LOCALEDIR           DATADIR "/locale"
 
 #define SIGNING_EXECUTABLE  LIB_PATH "/sign"
 #define UI_PATH             SHARE_PATH "/ui"

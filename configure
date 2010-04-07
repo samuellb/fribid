@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-#  Copyright (c) 2009 Samuel Lidén Borell <samuel@slbdata.se>
+#  Copyright (c) 2009-2010 Samuel Lidén Borell <samuel@slbdata.se>
 # 
 #  Permission is hereby granted, free of charge, to any person obtaining a copy
 #  of this software and associated documentation files (the "Software"), to deal
@@ -24,6 +24,9 @@
 prefixSet=""
 prefix="/usr/local"
 execprefix=""
+
+libdir=""
+datadir=""
 
 pluginPathSet=""
 pluginPaths="/usr/lib/mozilla/plugins"
@@ -52,6 +55,9 @@ Options:
     --prefix=PATH         Sets the installation prefix. [/usr/local]
     --exec-prefix=PATH    Sets the installation prefix for executable files.
                           The default is to use the same prefix for all files.
+    --libdir=PATH         Sets the directory for libraries. [EPREFIX/lib]
+    --datadir=PATH        Sets the directory for architecture-independent
+                          data. [PREFIX/share]
     --plugin-path=PATH    Sets the NPAPI plugin path [/usr/lib/mozilla/plugin]
                           This option may be repeated if you want to create
                           plugin links in several places. Do not include the
@@ -68,6 +74,12 @@ Options:
         ;;
     --exec-prefix=*)
         execprefix=${flag#--exec-prefix=}
+        ;;
+    --libdir=*)
+        libdir=${flag#--libdir=}
+        ;;
+    --datadir=*)
+        datadir=${flag#--datadir=}
         ;;
     --plugin-path=*)
         path=${flag#--plugin-path=}
@@ -134,6 +146,15 @@ if [ -n "$execprefix" ]; then
     echo "Executable/library prefix: $execPath"
 fi
 
+### Specific directories
+if [ -z "$libdir" ]; then
+    libdir="$execPath/lib"
+fi
+
+if [ -z "$datadir" ]; then
+    datadir="$prefixPath/share"
+fi
+
 
 ### Plugin paths
 hasPaths=""
@@ -195,6 +216,10 @@ echo "
 
 #define PREFIX \"$prefixPath\"
 #define EPREFIX \"$execPath\"
+
+#define LIBDIR \"$libdir\"
+#define DATADIR \"$datadir\"
+
 #define NPAPI_PLUGIN_PATHS \"$pluginPaths\"
 " > "$CONFFILE"
 
