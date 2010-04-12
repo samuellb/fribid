@@ -337,19 +337,24 @@ static SECItem *nicknameCollisionFunction(SECItem *oldNick, PRBool *cancel, void
     char *caNick = CERT_MakeCANickname(cert);
     if (!caNick) return NULL;
     
-    if (oldNick && oldNick->data && (oldNick->data != 0) &&
+    if (oldNick && oldNick->data && (oldNick->len != 0) &&
         (oldNick->len == strlen(caNick)) &&
         !strncmp((const char*)oldNick->data, caNick, oldNick->len)) {
         // Equal
-        free(caNick);
+        PORT_Free(caNick);
         PORT_SetError(SEC_ERROR_IO);
         return NULL;
     }
     
-    SECItem *item = SECITEM_AllocItem(NULL, NULL, strlen(caNick));
+    SECItem *item = PORT_New(SECItem);
+    if (!item) {
+        PORT_Free(caNick);
+        return NULL;
+    }
+    item->type = siBuffer;
+    item->len = strlen(caNick);
     item->data = (unsigned char*)caNick;
     
-    free(caNick);
     return item;
 }
 
