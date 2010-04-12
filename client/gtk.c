@@ -178,6 +178,8 @@ static void selectDefaultSignature() {
 
 void platform_startSign(const char *url, const char *hostname, const char *ip,
                         const char *subjectFilter, unsigned long parentWindowId) {
+    char** paths;
+    int len;
     
     currentSubjectFilter = (subjectFilter != NULL ?
                             strdup(subjectFilter) : NULL);
@@ -206,15 +208,19 @@ void platform_startSign(const char *url, const char *hostname, const char *ip,
     GtkListStore *signatures = gtk_list_store_new(3, G_TYPE_STRING, G_TYPE_POINTER, G_TYPE_STRING);
     GtkTreeIter iter = { .stamp = 0 };
     
-    // Look for P12s in ~/cbt
-    PlatformDirIter *dir = platform_openKeysDir();
-    if (dir) {
-        while (platform_iterateDir(dir)) {
-            char *filename = platform_currentPath(dir);
-            addSignatureFile(signatures, filename, &iter);
-            free(filename);
+    // Look for P12s in ~/cbt and ~/.cbt
+    platform_keyDirs(&paths, &len);
+    for (int i = 0; i <= len; i++) {
+        PlatformDirIter *dir = platform_openKeysDir(paths[i]);
+        if (dir) {
+            while (platform_iterateDir(dir)) {
+                char *filename = platform_currentPath(dir);
+                addSignatureFile(signatures, filename, &iter);
+                free(filename);
+            }
+            platform_closeDir(dir);
         }
-        platform_closeDir(dir);
+        free (paths[i]);
     }
     
     signaturesCombo = GTK_COMBO_BOX(gtk_builder_get_object(builder, "signature_combo"));

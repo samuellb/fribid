@@ -51,6 +51,7 @@ char *platform_currentName(PlatformDirIter *iter);
 char *platform_currentPath(PlatformDirIter *iter);
 void platform_closeDir(PlatformDirIter *iter);
 
+void platform_keyDirs(char*** path, int* len);
 PlatformDirIter *platform_openKeysDir();
 char *platform_makeMemTempDir();
 

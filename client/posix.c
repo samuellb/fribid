@@ -121,15 +121,22 @@ void platform_closeDir(PlatformDirIter *iter) {
     free(iter);
 }
 
-PlatformDirIter *platform_openKeysDir() {
-    static const char suffix[] = "/cbt";
-    
-    char *path = malloc(strlen(getenv("HOME")) + strlen(suffix) +1);
-    strcpy(path, getenv("HOME"));
-    strcat(path, suffix);
-    
+#define NUM_PATHS 2
+void platform_keyDirs(char*** path, int* len) {
+    static const char suffix[] = "cbt";
+    static const char hidden_suffix[] = ".cbt";
+    static char *paths[NUM_PATHS];
+    *len = (NUM_PATHS - 1);
+    *path = paths;
+    paths[0] = malloc(strlen(getenv("HOME")) + strlen(suffix) + 2);
+    sprintf(paths[0], "%s/%s", getenv("HOME"), suffix);
+
+    paths[1] = malloc(strlen(getenv("HOME")) + strlen(hidden_suffix) + 2);
+    sprintf(paths[1], "%s/%s", getenv("HOME"), hidden_suffix);
+}
+
+PlatformDirIter *platform_openKeysDir(char *path) {
     PlatformDirIter *iter = platform_openDir(path);
-    free(path);
     return iter;
 }
 
