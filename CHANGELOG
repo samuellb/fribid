@@ -1,3 +1,14 @@
+0.1.3 - 2010-04-16
+  * Fixed a crash that occurred with certain certificate/identity files.
+    Thanks to Magnus Carlson who tracked down this bug.
+  * Made FriBID look for certificates/identity files in ~/.cbt as well
+    as ~/cbt. Thanks to Magnus Carlson for this patch.
+  * Made it possible to specify a path for the library files. Normally
+    these are stored in /usr/lib/, but some distributions store them
+    in /usr/lib64/ on 64-bit platforms (for example Slackware).
+  * Added an ASN1 dumping tool, which can be used to analyze certificate/
+    identity files.
+  * Small improvements in performance and documentation fixes.
 
 0.1.2 - 2010-03-24
   * Fixed a bug with optimized builds that caused passwords to not be
