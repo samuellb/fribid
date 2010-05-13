@@ -67,7 +67,6 @@ void pipeData() {
             } else if (!is_canonical_base64(challenge) ||
                        !is_valid_hostname(hostname) ||
                        !is_valid_ip_address(ip) ||
-                       (subjectFilter && !is_canonical_base64(subjectFilter)) ||
                        (command == PMC_Sign && (
                            !is_canonical_base64(message) ||
                            (invisibleMessage && !is_canonical_base64(invisibleMessage))
@@ -82,6 +81,12 @@ void pipeData() {
                 
                 platform_leaveMainloop();
                 return;
+            }
+            
+            if (subjectFilter && !is_canonical_base64(subjectFilter)) {
+                // The subject filter is invalid. Ignore it
+                free(subjectFilter);
+                subjectFilter = NULL;
             }
             
             char *p12Data = NULL;
