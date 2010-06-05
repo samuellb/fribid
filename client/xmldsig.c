@@ -132,7 +132,6 @@ char *xmldsig_sign(const char *p12Data, const int p12Length,
     // Glue everything together
     char *complete = rasprintf(xmldsig_template,
                                signedinfo, signature, keyinfo, data);
-    
     free(keyinfo);
     free(signedinfo);
     free(signature);

@@ -28,9 +28,9 @@
 #include <stdbool.h>
 
 /* These values are used where "certMasks" are expected */
-#define CERTUSE_ISSUER            6
-#define CERTUSE_SIGNING          64
-#define CERTUSE_AUTHENTICATION  128
+#define CERTUSE_ISSUER          0x0004//X509v3_KU_KEY_CERT_SIGN
+#define CERTUSE_SIGNING         0x0040//X509v3_KU_DIGITAL_SIGNATURE
+#define CERTUSE_AUTHENTICATION  0x0080//X509v3_KU_NON_REPUDIATION
 
 // Subjects are just strings for now
 typedef char KeyfileSubject;

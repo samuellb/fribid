@@ -190,7 +190,7 @@ int process_non_ui_args(int argc, char **argv) {
 
 int main(int argc, char **argv) {
     bool ipc = false, error = false;
-    
+
     /* Check whether the current version is still valid */
     platform_seedRandom();
     bankid_checkVersionValidity();

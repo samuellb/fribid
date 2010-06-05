@@ -22,10 +22,10 @@
 
 CFLAGS ?= -O2 -g
 COMMONCFLAGS=$(CFLAGS) -Wall -Wextra -std=c99 -pedantic -Wno-unused-parameter
-CCFLAGS=$(COMMONCFLAGS) -I../npapi/include `pkg-config --cflags 'gtk+-2.0 >= 2.12' glib-2.0 'nss >= 3.10' nspr` -DGTK_DISABLE_DEPRECATED=1 -DGDK_DISABLE_DEPRECATED=1 -DG_DISABLE_DEPRECATED=1 -DGSEAL_ENABLE
+CCFLAGS=$(COMMONCFLAGS) -I../npapi/include `pkg-config --cflags 'gtk+-2.0 >= 2.12' glib-2.0 openssl` -DGTK_DISABLE_DEPRECATED=1 -DGDK_DISABLE_DEPRECATED=1 -DG_DISABLE_DEPRECATED=1 -DGSEAL_ENABLE
 # You may have to add -lpthread after $(LDFLAGS) on OpenBSD
 LINKFLAGS=$(CFLAGS) $(LDFLAGS) -Wl,--as-needed
-LIBS=`pkg-config --libs 'gtk+-2.0 >= 2.12' glib-2.0 'nss >= 3.10' nspr`
+LIBS=`pkg-config --libs 'gtk+-2.0 >= 2.12' glib-2.0 openssl`
 
 # Files to be installed
 LIB_PATH=`../configure --internal--get-define=LIB_PATH`

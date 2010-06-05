@@ -29,19 +29,9 @@
 #include <stdio.h>
 #include <assert.h>
 
-#include <pk11pub.h>
-#include <p12.h>
-#include <nss.h>
-#include <prinit.h>
-#include <p12plcy.h>
-#include <ciferfam.h>
-#include <cert.h>
-#include <secitem.h>
-#include <secoid.h>
-#include <secport.h>
-#include <prerror.h>
-#include <secerr.h>
-#include <cryptohi.h>
+#include <openssl/x509.h>
+#include <openssl/pkcs12.h>
+#include <openssl/safestack.h>
 
 #include "../common/defines.h"
 #include "misc.h"
@@ -58,145 +48,147 @@ typedef struct {
     char *data;
 } secuPWData;
 
-// Used for storing a dummy NSS database
-static char *nssDummyDir;
-
-static void cleanNSSDummyDir() {
-    // Remove file names of any files that NSS has created
-    // (if the OS supports deletion of filenames of files that are in use)
-    PlatformDirIter *iter = platform_openDir(nssDummyDir);
-    while (platform_iterateDir(iter)) {
-        char *file = platform_currentPath(iter);
-        platform_deleteFile(file);
-        free(file);
-    }
-    platform_closeDir(iter);
-}
-
 void keyfile_init() {
-    PR_Init(PR_SYSTEM_THREAD, PR_PRIORITY_NORMAL, 1);
-    
+    OpenSSL_add_all_algorithms();
+
     platform_seedRandom();
-    nssDummyDir = platform_makeMemTempDir();
-    if (!nssDummyDir) {
-        fprintf(stderr, BINNAME ": Failed to create temporary directory!\n");
-        abort();
-    }
-    
-    // Initialize NSS
-    if (NSS_Initialize(nssDummyDir, "", "", "secmod.db",
-            NSS_INIT_NOMODDB | NSS_INIT_NOROOTINIT) != SECSuccess) {
-        fprintf(stderr, BINNAME ": NSS initialization failed!\n");
-    }
-    
-    // TODO is this needed?
-    SEC_PKCS12EnableCipher(PKCS12_RC2_CBC_40, 1);
-    SEC_PKCS12EnableCipher(PKCS12_RC2_CBC_128, 1);
-    SEC_PKCS12EnableCipher(PKCS12_RC4_40, 1);
-    SEC_PKCS12EnableCipher(PKCS12_RC4_128, 1);
-    SEC_PKCS12EnableCipher(PKCS12_DES_56, 1);
-    SEC_PKCS12EnableCipher(PKCS12_DES_EDE3_168, 1);
-    SEC_PKCS12SetPreferredCipher(PKCS12_DES_EDE3_168, 1);
-    
-    cleanNSSDummyDir(); // The files are deleted when they are closed
-                        // (or on exit if not supported by the OS)
 }
 
 void keyfile_shutdown() {
-    NSS_Shutdown();
-    PR_Cleanup();
-    
-    cleanNSSDummyDir();
-    platform_deleteDir(nssDummyDir);
-    free(nssDummyDir);
 }
 
-static SEC_PKCS12DecoderContext *pkcs12_open(const char *p12Data, const int p12Length,
-                                             const char *password, SECItem **pwitem) {
+static PKCS12 *pkcs12_open(const char *p12Data, const int p12Length) {
+    BIO *bio;
+    bio = BIO_new_mem_buf((void *)p12Data, p12Length);
+    PKCS12 *p12;
+    p12 = d2i_PKCS12_bio(bio, NULL);
+    //TODO: cleanup bio
+    return p12;
+}
+
+static void pkcs12_close(PKCS12 *p12) {
+}
+
+static char *subject (X509_NAME *name) {
+    BIO *out;
+    unsigned char *issuer, *result;
+    int n;
+    out = BIO_new(BIO_s_mem());
+    X509_NAME_print_ex(out, name, 0,XN_FLAG_ONELINE);
+    n = BIO_get_mem_data(out, &issuer);
+    result = (char *) malloc (n+1);
+    result[n]='\0';
+    memcpy(result,issuer,n);
+
+    BIO_free(out);
+    out = NULL;
+    return result;
+}
+
+static EVP_PKEY * get_key (PKCS12 *p12, X509 *x509, const char* pass, int passlen) {
+    //för varje PKCS7:a
+    STACK_OF(PKCS7) *pkcs7s;
+    pkcs7s = PKCS12_unpack_authsafes(p12);
     
-    secuPWData dummy = { PW_NONE, NULL };
-    
-    // "Key" is important here, otherwise things will silently fail later on
-    PK11SlotInfo *slot = PK11_GetInternalKeySlot();
-    if (!slot) {
-        fprintf(stderr, BINNAME ": got NULL slot\n");
-    }
-    
-    if (PK11_NeedUserInit(slot)) {
-        // Create a new encrypted database
-        char randomString[13];
-        platform_makeRandomString(randomString, 12);
-        randomString[12] = '\0';
-        
-        if (PK11_InitPin(slot, NULL, randomString) != SECSuccess) {
-            fprintf(stderr, BINNAME ": failed to set PIN for NSS DB\n");
-            return NULL;
+    PKCS7 * p7 = NULL;
+    int nump = sk_PKCS7_num(pkcs7s);
+    int p;
+
+    for (p = 0; p < nump; p++) {
+        p7 = sk_PKCS7_value (pkcs7s, p);
+        STACK_OF(PKCS12_SAFEBAG) *safebags;
+        safebags = PKCS12_unpack_p7data(p7);
+        //gå igenom alla pkcs12_safebags
+        PKCS12_SAFEBAG *bag = NULL;
+        int numb = sk_PKCS12_SAFEBAG_num (safebags);
+        int i;
+        for (i = 0; i < numb; i++) {
+            bag = sk_PKCS12_SAFEBAG_value (safebags, i);
+            EVP_PKEY *pk;
+            PKCS8_PRIV_KEY_INFO * p8;
+
+            switch (M_PKCS12_bag_type(bag)) {
+                /*case NID_keyBag:
+                    if (!lkey || !pkey) return 1;
+                    if (!(*pkey = EVP_PKCS82PKEY(bag->value.keybag))) return 0;
+                    *keymatch |= MATCH_KEY;
+                break;*/
+
+                case NID_pkcs8ShroudedKeyBag:
+                    p8 = PKCS12_decrypt_skey(bag, pass, passlen);
+
+                    if (p8) {
+                        pk = EVP_PKCS82PKEY(p8);
+
+                        if (X509_check_private_key (x509, pk)) {
+                            return pk;
+                        }
+                    }
+                break;
+            }
         }
     }
-    
-    if (PK11_Authenticate(slot, PR_TRUE, &dummy) != SECSuccess) {
-        fprintf(stderr, BINNAME ": failed to auth slot.\n");
-    }
-    
-    // Convert the password to UCS2
-    *pwitem = SECITEM_AllocItem(NULL, NULL, 2*(strlen(password)+1));
-    if (!PORT_UCS2_UTF8Conversion(PR_TRUE, (unsigned char*)password, strlen(password)+1,
-                                  (*pwitem)->data, (*pwitem)->len,
-                                  &(*pwitem)->len)) {
-        fprintf(stderr, BINNAME ": failed to convert password\n");
-        return NULL;
-    }
-    
-    SEC_PKCS12DecoderContext *decoder = SEC_PKCS12DecoderStart(
-            *pwitem, slot, &dummy, NULL, NULL, NULL, NULL, NULL);
-    
-    if (!decoder)
-        return NULL;
-    
-    // Put the data into the decoder
-    if (SEC_PKCS12DecoderUpdate(decoder, (unsigned char*)p12Data, p12Length) != SECSuccess)
-        return NULL;
-    
-    if ((SEC_PKCS12DecoderVerify(decoder) != SECSuccess) &&
-        (password[0] != '\0')) {
-        fprintf(stderr, BINNAME ": decoder verify failed with "
-                        "non-empty password. error = %d\n", PR_GetError());
-    }
-    
-    return decoder;
+
+    return NULL;
 }
 
-static void pkcs12_close(SEC_PKCS12DecoderContext *decoder, SECItem *pwitem) {
-    SEC_PKCS12DecoderFinish(decoder);
-    // Clear and free the password
-    SECITEM_ZfreeItem(pwitem, PR_TRUE);
+
+static STACK_OF(X509) *pkcs12_listCerts(PKCS12 *p12) {
+    STACK_OF(X509) * x509s;
+    x509s = sk_X509_new_null ();
+
+    //för varje PKCS7:a
+    STACK_OF(PKCS7) *pkcs7s;
+    pkcs7s = PKCS12_unpack_authsafes(p12);
+    
+    PKCS7 * p7 = NULL;
+    int nump = sk_PKCS7_num(pkcs7s);
+    int p;
+    //Lägg alla cert i en stack
+    for (p = 0; p < nump; p++) {
+        p7 = sk_PKCS7_value (pkcs7s, p);
+        STACK_OF(PKCS12_SAFEBAG) *safebags;
+        safebags = PKCS12_unpack_p7data(p7);
+
+        //gå igenom alla pkcs12_safebags
+        PKCS12_SAFEBAG *bag = NULL;
+        int numb = sk_PKCS12_SAFEBAG_num (safebags);
+        int i;
+        for (i = 0; i < numb; i++) {
+            bag = sk_PKCS12_SAFEBAG_value (safebags, i);
+            //ta ut X509
+            X509 * x509;
+            x509 = PKCS12_certbag2x509(bag);
+            if (x509 != NULL) {
+                sk_X509_push (x509s, x509);
+            }
+        }
+
+    }
+
+    return x509s;
 }
 
-static CERTCertList *pkcs12_listCerts(const char *p12Data, const int p12Length) {
-    
-    SECItem *pwitem;
-    SEC_PKCS12DecoderContext *decoder = pkcs12_open(p12Data, p12Length, "", &pwitem);
-    
-    if (!decoder) return NULL;
-    
-    CERTCertList *certList = SEC_PKCS12DecoderGetCerts(decoder);
-    pkcs12_close(decoder, pwitem);
-    return certList;
-}
-
-static char *der_encode(const CERTCertificate *cert) {
+static char *der_encode(X509 *cert) {
     char *base64 = NULL;
-    SECItem *item = SEC_ASN1EncodeItem(NULL, NULL, cert, SEC_ASN1_GET(SEC_SignedCertificateTemplate));
-    if (item->type == siBuffer) {
-        base64 = base64_encode((char*)item->data, item->len);
-    }
-    SECITEM_FreeItem(item, PR_TRUE);
+    unsigned char *buf;
+    int len;
+    buf = NULL;
+    len = i2d_X509(cert, &buf);
+    base64 = base64_encode((const char*)buf, len);
+    free(buf);
     return base64;
 }
 
-#define CL_each(node, list) \
-        (CERTCertListNode *node = CERT_LIST_HEAD(list); \
-         !CERT_LIST_END(node, list); node = CERT_LIST_NEXT(node))
+static bool has_keyusage (X509 *cert, int kusage) {
+        ASN1_BIT_STRING *usage;
+    
+        usage=X509_get_ext_d2i(cert, NID_key_usage, NULL, NULL);
+        if (usage) {
+            return ((usage->length > 0) && (usage->data[0] & kusage));
+        }
+    return false;
+}
 
 /**
  * Lists the subjects in the given P12 file.
@@ -204,24 +196,40 @@ static char *der_encode(const CERTCertificate *cert) {
 bool keyfile_listPeople(const char *p12Data, const int p12Length,
                         KeyfileSubject ***people, int *count) {
     *count = 0;
-    
-    CERTCertList *certList = pkcs12_listCerts(p12Data, p12Length);
+    PKCS12 * p12;
+    p12 = pkcs12_open(p12Data, p12Length);
+    if (!p12)
+        return false;
+
+    STACK_OF(X509) *certList = pkcs12_listCerts(p12);
     if (!certList) return false;
-    
-    for CL_each(node, certList) {
-        if (node->cert->keyUsage & CERTUSE_AUTHENTICATION) (*count)++;
+
+    int num = sk_X509_num (certList);
+    for (int i = 0; i < num; i++) {
+        X509 * x;
+        x = sk_X509_value(certList, i);
+        char *dn;
+        dn = subject (X509_get_subject_name (x));
+        if (has_keyusage (x, CERTUSE_AUTHENTICATION)) {
+            (*count)++;
+        }
     }
     
     *people = malloc(*count * sizeof(void*));
     KeyfileSubject **person = *people;
-    for CL_each(node, certList) {
-        if (node->cert->keyUsage & CERTUSE_AUTHENTICATION) {
-            *person = strdup(node->cert->subjectName);
+    for (int i = 0; i < num; i++) {
+        X509 *x;
+        x = sk_X509_value(certList, i);
+        //TODO: egentligen en fuling - det här borde skickas med beroende på om det är signering eller auth!
+        if (has_keyusage (x, CERTUSE_AUTHENTICATION)) {
+            char *p;
+            p = strdup(subject(X509_get_subject_name (x)));
+            *person = p;
             person++;
         }
     }
     
-    CERT_DestroyCertList(certList);
+    //TODO: CERT_DestroyCertList(certList);
     return true;
 }
 
@@ -238,11 +246,15 @@ bool keyfile_compareSubjects(const KeyfileSubject *a, const KeyfileSubject *b) {
 }
 
 char *keyfile_getDisplayName(const KeyfileSubject *person) {
+
+    //TODO: int X509_NAME_get_text_by_NID(X509_NAME *name, int nid, char *buf,int len);
+
+
     // FIXME: Hack
-    const char *name = strstr(person, "OID.2.5.4.41=");
+    const char *name = strstr(person, "name = ");
     if (!name) return strdup(person);
     
-    name += 13;
+    name += 7;
     //return strndup(name, strcspn(name, ","));
     int length = strcspn(name, ",");
     char *displayName = malloc(length+1);
@@ -277,13 +289,19 @@ bool keyfile_matchSubjectFilter(const KeyfileSubject *person,
             (strncmp(wantedSerial, actualSerial, actualLength) == 0));
 }
 
-static CERTCertificate *findCert(const CERTCertList *certList,
+static X509 *findCert(const STACK_OF(X509) *certList,
                                  const KeyfileSubject *person,
                                  const unsigned int certMask) {
-    for CL_each(node, certList) {
-        if (((node->cert->keyUsage & certMask) == certMask) &&
-             !strcmp(node->cert->subjectName, person)) {
-            return node->cert;
+    int num = sk_X509_num (certList);
+    for (int i = 0; i < num; i++) {
+        char * dn;
+        X509 *cert;
+        cert = sk_X509_value (certList, i);
+        dn = subject (X509_get_subject_name (cert));
+        if (!strcmp (dn, person)) {
+            if (has_keyusage(cert, certMask)) {
+                return cert;
+            }
         }
     }
     return NULL;
@@ -301,63 +319,39 @@ bool keyfile_getBase64Chain(const char *p12Data, const int p12Length,
                             const unsigned int certMask,
                             char ***certs, int *count) {
     
-    CERTCertList *certList = pkcs12_listCerts(p12Data, p12Length);
+    PKCS12 *p12;
+    p12 = pkcs12_open(p12Data, p12Length);
+    if (!p12)
+        return false;
+
+    STACK_OF(X509) *certList = pkcs12_listCerts(p12);
     if (!certList) return false;
     
-    CERTCertificate *cert = findCert(certList, person, certMask);
+    X509 *cert = findCert(certList, person, certMask);
     if (!cert) {
-        CERT_DestroyCertList(certList);
+        //CERT_DestroyCertList(certList);
         return false;
     }
     
     *count = 1;
     *certs = malloc(sizeof(char*));
     (*certs)[0] = der_encode(cert);
-    
-    while (cert->issuerName != NULL) {
-        cert = findCert(certList, cert->issuerName, CERTUSE_ISSUER);
-        if (!cert) break;
+
+    X509_NAME *issuer = X509_get_issuer_name (cert);
+    while (issuer != NULL) {
+        char* issuerName;
+        issuerName = subject (issuer);
         
+        cert = findCert(certList, issuerName, CERTUSE_ISSUER);
+        if (!cert) break;
+        issuer = X509_get_issuer_name (cert);
         (*count)++;
         *certs = realloc(*certs, *count * sizeof(char*));
         (*certs)[*count-1] = der_encode(cert);
     }
-    CERT_DestroyCertList(certList);
+    //CERT_DestroyCertList(certList);
     return true;
 }
-
-/**
- * This function is needed by NSS
- */
-static SECItem *nicknameCollisionFunction(SECItem *oldNick, PRBool *cancel, void *wincx) {
-    CERTCertificate* cert = (CERTCertificate*)wincx;
-    
-    if (!cert || (cancel == NULL)) return NULL;
-    
-    char *caNick = CERT_MakeCANickname(cert);
-    if (!caNick) return NULL;
-    
-    if (oldNick && oldNick->data && (oldNick->len != 0) &&
-        (oldNick->len == strlen(caNick)) &&
-        !strncmp((const char*)oldNick->data, caNick, oldNick->len)) {
-        // Equal
-        PORT_Free(caNick);
-        PORT_SetError(SEC_ERROR_IO);
-        return NULL;
-    }
-    
-    SECItem *item = PORT_New(SECItem);
-    if (!item) {
-        PORT_Free(caNick);
-        return NULL;
-    }
-    item->type = siBuffer;
-    item->len = strlen(caNick);
-    item->data = (unsigned char*)caNick;
-    
-    return item;
-}
-
 
 bool keyfile_sign(const char *p12Data, const int p12Length,
                   const KeyfileSubject *person,
@@ -372,58 +366,45 @@ bool keyfile_sign(const char *p12Data, const int p12Length,
     assert(password != NULL);
     assert(signature != NULL);
     assert(siglen != NULL);
-    
-    SECItem *pwitem;
-    SEC_PKCS12DecoderContext *decoder = pkcs12_open(p12Data, p12Length, password, &pwitem);
-    if (!decoder) return false;
-    
-    if (SEC_PKCS12DecoderValidateBags(decoder, nicknameCollisionFunction) != SECSuccess) {
-        fprintf(stderr, BINNAME ": failed to validate \"bags\". error = %d\n", PR_GetError());
-        pkcs12_close(decoder, pwitem);
+    PKCS12 *p12;
+
+    p12 = pkcs12_open (p12Data, p12Length);
+    if (!p12)
         return false;
-    }
+    STACK_OF(X509) *certList = pkcs12_listCerts(p12);
     
-    if (SEC_PKCS12DecoderImportBags(decoder) != SECSuccess) {
-        fprintf(stderr, BINNAME ": failed to import \"bags\". error = %d\n", PR_GetError());
-        pkcs12_close(decoder, pwitem);
-        return false;
-    }
-    CERTCertList *certList = SEC_PKCS12DecoderGetCerts(decoder);
-    pkcs12_close(decoder, pwitem);
-    
-    for CL_each(node, certList) {
-        if (((node->cert->keyUsage & certMask) == certMask) &&
-             !strcmp(node->cert->subjectName, person)) {
-             
-            secuPWData dummy = { PW_NONE, NULL };
-            SECKEYPrivateKey *privkey = PK11_FindPrivateKeyFromCert(PK11_GetInternalKeySlot(), node->cert, &dummy);
-            if (!privkey) {
-                CERT_DestroyCertList(certList);
+    int num = sk_X509_num (certList);
+    for (int i = 0; i < num; i++) {
+        char * dn;
+        X509 *cert;
+        cert = sk_X509_value (certList, i);
+        dn = subject (X509_get_subject_name (cert));
+        //TODO: free dn
+        if (!strcmp(dn, person) && has_keyusage (cert, certMask)) {
+            EVP_MD_CTX sig_ctx;
+            unsigned char sig_buf[4096]; //TODO: size of sha
+
+            EVP_PKEY *pk;
+            pk = get_key (p12, cert, password, strlen(password));
+            if (!pk) {
+                //Wrong password
                 return false;
             }
+
+            EVP_SignInit(&sig_ctx, EVP_sha1());
+            EVP_SignUpdate(&sig_ctx, message, messagelen);
+            unsigned int sig_len = sizeof(sig_buf);
+            int sig_err;
+            sig_err = EVP_SignFinal(&sig_ctx, sig_buf,
+                                    &sig_len, pk);
+            *signature = malloc(sig_len);
+            memcpy(*signature, sig_buf, sig_len);
+            *siglen = sig_len;
             
-            SECItem result = { siBuffer, NULL, 0 };
-            if (SEC_SignData(&result, (unsigned char *)message, messagelen, privkey,
-                             SEC_OID_ISO_SHA_WITH_RSA_SIGNATURE) != SECSuccess) {
-                fprintf(stderr, BINNAME ": failed to sign data!\n");
-                SECKEY_DestroyPrivateKey(privkey);
-                CERT_DestroyCertList(certList);
-                return false;
-            }
-            
-            SECKEY_DestroyPrivateKey(privkey);
-            
-            *signature = malloc(result.len);
-            memcpy(*signature, result.data, result.len);
-            *siglen = result.len;
-            SECITEM_FreeItem(&result, PR_FALSE);
-            
-            CERT_DestroyCertList(certList);
             return true;
         }
     }
     
-    CERT_DestroyCertList(certList);
     return false;
 }
 
