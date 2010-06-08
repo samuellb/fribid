@@ -34,8 +34,8 @@
 #define RELEASE_TIME        1274043565
 #define IPCVERSION          "3"
 
-#define EMULATED_VERSION    "4.10.2.16"
-#define DNSVERSION          "1"
+#define EMULATED_VERSION    "4.15.0.14"
+#define DNSVERSION          "2"
 #define STATUSDOMAIN        ".status.fribid.se"
 
 #define LIB_PATH            LIBDIR "/" BINNAME
