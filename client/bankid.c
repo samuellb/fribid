@@ -118,6 +118,20 @@ static bool checkValidity(bool *valid, char **versionToEmulate) {
     return true;
 }
 
+
+static void storeExpiryParameters(PlatformConfig *cfg,
+                                  int64_t lastCheck, bool valid,
+                                  const char *emulatedVersion) {
+    if (valid) {
+        platform_setConfigInteger(cfg, "expiry", "best-before",
+                                  lastCheck - EXPIRY_RAND + 30*24*3600);
+    }
+    platform_setConfigBool(cfg, "expiry", "still-valid", valid);
+    platform_setConfigString(cfg, "expiry", "version-to-emulate", emulatedVersion);
+    platform_setConfigString(cfg, "expiry", "checked-with-version", DNSVERSION);
+    platform_saveConfig(cfg);
+}
+
 /**
  * Checks the validity of the emulated version and stores the status
  * in the configuration file.
@@ -128,14 +142,8 @@ static void versionCheckFunction(void *ignored) {
     char *versionToEmulate;
     
     if (checkValidity(&valid, &versionToEmulate)) {
-        if (valid) {
-            platform_setConfigInteger(cfg, "expiry", "best-before",
-                                      time(NULL) - EXPIRY_RAND + 30*24*3600);
-        }
-        platform_setConfigBool(cfg, "expiry", "still-valid", valid);
-        platform_setConfigString(cfg, "expiry", "version-to-emulate", versionToEmulate);
-        platform_setConfigString(cfg, "expiry", "checked-with-version", DNSVERSION);
-        platform_saveConfig(cfg);
+        storeExpiryParameters(cfg, time(NULL), valid,
+                              versionToEmulate);
         free(versionToEmulate);
     }
     
@@ -151,6 +159,17 @@ static void versionCheckFunction(void *ignored) {
 void bankid_checkVersionValidity() {
     PlatformConfig *cfg = platform_openConfig(BINNAME, "expiry");
     
+    char *checkedWithVersion = NULL;
+    if (platform_getConfigString(cfg, "expiry", "checked-with-version", &checkedWithVersion) &&
+        strcmp(checkedWithVersion, DNSVERSION) != 0) {
+        // The last check was done with another version, so overwrite the
+        // old configuration with the defaults
+        storeExpiryParameters(cfg, DEFAULT_EXPIRY, true,
+                              defaultEmulatedVersion);
+
+    }
+    free(checkedWithVersion);
+
     long lexpiry;
     time_t expiry;
     if (platform_getConfigInteger(cfg, "expiry", "best-before", &lexpiry)) {
@@ -163,16 +182,6 @@ void bankid_checkVersionValidity() {
     if (!platform_getConfigBool(cfg, "expiry", "still-valid", &maybeValid)) {
         maybeValid = true;
     }
-    
-    char *checkedWithVersion = NULL;
-    if (!platform_getConfigString(cfg, "expiry", "checked-with-version", &checkedWithVersion)) {
-        maybeValid = true;
-    } else if (strcmp(checkedWithVersion, DNSVERSION) != 0) {
-        // The check was done with another version, so the current version
-        // might not have expired even if the old version has expired.
-        maybeValid = true;
-    }
-    free(checkedWithVersion);
     
     platform_freeConfig(cfg);
     
