@@ -248,9 +248,11 @@ void platform_startSign(const char *url, const char *hostname, const char *ip,
         GdkWindow *parent = gdk_window_foreign_new((GdkNativeWindow)parentWindowId);
         if (parent != NULL) {
             gtk_widget_realize(GTK_WIDGET(signDialog));
-            // Only available in GTK 2.14+
-            //GdkWindow *ourWindow = gtk_widget_get_window(GTK_WINDOW(signDialog));
+#if GTK_CHECK_VERSION(2, 14, 0)
+            GdkWindow *ourWindow = gtk_widget_get_window(GTK_WIDGET(signDialog));
+#else
             GdkWindow *ourWindow = GTK_WIDGET(signDialog)->window;
+#endif
             if (ourWindow != NULL) {
                 gdk_window_set_transient_for(ourWindow, parent);
                 transientOk = true;
