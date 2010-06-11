@@ -1,6 +1,6 @@
 /*
 
-  Copyright (c) 2009 Samuel Lidén Borell <samuel@slbdata.se>
+  Copyright (c) 2009-2010 Samuel Lidén Borell <samuel@slbdata.se>
  
   Permission is hereby granted, free of charge, to any person obtaining a copy
   of this software and associated documentation files (the "Software"), to deal
@@ -74,14 +74,6 @@ bool platform_readFile(const char *filename, char **data, int *length) {
     return ok;
 }
 
-bool platform_deleteFile(const char *filename) {
-    return (unlink(filename) == 0);
-}
-
-bool platform_deleteDir(const char *filename) {
-    return (rmdir(filename) == 0);
-}
-
 PlatformDirIter *platform_openDir(const char *pathname) {
     PlatformDirIter *iter = malloc(sizeof(PlatformDirIter));
     iter->dir = opendir(pathname);
@@ -138,75 +130,6 @@ void platform_keyDirs(char*** path, int* len) {
 PlatformDirIter *platform_openKeysDir(char *path) {
     PlatformDirIter *iter = platform_openDir(path);
     return iter;
-}
-
-void platform_makeRandomString(char *buff, int length) {
-    // This array are characters for [0..63] i.e. a 6bit number
-    static const char randChars[] =
-        "0123456789_-ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
-
-    // Attempt to use the /dev/urandom device first, as
-    // adviced by Wheeler. We cannot use /dev/random because
-    // we don't want the GUI to freeze
-    // http://www.dwheeler.com/secure-programs/Secure-Programs-HOWTO/
-    // random-numbers.html
-    FILE *file = fopen("/dev/urandom", "rb");
-    if (file) {
-        // Read directly into the buffer and modify
-        // since this may be a piece of secure memory
-        if ((int) fread(buff, 1, length, file) == length) {
-            for (int i = 0; i < length; i++)
-                buff[i] = randChars[buff[i] & 0x3f];
-            return;
-        }
-        // No, didn't work, fall through but cleanup first
-        guaranteed_memset(buff, 0, length);
-    }
-
-    // Else we fall back to the libc intrinsic rand() function
-    // so we *always* return something random
-    for (int i = 0; i < length; i++) {
-        int randVal = rand();
-        buff[i] = randChars[(i ^ randVal ^ (randVal >> 6) ^
-                             (randVal >> 12) ^ (randVal >> 18)) % 64];
-    }
-}
-
-static char *makeTempDir(const char *template) {
-    char *dir = malloc(strlen(template) - 2 + 12 + 1);
-    
-    do {
-        // Create template
-        char randomString[13];
-        platform_makeRandomString(randomString, 12);
-        randomString[12] = '\0';
-        
-        // Create directory
-        sprintf(dir, template, randomString);
-        
-        if (mkdir(dir, S_IRWXU) == 0) {
-            return dir;
-        }
-    } while (errno == EEXIST);
-    
-    // Directory doesn't exist, but can't be created
-    free(dir);
-    return NULL;
-}
-
-char *platform_makeMemTempDir() {
-    static const char *const paths[] = {
-        "/dev/shm/" BINNAME "-%s.tmp",
-        "/tmp/" BINNAME "-%s.tmp",
-        NULL
-    };
-    
-    for (const char *const *path = paths; *path; path++) {
-        char *dir = makeTempDir(*path);
-        if (dir) return dir;
-    }
-    
-    return NULL;
 }
 
 void platform_asyncCall(AsyncCallFunction *function, void *param) {

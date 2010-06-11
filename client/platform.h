@@ -1,6 +1,6 @@
 /*
 
-  Copyright (c) 2009 Samuel Lidén Borell <samuel@slbdata.se>
+  Copyright (c) 2009-2010 Samuel Lidén Borell <samuel@slbdata.se>
  
   Permission is hereby granted, free of charge, to any person obtaining a copy
   of this software and associated documentation files (the "Software"), to deal
@@ -33,7 +33,6 @@ void platform_init(int *argc, char ***argv);
 
 /* Random number generation */
 void platform_seedRandom();
-void platform_makeRandomString(char *buff, int length);
 
 /* Pipe I/O */
 typedef void (PlatformPipeFunction) ();
@@ -41,8 +40,6 @@ void platform_setupPipe(PlatformPipeFunction *pipeFunction);
 
 /* File IO */
 bool platform_readFile(const char *filename, char **data, int *length);
-bool platform_deleteFile(const char *filename);
-bool platform_deleteDir(const char *filename);
 
 typedef struct PlatformDirIter PlatformDirIter;
 PlatformDirIter *platform_openDir(const char *pathname);
@@ -53,7 +50,6 @@ void platform_closeDir(PlatformDirIter *iter);
 
 void platform_keyDirs(char*** path, int* len);
 PlatformDirIter *platform_openKeysDir();
-char *platform_makeMemTempDir();
 
 /* Configuration */
 char *platform_getConfigPath(const char *appname);

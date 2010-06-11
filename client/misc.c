@@ -30,8 +30,6 @@
 #include <openssl/sha.h>
 #include <openssl/hmac.h>
 #include <openssl/evp.h>
-#include <openssl/bio.h>
-#include <openssl/buffer.h>
 
 #include "misc.h"
 
@@ -99,82 +97,64 @@ static void removeNewlines(char *s) {
     *writep = '\0';
 }
 
-char *base64_encode(const char *input, const int length) {
-  if (length == 0) return strdup("");
-
-  BIO *bmem, *b64;
-  BUF_MEM *bptr;
-
-  b64 = BIO_new(BIO_f_base64());
-  bmem = BIO_new(BIO_s_mem());
-  b64 = BIO_push(b64, bmem);
-  BIO_write(b64, input, length);
-  BIO_flush(b64);
-  BIO_get_mem_ptr(b64, &bptr);
-
-  char *buff = (char *)malloc(bptr->length);
-  memcpy(buff, bptr->data, bptr->length-1);
-  buff[bptr->length-1] = 0;
-
-  BIO_free_all(b64);
-
-  //removeNewlines(base64);
-  return buff;
+char *base64_encode(const char *data, const int length) {
+    if (length == 0) return strdup("");
+    
+    char *base64 = (char*)g_base64_encode((const guchar*)data, length);
+    removeNewlines(base64);
+    return base64;
 }
 
-char *base64_decode(const char *input){
-  BIO *b64, *bmem;
-  int length = strlen(input);
-  char *buffer = (char *)malloc(length);
-  memset(buffer, 0, length);
+char *base64_decode(const char *encoded) {
+    unsigned int length;
 
-  b64 = BIO_new(BIO_f_base64());
-  bmem = BIO_new_mem_buf((void *)input, length);
-  bmem = BIO_push(b64, bmem);
+    char *temp = (char*)g_base64_decode(encoded, &length);
+    if (!temp) return NULL;
+    char *result = malloc(length+1);
+    memcpy(result, temp, length);
+    result[length] = '\0';
+    free(temp);
+    
+    if (length != strlen(result)) {
+        return NULL;
+    }
+    return result;
 
-  BIO_read(bmem, buffer, length);
-
-  BIO_free_all(bmem);
-
-  return buffer;
 }
 
 bool is_canonical_base64(const char *encoded) {
-    return true;
-    //TODO: xxx
     /* Try to decode */
-    /*
     unsigned int length;
-    char *decoded = (char*)ATOB_AsciiToData(encoded, &length);
+    char *decoded = (char*)g_base64_decode(encoded, &length);
     if (!decoded) return false;
-    */
+    
     /* Recode and verify that it's equal to the encoded data */
-    /*char *recoded = BTOA_DataToAscii((const unsigned char*)decoded, length);
-    removeNewlines(recoded);
+    char *recoded = base64_encode(decoded, length);
     bool equal = !strcmp(recoded, encoded);
     
     free(recoded);
     free(decoded);
-    return equal;*/
+    return equal;
 }
 
 char *sha_base64(const char *str) {
-    char shasum[SHA256_DIGEST_LENGTH];
+    unsigned char shasum[SHA256_DIGEST_LENGTH];
     EVP_MD_CTX mdctx;
     const EVP_MD *md;
-    int md_len, i;
+    unsigned int md_len;
+    char *result = NULL;
 
-    OpenSSL_add_all_digests();
-
-    md = EVP_get_digestbyname("sha256");
-
+    md = EVP_sha256();
     EVP_MD_CTX_init(&mdctx);
-    EVP_DigestInit_ex(&mdctx, md, NULL);
-    EVP_DigestUpdate(&mdctx, str, strlen(str));
-    EVP_DigestFinal_ex(&mdctx, shasum, &md_len);
+    
+    if (EVP_DigestInit_ex(&mdctx, md, NULL) &&
+        EVP_DigestUpdate(&mdctx, str, strlen(str)) &&
+        EVP_DigestFinal_ex(&mdctx, shasum, &md_len)) {
+        result = base64_encode((const char*)shasum, sizeof(shasum));
+    }
+    
     EVP_MD_CTX_cleanup(&mdctx);
-
-    return base64_encode(shasum, sizeof(shasum));
+    return result;
 }
 
 bool is_valid_domain_name(const char *domain) {

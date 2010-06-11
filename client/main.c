@@ -62,7 +62,7 @@ void pipeData() {
             // Validate input
             BankIDError error = BIDERR_OK;
             
-            if (!is_https_url(url)) {
+            /*if (!is_https_url(url)) {
                 error = BIDERR_NotSSL;
             } else if (!is_canonical_base64(challenge) ||
                        !is_valid_hostname(hostname) ||
@@ -72,7 +72,7 @@ void pipeData() {
                            (invisibleMessage && !is_canonical_base64(invisibleMessage))
                        ))) {
                 error = BIDERR_InternalError;
-            }
+            }*/
             
             if (error != BIDERR_OK) {
                 pipe_sendInt(stdout, error);
@@ -190,7 +190,7 @@ int process_non_ui_args(int argc, char **argv) {
 
 int main(int argc, char **argv) {
     bool ipc = false, error = false;
-
+    
     /* Check whether the current version is still valid */
     platform_seedRandom();
     bankid_checkVersionValidity();
