@@ -28,7 +28,6 @@
 #include <glib.h>
 #include <stdarg.h>
 #include <openssl/sha.h>
-#include <openssl/hmac.h>
 #include <openssl/evp.h>
 
 #include "misc.h"
