@@ -153,10 +153,12 @@ static STACK_OF(X509) *pkcs12_listCerts(PKCS12 *p12) {
             PKCS12_SAFEBAG *bag = sk_PKCS12_SAFEBAG_value(safebags, i);
             if (!bag) continue;
             
-            // Extract x509 cert
-            X509 *x509 = PKCS12_certbag2x509(bag);
-            if (x509 != NULL) {
-                sk_X509_push(x509s, x509);
+            if (M_PKCS12_bag_type(bag) == NID_certBag) {
+                // Extract x509 cert
+                X509 *x509 = PKCS12_certbag2x509(bag);
+                if (x509 != NULL) {
+                    sk_X509_push(x509s, x509);
+                }
             }
         }
         
