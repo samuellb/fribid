@@ -39,7 +39,7 @@ void keyfile_init();
 void keyfile_shutdown();
 
 bool keyfile_listPeople(const char *p12Data, const int p12Length,
-                         KeyfileSubject ***people, int *count);
+                        KeyfileSubject ***people, int *count, int keyusage);
 
 void keyfile_freeSubject(KeyfileSubject *person);
 KeyfileSubject *keyfile_duplicateSubject(const KeyfileSubject *person);

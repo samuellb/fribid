@@ -87,7 +87,8 @@ void platform_mainloop();
 void platform_leaveMainloop();
 
 void platform_startSign(const char *url, const char *hostname, const char *ip,
-                        const char *subjectFilter, unsigned long parentWindowId);
+                        const char *subjectFilter, unsigned long parentWindowId,
+                        int keyUsage);
 void platform_endSign();
 void platform_setMessage(const char *message);
 bool platform_sign(char **signature, int *siglen, char **person,

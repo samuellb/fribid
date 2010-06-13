@@ -91,6 +91,8 @@ static GtkWidget *signScroller;
 static char *currentSubjectFilter;
 static bool dialogShown;
 
+static int currentKeyUsage;
+
 static void showMessage(GtkMessageType type, const char *text) {
     GtkWidget *dialog = gtk_message_dialog_new(
         GTK_WINDOW(signDialog), GTK_DIALOG_DESTROY_WITH_PARENT,
@@ -105,14 +107,14 @@ static void validateDialog(GtkWidget *ignored1, gpointer *ignored2) {
 }
 
 static bool addSignatureFile(GtkListStore *signatures, const char *filename,
-                             GtkTreeIter *iter) {
+                             GtkTreeIter *iter, int keyUsage) {
     int fileLen;
     char *fileData;
     platform_readFile(filename, &fileData, &fileLen);
     
     int personCount;
     KeyfileSubject **people = NULL;
-    keyfile_listPeople(fileData, fileLen, &people, &personCount);
+    keyfile_listPeople(fileData, fileLen, &people, &personCount, keyUsage);
     
     for (int i = 0; i < personCount; i++) {
         if (keyfile_matchSubjectFilter(people[i], currentSubjectFilter)) {
@@ -177,9 +179,12 @@ static void selectDefaultSignature() {
 }
 
 void platform_startSign(const char *url, const char *hostname, const char *ip,
-                        const char *subjectFilter, unsigned long parentWindowId) {
+                        const char *subjectFilter, unsigned long parentWindowId,
+                        int keyUsage) {
     char** paths;
     int len;
+    
+    currentKeyUsage = keyUsage;
     
     currentSubjectFilter = (subjectFilter != NULL ?
                             strdup(subjectFilter) : NULL);
@@ -215,7 +220,7 @@ void platform_startSign(const char *url, const char *hostname, const char *ip,
         if (dir) {
             while (platform_iterateDir(dir)) {
                 char *filename = platform_currentPath(dir);
-                addSignatureFile(signatures, filename, &iter);
+                addSignatureFile(signatures, filename, &iter, keyUsage);
                 free(filename);
             }
             platform_closeDir(dir);
@@ -329,7 +334,7 @@ static void selectExternalFile() {
         
         // Add an item to the signatures list and select it
         GtkTreeIter iter = { .stamp = 0 };
-        ok = addSignatureFile(GTK_LIST_STORE(signatures), filename, &iter);
+        ok = addSignatureFile(GTK_LIST_STORE(signatures), filename, &iter, currentKeyUsage);
         if (ok) gtk_combo_box_set_active_iter(signaturesCombo, &iter);
         
         g_free(filename);

@@ -201,10 +201,10 @@ static bool has_keyusage(X509 *cert, int keyUsage) {
 }
 
 /**
- * Lists the subjects in the given P12 file.
+ * Lists the subjects with correct keyusage in the given P12 file.
  */
 bool keyfile_listPeople(const char *p12Data, const int p12Length,
-                        KeyfileSubject ***people, int *count) {
+                        KeyfileSubject ***people, int *count, int keyUsage) {
     *count = 0;
     PKCS12 *p12 = pkcs12_open(p12Data, p12Length);
     if (!p12) return false;
@@ -216,7 +216,7 @@ bool keyfile_listPeople(const char *p12Data, const int p12Length,
     int certCount = sk_X509_num(certList);
     for (int i = 0; i < certCount; i++) {
         X509 *x = sk_X509_value(certList, i);
-        if (has_keyusage(x, CERTUSE_AUTHENTICATION)) {
+        if (has_keyusage(x, keyUsage)) {
             (*count)++;
         }
     }
@@ -230,8 +230,7 @@ bool keyfile_listPeople(const char *p12Data, const int p12Length,
     KeyfileSubject **person = *people;
     for (int i = 0; i < certCount; i++) {
         X509 *x = sk_X509_value(certList, i);
-        // TODO: egentligen en fuling - det här borde skickas med beroende på om det är signering eller auth!
-        if (has_keyusage(x, CERTUSE_AUTHENTICATION)) {
+        if (has_keyusage(x, keyUsage)) {
             char *p = subject(X509_get_subject_name(x));
             *person = p;
             person++;

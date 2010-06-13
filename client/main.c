@@ -115,7 +115,8 @@ void pipeData() {
             }
             
             platform_startSign(url, hostname, ip, decodedSubjectFilter,
-                               browserWindowId);
+                               browserWindowId,
+                               command == PMC_Sign ? CERTUSE_SIGNING : CERTUSE_AUTHENTICATION);
             free(decodedSubjectFilter);
             
             if (message != NULL) {
