@@ -36,17 +36,39 @@
 #include <unistd.h> // For STDIN_FILENO
 
 #include "../common/defines.h"
+#include "backend.h"
 #include "bankid.h"
-#include "keyfile.h"
 #include "platform.h"
 #include "misc.h"
 
 #define _(string) gettext(string)
+#define translatable(string) (string)
+
+static const char *const errorStrings[] = {
+    // TokenError_Success
+    NULL,
+    // TokenError_Unknown
+    translatable("An unknown error occurred"),
+    
+    // File errors
+    // TokenError_FileNotReadable
+    translatable("The file could not be read"),
+    // TokenError_BadFile
+    translatable("Invalid file format"),
+    // TokenError_BadPassword,
+    translatable("Incorrect password"),
+    
+    // Smart card errors
+    // TokenError_BadPin
+    translatable("Incorrect PIN"),
+};
+
 
 void platform_init(int *argc, char ***argv) {
     setlocale(LC_ALL, "");
     bindtextdomain(BINNAME, LOCALEDIR);
     textdomain(BINNAME);
+    
     gtk_init(argc, argv);
 }
 
@@ -80,7 +102,7 @@ void platform_mainloop() {
 static GtkDialog *signDialog;
 static GtkLabel *operationLabel;
 static GtkTextView *signText;
-static GtkComboBox *signaturesCombo;
+static GtkComboBox *tokenCombo;
 static GtkEntry *passwordEntry;
 static GtkButton *signButton;
 static GtkLabel *signButtonLabel;
@@ -88,10 +110,9 @@ static GtkLabel *signButtonLabel;
 static GtkWidget *signLabel;
 static GtkWidget *signScroller;
 
-static char *currentSubjectFilter;
+static GtkListStore *tokens;
+static BackendNotifier *notifier;
 static bool dialogShown;
-
-static int currentKeyUsage;
 
 static void showMessage(GtkMessageType type, const char *text) {
     GtkWidget *dialog = gtk_message_dialog_new(
@@ -103,91 +124,68 @@ static void showMessage(GtkMessageType type, const char *text) {
 
 static void validateDialog(GtkWidget *ignored1, gpointer *ignored2) {
     gtk_widget_set_sensitive(GTK_WIDGET(signButton),
-                             (gtk_combo_box_get_active(signaturesCombo) != -1));
+                             (gtk_combo_box_get_active(tokenCombo) != -1));
 }
 
-static bool addSignatureFile(GtkListStore *signatures, const char *filename,
-                             GtkTreeIter *iter, int keyUsage) {
+static TokenError addTokenFile(const char *filename) {
     int fileLen;
     char *fileData;
-    platform_readFile(filename, &fileData, &fileLen);
     
-    int personCount;
-    KeyfileSubject **people = NULL;
-    keyfile_listPeople(fileData, fileLen, &people, &personCount, keyUsage);
+    if (!platform_readFile(filename, &fileData, &fileLen))
+        return TokenError_FileNotReadable;
     
-    for (int i = 0; i < personCount; i++) {
-        if (keyfile_matchSubjectFilter(people[i], currentSubjectFilter)) {
-            char *displayName = keyfile_getDisplayName(people[i]);
-            
-            gtk_list_store_append(signatures, iter);
-            gtk_list_store_set(signatures, iter,
-                               0, displayName,
-                               1, people[i],
-                               2, filename, -1);
-            
-            free(displayName);
-        } else {
-            // The subject isn't needed
-            keyfile_freeSubject(people[i]);
-        }
-    }
-    free(people);
+    TokenError error = backend_addFile(notifier, fileData, fileLen,
+                                       strdup(filename));
+    
     guaranteed_memset(fileData, 0, fileLen);
     free(fileData);
     
-    return (personCount != 0);
+    return error;
 }
 
-static bool removeSignatureFile(GtkTreeModel *signatures, const char *filename) {
+/**
+ * Tells the backend to remove a file token.
+ */
+static void removeTokenFile(const char *filename) {
     GtkTreeIter iter = { .stamp = 0 };
+    GtkTreeModel *model = GTK_TREE_MODEL(tokens);
     
-    bool valid = gtk_tree_model_get_iter_first(signatures, &iter);
+    bool valid = gtk_tree_model_get_iter_first(model, &iter);
     while (valid) {
         char *displayName;
         char *otherFilename;
-        KeyfileSubject *person;
+        Token *token;
         
-        gtk_tree_model_get(signatures, &iter,
+        gtk_tree_model_get(model, &iter,
                            0, &displayName,
-                           1, &person,
+                           1, &token,
                            2, &otherFilename, -1);
         if (!strcmp(filename, otherFilename)) {
-            // Remove this signature
+            // Remove this token
+            token_remove(token);
             free(displayName);
             free(otherFilename);
-            keyfile_freeSubject(person);
-            valid = gtk_list_store_remove(GTK_LIST_STORE(signatures), &iter);
+            valid = gtk_list_store_remove(tokens, &iter);
         } else {
-            valid = gtk_tree_model_iter_next(signatures, &iter);
+            valid = gtk_tree_model_iter_next(model, &iter);
         }
     }
-    
-    return false;
 }
 
-static void selectDefaultSignature() {
-    GtkTreeModel *model = gtk_combo_box_get_model(signaturesCombo);
+static void selectDefaultToken() {
+    GtkTreeModel *model = GTK_TREE_MODEL(tokens);
     GtkTreeIter iter = { .stamp = 0 };
     
     if (gtk_tree_model_get_iter_first(model, &iter) &&
         !gtk_tree_model_iter_next(model, &iter)) {
         // There's only one item, select it
         gtk_tree_model_get_iter_first(model, &iter);
-        gtk_combo_box_set_active_iter(signaturesCombo, &iter);
+        gtk_combo_box_set_active_iter(tokenCombo, &iter);
     }
 }
 
 void platform_startSign(const char *url, const char *hostname, const char *ip,
-                        const char *subjectFilter, unsigned long parentWindowId,
-                        int keyUsage) {
-    char** paths;
-    int len;
-    
-    currentKeyUsage = keyUsage;
-    
-    currentSubjectFilter = (subjectFilter != NULL ?
-                            strdup(subjectFilter) : NULL);
+                        unsigned long parentWindowId) {
     
     GtkBuilder *builder = gtk_builder_new();
     GError *error = NULL;
@@ -209,40 +207,21 @@ void platform_startSign(const char *url, const char *hostname, const char *ip,
     signScroller = GTK_WIDGET(gtk_builder_get_object(builder, "sign_scroller"));
     signText = GTK_TEXT_VIEW(gtk_builder_get_object(builder, "sign_text"));
     
-    // Create a GtkListStore of (displayname, person, filename) tuples
-    GtkListStore *signatures = gtk_list_store_new(3, G_TYPE_STRING, G_TYPE_POINTER, G_TYPE_STRING);
-    GtkTreeIter iter = { .stamp = 0 };
+    // Create a GtkListStore of (displayname, token, filename) tuples
+    tokens = gtk_list_store_new(3, G_TYPE_STRING, G_TYPE_POINTER, G_TYPE_STRING);
     
-    // Look for P12s in ~/cbt and ~/.cbt
-    platform_keyDirs(&paths, &len);
-    for (int i = 0; i <= len; i++) {
-        PlatformDirIter *dir = platform_openKeysDir(paths[i]);
-        if (dir) {
-            while (platform_iterateDir(dir)) {
-                char *filename = platform_currentPath(dir);
-                addSignatureFile(signatures, filename, &iter, keyUsage);
-                free(filename);
-            }
-            platform_closeDir(dir);
-        }
-        free (paths[i]);
-    }
-    
-    signaturesCombo = GTK_COMBO_BOX(gtk_builder_get_object(builder, "signature_combo"));
-    gtk_combo_box_set_model(signaturesCombo, GTK_TREE_MODEL(signatures));
-    g_object_unref(signatures);
+    tokenCombo = GTK_COMBO_BOX(gtk_builder_get_object(builder, "signature_combo"));
+    gtk_combo_box_set_model(tokenCombo, GTK_TREE_MODEL(tokens));
     
     GtkCellRenderer *renderer = gtk_cell_renderer_text_new();
-    gtk_cell_layout_pack_start(GTK_CELL_LAYOUT(signaturesCombo),
+    gtk_cell_layout_pack_start(GTK_CELL_LAYOUT(tokenCombo),
                                renderer, TRUE);
-    gtk_cell_layout_set_attributes(GTK_CELL_LAYOUT(signaturesCombo),
+    gtk_cell_layout_set_attributes(GTK_CELL_LAYOUT(tokenCombo),
                                    renderer, "text", 0, (char *)NULL);
     
     // Used to dim the "Sign" button when no signature has been selected
-    g_signal_connect(G_OBJECT(signaturesCombo), "changed",
+    g_signal_connect(G_OBJECT(tokenCombo), "changed",
                      G_CALLBACK(validateDialog), NULL);
-    
-    selectDefaultSignature();
     
     passwordEntry = GTK_ENTRY(gtk_builder_get_object(builder, "password_entry"));
     
@@ -279,22 +258,30 @@ void platform_startSign(const char *url, const char *hostname, const char *ip,
 }
 
 void platform_endSign() {
-    // Free all subjects in the list
-    GtkTreeModel *model = gtk_combo_box_get_model(signaturesCombo);
+    // Remove all manually added tokens
+    GtkTreeModel *model = GTK_TREE_MODEL(tokens);
     GtkTreeIter iter = { .stamp = 0 };
     
     bool valid = gtk_tree_model_get_iter_first(model, &iter);
     while (valid) {
-        KeyfileSubject *subject;
+        char *displayName, *filename;
+        Token *token;
+        
         gtk_tree_model_get(model, &iter,
-                           1, &subject, -1);
-        keyfile_freeSubject(subject);
+                           0, &displayName,
+                           1, &token,
+                           2, &filename, -1);
+        token_remove(token);
+        free(displayName);
+        free(filename);
         valid = gtk_tree_model_iter_next(model, &iter);
     }
     
     gtk_widget_destroy(GTK_WIDGET(signDialog));
-    free(currentSubjectFilter);
+    g_object_unref(tokens);
 }
+
+
 
 void platform_setMessage(const char *message) {
     if (message == NULL) {
@@ -317,9 +304,101 @@ void platform_setMessage(const char *message) {
     }
 }
 
+/**
+ * Sets the backend notifier to use for receiving token insertion/removal
+ * events and manually requesting token files to be added.
+ */
+void platform_setNotifier(BackendNotifier *notifierToUse) {
+    notifier = notifierToUse;
+}
+
+/**
+ * Add  from the key directories
+ */
+void platform_addKeyDirectories() {
+    char** paths;
+    size_t len;
+    
+    // Look for P12s in ~/cbt and ~/.cbt
+    platform_keyDirs(&paths, &len);
+    for (size_t i = 0; i <= len; i++) {
+        PlatformDirIter *dir = platform_openKeysDir(paths[i]);
+        if (dir) {
+            while (platform_iterateDir(dir)) {
+                char *filename = platform_currentPath(dir);
+                addTokenFile(filename);
+                free(filename);
+            }
+            platform_closeDir(dir);
+        }
+        free(paths[i]);
+    }
+}
+
+static gboolean addTokenFunc(gpointer ptr) {
+    Token *token = (Token*)ptr;
+    GtkTreeIter iter = { .stamp = 0 };
+    const char *filename = (char *)token_getTag(token);
+    
+    // Check for errors
+    const TokenError error = token_getLastError(token);
+    if (error) {
+        platform_showError(error);
+        return FALSE;
+    }
+    
+    // Add token
+    gtk_list_store_append(tokens, &iter);
+    gtk_list_store_set(tokens, &iter,
+                       0, token_getDisplayName(token),
+                       1, token,
+                       2, filename, -1);
+    
+    if (filename) {
+        // The token was manually added. Select it.
+        gtk_combo_box_set_active_iter(tokenCombo, &iter);
+    }
+    
+    return FALSE;
+}
+
+static gboolean removeTokenFunc(gpointer ptr) {
+    Token *token = (Token*)ptr;
+    GtkTreeModel *model = GTK_TREE_MODEL(tokens);
+    GtkTreeIter iter = { .stamp = 0 };
+    
+    bool valid = gtk_tree_model_get_iter_first(model, &iter);
+    while (valid) {
+        Token *listToken;
+        gtk_tree_model_get(model, &iter,
+                           1, &listToken, -1);
+        valid = (listToken == token ?
+            gtk_list_store_remove(tokens, &iter) :
+            gtk_tree_model_iter_next(model, &iter));
+    }
+    
+    return FALSE;
+}
+
+/**
+ * Adds a token to the list of identity tokens. This function should be called
+ * after platform_startSign.
+ */
+void platform_addToken(Token *token) {
+    g_idle_add_full(G_PRIORITY_HIGH, addTokenFunc, token, NULL);
+}
+
+/**
+ * Removes a token from the list of identity tokens. This function should only
+ * be called after platform_startSign has been called.
+ */
+void platform_removeToken(Token *token) {
+    g_idle_add_full(G_PRIORITY_HIGH, removeTokenFunc, token, NULL);
+}
+
 
 static void selectExternalFile() {
-    bool ok = true;
+    TokenError error = TokenError_Success;
     GtkFileChooser *chooser = GTK_FILE_CHOOSER(gtk_file_chooser_dialog_new(
             _("Select external identity file"), GTK_WINDOW(signDialog),
             GTK_FILE_CHOOSER_ACTION_OPEN,
@@ -328,24 +407,18 @@ static void selectExternalFile() {
             (char *)NULL));
     if (gtk_dialog_run(GTK_DIALOG(chooser)) == GTK_RESPONSE_ACCEPT) {
         gchar *filename = gtk_file_chooser_get_filename(chooser);
-        GtkTreeModel *signatures = gtk_combo_box_get_model(signaturesCombo);
         
-        removeSignatureFile(signatures, filename);
+        removeTokenFile(filename);
         
-        // Add an item to the signatures list and select it
-        GtkTreeIter iter = { .stamp = 0 };
-        ok = addSignatureFile(GTK_LIST_STORE(signatures), filename, &iter, currentKeyUsage);
-        if (ok) gtk_combo_box_set_active_iter(signaturesCombo, &iter);
+        // Add an item to the token list and select it
+        error = addTokenFile(filename);
         
         g_free(filename);
     }
     gtk_widget_destroy(GTK_WIDGET(chooser));
     
-    if (!ok) {
-        // TODO check the real reason for the error
-        showMessage(GTK_MESSAGE_ERROR, (currentSubjectFilter != NULL ?
-            _("No matching identities found") :
-            _("Invalid file format")));
+    if (error) {
+        platform_showError(error);
     }
 }
 
@@ -357,8 +430,7 @@ static void selectExternalFile() {
  * Waits for the user to fill in the dialog, and loads the P12 file for
  * the selected subject.
  */
-bool platform_sign(char **signature, int *siglen, KeyfileSubject **person,
-                   char *password, int password_maxlen) {
+bool platform_sign(Token **token, char *password, int password_maxlen) {
     guint response;
 
     // Restrict the password to the length of the preallocated
@@ -366,6 +438,7 @@ bool platform_sign(char **signature, int *siglen, KeyfileSubject **person,
     gtk_entry_set_max_length(passwordEntry, password_maxlen-1);
     
     if (!dialogShown) {
+        selectDefaultToken();
         gtk_widget_show(GTK_WIDGET(signDialog));
         dialogShown = true;
     }
@@ -379,22 +452,11 @@ bool platform_sign(char **signature, int *siglen, KeyfileSubject **person,
         // User pressed "Log in" or "Sign"
         GtkTreeIter iter = { .stamp = 0 };
         
-        *signature = NULL;
-        *siglen = 0;
-        *person = NULL;
+        *token = NULL;
         
-        if (gtk_combo_box_get_active_iter(signaturesCombo, &iter)) {
-            const KeyfileSubject *selectedPerson;
-            char *filename;
-            GtkTreeModel *model = gtk_combo_box_get_model(signaturesCombo);
-            gtk_tree_model_get(model, &iter,
-                               1, &selectedPerson,
-                               2, &filename, -1);
-            *person = keyfile_duplicateSubject(selectedPerson);
-            
-            // Read .p12 file
-            platform_readFile(filename, signature, siglen);
-            free(filename);
+        if (gtk_combo_box_get_active_iter(tokenCombo, &iter)) {
+            gtk_tree_model_get(GTK_TREE_MODEL(tokens), &iter,
+                               1, token, -1);
         }
         
         // Copy the password to the secure buffer
@@ -408,8 +470,9 @@ bool platform_sign(char **signature, int *siglen, KeyfileSubject **person,
     }
 }
 
-void platform_signError() {
-    showMessage(GTK_MESSAGE_ERROR, _("The identity file couldn't be decoded. Maybe the password is incorrect?"));
+void platform_showError(TokenError error) {
+    assert(error != TokenError_Success);
+    showMessage(GTK_MESSAGE_ERROR, gettext(errorStrings[error]));
 }
 
 void platform_versionExpiredError() {

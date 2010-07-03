@@ -44,7 +44,6 @@
 
 #include "../common/defines.h"
 #include "platform.h"
-#include "misc.h"
 
 void platform_seedRandom() {
     struct timeval tv;
@@ -114,7 +113,7 @@ void platform_closeDir(PlatformDirIter *iter) {
 }
 
 #define NUM_PATHS 2
-void platform_keyDirs(char*** path, int* len) {
+void platform_keyDirs(char*** path, size_t* len) {
     static const char suffix[] = "cbt";
     static const char hidden_suffix[] = ".cbt";
     static char *paths[NUM_PATHS];

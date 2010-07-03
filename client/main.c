@@ -29,6 +29,7 @@
 
 #include "../common/defines.h"
 #include "../common/pipe.h"
+#include "backend.h"
 #include "bankid.h"
 #include "platform.h"
 #include "misc.h"
@@ -36,6 +37,24 @@
 
 static const char version[] = PACKAGEVERSION;
 static unsigned long browserWindowId = PLATFORM_NO_WINDOW;
+
+/**
+ * Called when a token has been added or removed.
+ */
+static void notifyCallback(Token *token, TokenChange change) {
+    switch (change) {
+        case TokenChange_Added:
+            platform_addToken(token);
+            break;
+        case TokenChange_Changed:
+            // Not supported
+            break;
+        case TokenChange_Removed:
+            platform_removeToken(token);
+            token_free(token);
+            break;
+    }
+}
 
 /**
  * pipeData is called when the plugin has sent some data.
@@ -89,9 +108,7 @@ void pipeData() {
                 subjectFilter = NULL;
             }
             
-            char *p12Data = NULL;
-            int p12Length;
-            KeyfileSubject *person;
+            Token *token;
             char *password = NULL;
             long password_maxsize = 0;
             char *signature = NULL;
@@ -114,9 +131,15 @@ void pipeData() {
                 free(subjectFilter);
             }
             
-            platform_startSign(url, hostname, ip, decodedSubjectFilter,
-                               browserWindowId,
-                               command == PMC_Sign ? CERTUSE_SIGNING : CERTUSE_AUTHENTICATION);
+            // Pass all parameters to the user interface
+            platform_startSign(url, hostname, ip, browserWindowId);
+            BackendNotifier *notifier = backend_createNotifier(
+                decodedSubjectFilter,
+                (command == PMC_Sign ?
+                    KeyUsage_Signing : KeyUsage_Authentication),
+                notifyCallback);
+            platform_setNotifier(notifier);
+            platform_addKeyDirectories();
             free(decodedSubjectFilter);
             
             if (message != NULL) {
@@ -129,25 +152,24 @@ void pipeData() {
                 platform_versionExpiredError();
             }
 
-            while (platform_sign(&p12Data, &p12Length, &person, password, password_maxsize)) {
+            while (platform_sign(&token, password, password_maxsize)) {
+                // Set the password (not used by all backends)
+                token_usePassword(token, password);
+                
                 // Try to authenticate/sign
                 if (command == PMC_Authenticate) {
-                    error = bankid_authenticate(p12Data, p12Length, person, password,
-                                                challenge, hostname, ip,
+                    error = bankid_authenticate(token, challenge, hostname, ip,
                                                 &signature);
                 } else {
-                    error = bankid_sign(p12Data, p12Length, person, password,
-                                        challenge, hostname, ip,
+                    error = bankid_sign(token, challenge, hostname, ip,
                                         message, invisibleMessage, &signature);
                 }
                 
-                free(p12Data);
-                keyfile_freeSubject(person);
                 guaranteed_memset(password, 0, password_maxsize);
                 
                 if (error == BIDERR_OK) break;
                 
-                platform_signError();
+                platform_showError(token_getLastError(token));
                 error = BIDERR_UserCancel;
             }
 
@@ -155,6 +177,7 @@ void pipeData() {
 
             platform_endSign();
             
+            backend_freeNotifier(notifier);
             free(message);
             free(invisibleMessage);
             free(challenge);
@@ -208,7 +231,6 @@ int main(int argc, char **argv) {
     }
 
     platform_init(&argc, &argv);
-    bankid_init();
     
     for (int i = 1; i < argc; i++) {
         if (!strcmp(argv[i], "--internal--ipc=" IPCVERSION)) {
@@ -249,7 +271,6 @@ int main(int argc, char **argv) {
     platform_mainloop();
 
     secmem_destroy_pool();
-    bankid_shutdown();
     return 0;
 }
 

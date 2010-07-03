@@ -191,7 +191,7 @@ fi
 
 oldifs=IFS
 IFS=";"
-pkgconfigDeps="gtk+-2.0 >= 2.12;glib-2.0;openssl;x11"
+pkgconfigDeps="gtk+-2.0 >= 2.12;gdk-2.0;glib-2.0;openssl;x11"
 
 if ! pkg-config --exists $pkgconfigDeps; then
     echo "Error: Unsatisfied dependencies: " >&2

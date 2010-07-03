@@ -27,26 +27,20 @@
 
 #include <stdbool.h>
 
-#include "keyfile.h"
+#include "backend.h"
 #include "../common/biderror.h"
 
-void bankid_init();
-void bankid_shutdown();
 void bankid_checkVersionValidity();
 bool bankid_versionHasExpired();
 char *bankid_getVersion();
 
 
-BankIDError bankid_authenticate(const char *p12Data, const int p12Length,
-                                const KeyfileSubject *person,
-                                const char *password,
+BankIDError bankid_authenticate(Token *token,
                                 const char *challenge,
                                 const char *hostname, const char *ip,
                                 char **signature);
 
-BankIDError bankid_sign(const char *p12Data, const int p12Length,
-                        const KeyfileSubject *person,
-                        const char *password,
+BankIDError bankid_sign(Token *token,
                         const char *challenge,
                         const char *hostname, const char *ip,
                         const char *message, const char *invisibleMessage,

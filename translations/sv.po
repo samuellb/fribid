@@ -1,7 +1,7 @@
 # Swedish translations for FriBID package
 # Svenska översättningar för paket FriBID.
-# Copyright (C) 2009 Samuel Lidén Borell <samuel@slbdata.se> 
-# 
+# Copyright (C) 2009-2010 Samuel Lidén Borell <samuel@slbdata.se> 
+#
 #  Permission is hereby granted, free of charge, to any person obtaining a copy
 #  of this software and associated documentation files (the "Software"), to deal
 #  in the Software without restriction, including without limitation the rights
@@ -22,10 +22,10 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: FriBID 0.1.0\n"
+"Project-Id-Version: FriBID 0.1.4\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2009-10-17 22:48+0200\n"
-"PO-Revision-Date: 2009-10-17 22:48+0200\n"
+"POT-Creation-Date: 2010-06-30 20:40+0200\n"
+"PO-Revision-Date: 2010-06-30 18:23+0200\n"
 "Last-Translator: Samuel Lidén Borell <samuel@slbdata.se>\n"
 "Language-Team: Swedish\n"
 "MIME-Version: 1.0\n"
@@ -33,47 +33,55 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
-#: ../client/gtk.c:290
-msgid "Identification"
-msgstr "Legitimering"
+#: ../client/gtk.c:51
+msgid "An unknown error occurred"
+msgstr "Ett okänt fel inträffade"
 
-#: ../client/gtk.c:291
-msgid "<big><b>Prove identity to: </b></big>"
-msgstr "<big><b>Legitimera mot: </b></big>"
+#: ../client/gtk.c:55
+msgid "The file could not be read"
+msgstr "Det gick inte att öppna filen"
 
-#: ../client/gtk.c:292 ../client/gtk/sign.glade:212
-msgid "_Prove identity"
-msgstr "_Legitimera"
-
-#: ../client/gtk.c:300
-msgid "Signing"
-msgstr "Underskrift"
-
-#: ../client/gtk.c:301
-msgid "<big><b>Signing on: </b></big>"
-msgstr "<big><b>Signering på: </b></big>"
-
-#: ../client/gtk.c:302
-msgid "_Sign"
-msgstr "_Signera"
-
-#: ../client/gtk.c:310
-msgid "Select external identity file"
-msgstr "Välj en extern legitimationsfil"
-
-#: ../client/gtk.c:333
-msgid "No matching identities found"
-msgstr "Inga matchande identiteter hittades"
-
-#: ../client/gtk.c:334
+#: ../client/gtk.c:57a
 msgid "Invalid file format"
 msgstr "Felaktigt filformat"
 
-#: ../client/gtk.c:386
-msgid "The identity file couldn't be decoded. Maybe the password is incorrect?"
-msgstr "Legitimationsfilen kunde inte avkodas. Lösenordet är kanske felaktigt."
+#: ../client/gtk.c:59
+msgid "Incorrect password"
+msgstr "Felaktigt lösenord"
 
-#: ../client/gtk.c:390
+#: ../client/gtk.c:63
+msgid "Incorrect PIN"
+msgstr "Felaktig PIN"
+
+#: ../client/gtk.c:291
+msgid "Identification"
+msgstr "Legitimering"
+
+#: ../client/gtk.c:292
+msgid "<big><b>Prove identity to: </b></big>"
+msgstr "<big><b>Legitimera mot: </b></big>"
+
+#: ../client/gtk.c:293 ../client/gtk/sign.glade:235
+msgid "_Prove identity"
+msgstr "_Legitimera"
+
+#: ../client/gtk.c:301
+msgid "Signing"
+msgstr "Underskrift"
+
+#: ../client/gtk.c:302
+msgid "<big><b>Signing on: </b></big>"
+msgstr "<big><b>Signering på: </b></big>"
+
+#: ../client/gtk.c:303
+msgid "_Sign"
+msgstr "_Signera"
+
+#: ../client/gtk.c:403
+msgid "Select external identity file"
+msgstr "Välj en extern legitimationsfil"
+
+#: ../client/gtk.c:479
 msgid ""
 "This software version has expired, and will probably not be accepted on all "
 "web sites.\n"
@@ -87,19 +95,18 @@ msgstr ""
 "Du behöver ladda ner en nyare version (om det finns någon) eller, "
 "alternativt, använda den officiella programvaran (Nexus Personal) istället."
 
-#: ../client/gtk/sign.glade:65
+#: ../client/gtk/sign.glade:88
 msgid "Text to sign:"
 msgstr "Text att skriva under:"
 
-#: ../client/gtk/sign.glade:104
+#: ../client/gtk/sign.glade:127
 msgid "Identity:"
 msgstr "Legitimation:"
 
-#: ../client/gtk/sign.glade:117
+#: ../client/gtk/sign.glade:140
 msgid "Password:"
 msgstr "Lösenord:"
 
-#: ../client/gtk/sign.glade:234
+#: ../client/gtk/sign.glade:257
 msgid "External file..."
 msgstr "Extern fil..."
-

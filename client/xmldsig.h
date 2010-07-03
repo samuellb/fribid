@@ -25,13 +25,9 @@
 #ifndef __XMLDSIG_H__
 #define __XMLDSIG_H__
 
-#include "keyfile.h"
+#include "backend.h"
 
-char *xmldsig_sign(const char *p12Data, const int p12Length,
-                   const KeyfileSubject *person,
-                   const unsigned int certMask,
-                   const char *password,
-                   const char *dataId, const char *data);
+char *xmldsig_sign(Token *token, const char *dataId, const char *data);
 
 #endif
 

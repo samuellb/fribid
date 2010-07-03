@@ -38,7 +38,7 @@ DEFINES=../common/config.h ../common/defines.h
 all: template.pot $(MOFILES)
 
 template.pot: $(POTFILES) $(DEFINES)
-	xgettext -k_ -d $(DOMAIN) --package-name=$(PACKAGENAME) --package-version=$(PACKAGEVERSION) --copyright-holder='YOUR NAME' -o $@ $(POTFILES)
+	xgettext -k_ -ktranslatable -d $(DOMAIN) --package-name=$(PACKAGENAME) --package-version=$(PACKAGEVERSION) --copyright-holder='YOUR NAME' -o $@ $(POTFILES)
 
 .po.mo:
 	msgfmt $< -o $@

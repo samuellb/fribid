@@ -27,6 +27,7 @@
 
 #include <stdbool.h>
 #include <stdint.h>
+#include "backend.h"
 
 /* Initialization */
 void platform_init(int *argc, char ***argv);
@@ -48,7 +49,7 @@ char *platform_currentName(PlatformDirIter *iter);
 char *platform_currentPath(PlatformDirIter *iter);
 void platform_closeDir(PlatformDirIter *iter);
 
-void platform_keyDirs(char*** path, int* len);
+void platform_keyDirs(char*** path, size_t* len);
 PlatformDirIter *platform_openKeysDir();
 
 /* Configuration */
@@ -87,14 +88,16 @@ void platform_mainloop();
 void platform_leaveMainloop();
 
 void platform_startSign(const char *url, const char *hostname, const char *ip,
-                        const char *subjectFilter, unsigned long parentWindowId,
-                        int keyUsage);
+                        unsigned long parentWindowId);
 void platform_endSign();
+void platform_setNotifier(BackendNotifier *notifier);
 void platform_setMessage(const char *message);
-bool platform_sign(char **signature, int *siglen, char **person,
-                   char *password, int password_maxlen);
+void platform_addKeyDirectories();
+void platform_addToken(Token *token);
+void platform_removeToken(Token *token);
+bool platform_sign(Token **token, char *password, int password_maxlen);
 
-void platform_signError();
+void platform_showError(TokenError error);
 void platform_versionExpiredError();
 
 #endif

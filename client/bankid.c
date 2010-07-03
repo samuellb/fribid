@@ -1,6 +1,6 @@
 /*
 
-  Copyright (c) 2009 Samuel Lidén Borell <samuel@slbdata.se>
+  Copyright (c) 2009-2010 Samuel Lidén Borell <samuel@slbdata.se>
  
   Permission is hereby granted, free of charge, to any person obtaining a copy
   of this software and associated documentation files (the "Software"), to deal
@@ -31,19 +31,11 @@
 #include <inttypes.h>
 
 #include "../common/defines.h"
-#include "keyfile.h"
+#include "backend.h"
 #include "xmldsig.h"
 #include "misc.h"
 #include "bankid.h"
 #include "platform.h"
-
-void bankid_init() {
-    keyfile_init();
-}
-
-void bankid_shutdown() {
-    keyfile_shutdown();
-}
 
 static const char defaultEmulatedVersion[] = EMULATED_VERSION;
 
@@ -247,14 +239,12 @@ static const char signobj_id[] = "bidSignedData";
 /**
  * Creates a BankID-compatible xmldsig signature
  *
- * @param p12Data    Contents of the P12 file
- * @param p12Length  Length of the P12 file in bytes
- * @param person     The subject who signs the data
- * @param password   The password the P12 is encrypted with
+ * @param token      The token to sign the data with. (see backend.h)
+ *                   If the key of the token encrypted, you must call
+ *                   backend_login() on it first.
  * @param challenge  The nonce sent by the server
  * @param hostname   Hostname of the server that requested the signature
  * @param ip         IP address of the server
- * @param certMask   Which certificates to use. See keyfile.h
  * @param purpose    Either "Identification" or "Signing"
  * @param extra      Extra data to include. This is generally a
  *                   usrVisibleData tag
@@ -262,14 +252,11 @@ static const char signobj_id[] = "bidSignedData";
  * @param signature  The resulting signature. It's allocated and
  *                   is null-terminated.
  *
- * @return  A status code (see bankid.h)
+ * @return  A status code (see ../common/biderror.h)
  */
-static BankIDError sign(const char *p12Data, const int p12Length,
-                        const KeyfileSubject *person,
-                        const char *password,
+static BankIDError sign(Token *token,
                         const char *challenge,
                         const char *hostname, const char *ip,
-                        const unsigned int certMask,
                         const char *purpose, const char *extra,
                         char **signature) {
     
@@ -283,9 +270,7 @@ static BankIDError sign(const char *p12Data, const int p12Length,
     free(version);
     
     // Sign
-    char *xmlsig = xmldsig_sign(p12Data, p12Length,
-                person, certMask, password,
-                signobj_id, object);
+    char *xmlsig = xmldsig_sign(token, signobj_id, object);
     free(object);
     
     if (xmlsig) {
@@ -299,19 +284,15 @@ static BankIDError sign(const char *p12Data, const int p12Length,
     }
 }
 
-BankIDError bankid_authenticate(const char *p12Data, const int p12Length,
-                                const KeyfileSubject *person,
-                                const char *password,
+BankIDError bankid_authenticate(Token *token,
                                 const char *challenge,
                                 const char *hostname, const char *ip,
                                 char **signature) {
-    return sign(p12Data, p12Length, person, password, challenge,
-                hostname, ip, CERTUSE_AUTHENTICATION, "Identification", "", signature);
+    return sign(token, challenge, hostname, ip,
+                "Identification", "", signature);
 }
 
-BankIDError bankid_sign(const char *p12Data, const int p12Length,
-                        const KeyfileSubject *person,
-                        const char *password,
+BankIDError bankid_sign(Token *token,
                         const char *challenge,
                         const char *hostname, const char *ip,
                         const char *message, const char *invisibleMessage,
@@ -324,8 +305,8 @@ BankIDError bankid_sign(const char *p12Data, const int p12Length,
         extra = rasprintf_append(extra, signedInvisibleText_template, invisibleMessage);
     }
     
-    error = sign(p12Data, p12Length, person, password, challenge,
-                 hostname, ip, CERTUSE_SIGNING, "Signing", extra, signature);
+    error = sign(token, challenge, hostname, ip,
+                 "Signing", extra, signature);
     
     free(extra);
     return error;

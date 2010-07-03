@@ -28,7 +28,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-#include "keyfile.h"
+#include "backend.h"
 #include "xmldsig.h"
 #include "misc.h"
 
@@ -75,29 +75,24 @@ static const char cert_template[] =
 /**
  * Creates a xmldsig signature. See the sign function in bankid.c.
  */
-char *xmldsig_sign(const char *p12Data, const int p12Length,
-                   const KeyfileSubject *person,
-                   const unsigned int certMask,
-                   const char *password,
-                   const char *dataId, const char *data) {
+char *xmldsig_sign(Token *token, const char *dataId, const char *data) {
     
     // Keyinfo
     char **certs;
-    int certCount;
-    if (!keyfile_getBase64Chain(p12Data, p12Length, person, certMask,
-                                &certs, &certCount)) {
+    size_t certCount;
+    if (!token_getBase64Chain(token, &certs, &certCount)) {
         return NULL;
     }
     
-    int certsLength = (strlen(cert_template)-2) * certCount;
-    for (int i = 0; i < certCount; i++) {
+    size_t certsLength = (strlen(cert_template)-2) * certCount;
+    for (size_t i = 0; i < certCount; i++) {
         certsLength += strlen(certs[i]);
     }
     
     char *keyinfoInner = malloc(certsLength+1);
     keyinfoInner[0] = '\0';
     char *keyend = keyinfoInner;
-    for (int i = 0; i < certCount; i++) {
+    for (size_t i = 0; i < certCount; i++) {
         keyend += sprintf(keyend, cert_template, certs[i]);
         free(certs[i]);
     }
@@ -117,10 +112,10 @@ char *xmldsig_sign(const char *p12Data, const int p12Length,
     
     // Signature
     char *sigData;
-    int sigLen;
+    size_t sigLen;
     
-    if (!keyfile_sign(p12Data, p12Length, person, certMask, password,
-                      signedinfo, strlen(signedinfo), &sigData, &sigLen)) {
+    if (!token_sign(token, signedinfo, strlen(signedinfo),
+                    &sigData, &sigLen)) {
         free(keyinfo);
         free(signedinfo);
         return NULL;
