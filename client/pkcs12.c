@@ -218,8 +218,8 @@ static char *der_encode(X509 *cert) {
 static bool has_keyusage(X509 *cert, KeyUsage keyUsage) {
     static const int openSSLUsages[] = {
         X509v3_KU_KEY_CERT_SIGN,     // KeyUsage_Issuing
-        X509v3_KU_DIGITAL_SIGNATURE, // KeyUsage_Signing
-        X509v3_KU_NON_REPUDIATION,   // KeyUsage_Authentication
+        X509v3_KU_NON_REPUDIATION,   // KeyUsage_Signing
+        X509v3_KU_DIGITAL_SIGNATURE, // KeyUsage_Authentication
     };
     ASN1_BIT_STRING *usage;
     bool supported = false;
