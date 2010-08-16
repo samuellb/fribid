@@ -33,8 +33,8 @@
 
 
 // Available backends
+Backend *pkcs11_getBackend();
 Backend *pkcs12_getBackend();
-
 
 static void addBackend(BackendNotifier *notifier, Backend *backend) {
     if (backend == NULL) return;
@@ -65,6 +65,9 @@ BackendNotifier *backend_createNotifier(const char *subjectFilter,
     
     // Add all backends
     addBackend(notifier, pkcs12_getBackend());
+#if ENABLE_PKCS11
+    addBackend(notifier, pkcs11_getBackend());
+#endif
     return notifier;
 }
 
@@ -98,6 +101,19 @@ TokenError backend_addFile(BackendNotifier *notifier,
         }
     }
     return lastError;
+}
+
+/**
+ * Scan backends for tokens
+ */
+void backend_scanTokens(BackendNotifier *notifier)
+{
+    for (size_t i = 0; i < notifier->backendCount; i++) {
+        Backend *backend = notifier->backends[i];
+        if (backend->scan) {
+            backend->scan(backend);
+        }
+    }
 }
 
 /**

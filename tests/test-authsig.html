@@ -31,6 +31,11 @@
 var output;
 var pluginVersion;
 
+function outparam(plugin, name) {
+    value = plugin.GetParam(name);
+    return "    " + name + ": \"" + value + "\" (" + typeof(value) + ")\n";
+}
+
 function test(sign, visibleText, nonVisibleText) {
     output = document.getElementById('output');
     pluginVersion = document.getElementById('pluginVersion');
@@ -45,16 +50,16 @@ function test(sign, visibleText, nonVisibleText) {
     plugin.SetParam("NonVisibleData", nonVisibleText);
     output.value += "Calling SetParam(Policys)\n";
     var retval = plugin.SetParam("Policys", "MS4yLjc1Mi43OC4xLjE7MS4yLjc1Mi43OC4xLjI7MS4yLjMuNC41OzEuMi4zLjQuMTA=");
-    
-    output.value += "retval of sp = "+retval+"\n";
+    output.value += "retval of sp = "+retval+" ("+typeof(retval)+")\n";
+
     output.value += "\nGetParam:\n";
-    output.value += "    Challenge: \""+plugin.GetParam("Challenge")+"\"\n";
-    output.value += "    Nonce: \""+plugin.GetParam("Nonce")+"\"\n";
-    output.value += "    Policys: \""+plugin.GetParam("Policys")+"\"\n";
-    output.value += "    TextToBeSigned: \""+plugin.GetParam("TextToBeSigned")+"\"\n";
-    output.value += "    NonVisibleData: \""+plugin.GetParam("NonVisibleData")+"\"\n";
-    output.value += "    Subjects: \""+plugin.GetParam("Subjects")+"\"\n";
-    output.value += "    Signature: \""+plugin.GetParam("Signature")+"\"\n";
+    output.value += outparam(plugin, "Challenge");
+    output.value += outparam(plugin, "Nonce");
+    output.value += outparam(plugin, "Policys");
+    output.value += outparam(plugin, "TextToBeSigned");
+    output.value += outparam(plugin, "NonVisibleData");
+    output.value += outparam(plugin, "Subjects");
+    output.value += outparam(plugin, "Signature");
     
     command = (sign ? "Sign" : "Authenticate");
     output.value += "\nInvoking PerformAction("+command+"):\n";

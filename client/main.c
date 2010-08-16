@@ -140,6 +140,7 @@ void pipeData() {
                 notifyCallback);
             platform_setNotifier(notifier);
             platform_addKeyDirectories();
+            backend_scanTokens(notifier);
             free(decodedSubjectFilter);
             
             if (message != NULL) {
@@ -204,7 +205,7 @@ int process_non_ui_args(int argc, char **argv) {
     for (int i = 1; i < argc; i++) {
         if (!strcmp(argv[i], "--internal--bankid-version-string")) {
             char *versionString = bankid_getVersion();
-            printf("%s\n", versionString);
+            printf("%s", versionString);
             free(versionString);
             return 1;
         }

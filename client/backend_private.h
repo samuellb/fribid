@@ -32,9 +32,14 @@
 #ifndef TokenType
     #define TokenType Token
 #endif
+#ifndef BackendPrivateType
+    #define BackendPrivateType void
+#endif
+
 
 typedef struct _Backend Backend;
 struct _Backend {
+    BackendPrivateType *private;
     const BackendNotifier *notifier;
     
     /* Initialization and de-initialization */
@@ -46,6 +51,11 @@ struct _Backend {
      */
     void (*freeToken)(TokenType *token);
     
+    /**
+     * Scan tokens provided by this backend
+     */
+    void (*scan)(Backend *backend);
+
     /**
      * Manually adds a file to the backend. May be NULL if not applicable
      */

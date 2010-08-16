@@ -74,6 +74,8 @@ BackendNotifier *backend_createNotifier(const char *subjectFilter,
                                         BackendNotifyFunction notifyFunction);
 void backend_freeNotifier(BackendNotifier *notifier);
 
+void backend_scanTokens();
+
 /* Function to manually add files */
 TokenError backend_addFile(BackendNotifier *notifier,
                            const char *file, size_t length, void *tag);

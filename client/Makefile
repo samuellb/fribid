@@ -22,10 +22,11 @@
 
 CFLAGS ?= -O2 -g
 COMMONCFLAGS=$(CFLAGS) -Wall -Wextra -std=c99 -pedantic -Wno-unused-parameter
-CCFLAGS=$(COMMONCFLAGS) -I../npapi/include `pkg-config --cflags 'gtk+-2.0 >= 2.12' gdk-2.0 glib-2.0 openssl` -DGTK_DISABLE_DEPRECATED=1 -DGDK_DISABLE_DEPRECATED=1 -DG_DISABLE_DEPRECATED=1 -DGSEAL_ENABLE
+PKG_DEPS='gtk+-2.0 >= 2.12' gdk-2.0 glib-2.0 gthread-2.0 $(if $(ENABLE_PKCS11),libp11) openssl
+CCFLAGS=$(COMMONCFLAGS) -I../npapi/include `pkg-config --cflags $(PKG_DEPS)` -DGTK_DISABLE_DEPRECATED=1 -DGDK_DISABLE_DEPRECATED=1 -DG_DISABLE_DEPRECATED=1 -DGSEAL_ENABLE
 # You may have to add -lpthread after $(LDFLAGS) on OpenBSD
 LINKFLAGS=$(CFLAGS) $(LDFLAGS) -Wl,--as-needed
-LIBS=`pkg-config --libs 'gtk+-2.0 >= 2.12' gdk-2.0 glib-2.0 gthread-2.0 openssl`
+LIBS=`pkg-config --libs $(PKG_DEPS)`
 
 # Files to be installed
 LIB_PATH=`../configure --internal--get-define=LIB_PATH`
@@ -33,8 +34,9 @@ SHARE_PATH=`../configure --internal--get-define=SHARE_PATH`
 UI_PATH=`../configure --internal--get-define=UI_PATH`
 SIGNING_EXECUTABLE=`../configure --internal--get-define=SIGNING_EXECUTABLE`
 UI_GTK_XML=`../configure --internal--get-define=UI_GTK_XML`
+ENABLE_PKCS11=$(shell ../configure --internal--get-define=ENABLE_PKCS11|grep 1)
 
-OBJECTS=backend.o bankid.o pkcs12.o main.o misc.o pipe.o posix.o glibconfig.o gtk.o xmldsig.o secmem.o
+OBJECTS=backend.o bankid.o $(if $(ENABLE_PKCS11),pkcs11.o) pkcs12.o main.o misc.o pipe.o posix.o glibconfig.o gtk.o xmldsig.o secmem.o
 
 all: sign
 
@@ -44,6 +46,7 @@ glibconfig.o: platform.h
 gtk.o: ../common/biderror.h backend.h bankid.h platform.h misc.h
 main.o: ../common/biderror.h bankid.h misc.h secmem.h platform.h ../common/pipe.h
 misc.o: misc.h
+pkcs11.o: backend.h backend_private.h misc.h
 pkcs12.o: backend.h backend_private.h misc.h
 pipe.o: ../common/pipe.h ../common/pipe.c
 posix.o: platform.h
