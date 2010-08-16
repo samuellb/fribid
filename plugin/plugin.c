@@ -142,11 +142,20 @@ char *sign_getParam(Plugin *plugin, const char *name) {
 bool sign_setParam(Plugin *plugin, const char *name, const char *value) {
     char **valuePtr = getParamPointer(plugin, name);
     
-    if (valuePtr == NULL) return false;
+    if (valuePtr == NULL) {
+        plugin->lastError = BIDERR_InvalidParameter;
+        return false;
+    }
     
     free(*valuePtr);
     *valuePtr = strdup(value);
-    return (*valuePtr != NULL);
+    if (*valuePtr != NULL) {
+        plugin->lastError = BIDERR_OK;
+        return true;
+    } else {
+        plugin->lastError = BIDERR_InternalError;
+        return false;
+    }
 }
 
 static bool hasSignParams(const Plugin *plugin) {

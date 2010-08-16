@@ -29,6 +29,7 @@ typedef enum {
     BIDERR_OK =                  0,
     BIDERR_InternalError =       1,
     BIDERR_UserCancel =       8002,
+    BIDERR_InvalidParameter = 8004,
     BIDERR_InvalidAction =    8008,
     BIDERR_InvalidPIN =       8013,
     BIDERR_NotSSL =           8015,

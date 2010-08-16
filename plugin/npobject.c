@@ -257,11 +257,12 @@ static bool objInvoke(NPObject *npobj, NPIdentifier ident,
                 
                 if (ok) {
                     sign_setParam(this->plugin, param, value);
-                    VOID_TO_NPVARIANT(*result);
+                    INT32_TO_NPVARIANT((int32_t)this->plugin->lastError, *result);
                 }
                 
                 free(param);
                 free(value);
+                
                 return ok;
             } else if (!strcmp(name, "PerformAction") && (argCount == 1) &&
                        NPVARIANT_IS_STRING(args[0])) {
