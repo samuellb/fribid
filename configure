@@ -215,7 +215,7 @@ fi
 
 oldifs=IFS
 IFS=";"
-pkgconfigDeps="gtk+-2.0 >= 2.12;gdk-2.0;glib-2.0;openssl;x11"
+pkgconfigDeps="gtk+-2.0 >= 2.12;gdk-2.0;glib-2.0;libcrypto;x11"
 if [ "$enable_pkcs11" = 1 ]; then
     echo "pkcs11 smartcard support enabled"
     pkgconfigDeps="$pkgconfigDeps;libp11"
