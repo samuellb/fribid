@@ -11,7 +11,6 @@ Architecture: any
 # These are generated from shlibs but have been modified to not be unecessarily strict
 Depends: libc6, libglib2.0-0 (>= 2.8), libgtk2.0-0 (>= 2.12), libssl0.9.8
 Recommends: iceweasel (>= 3) | firefox (>= 3) | midori (>= 0.2) | epiphany-browser (>= 2.22) | iceape-browser (>= 2)
-Suggests: icedtea-gcjwebplugin | sun-java6-plugin | sun-java5-plugin | gcjwebplugin
 Description: web browser plugin for BankID
  FriBID is a web browser plugin for BankID, a kind of electronic ID
  (e-legitmiation) that's used in Sweden. Currently, it only supports
