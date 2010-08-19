@@ -20,7 +20,7 @@ endif
 configure:
 configure-stamp:
 	dh_testdir
-	./configure --prefix=/usr --plugin-path=/usr/lib/iceweasel/plugins --plugin-path=/usr/lib/mozilla/plugins --plugin-path=/usr/lib/midbrowser/plugins --plugin-path=/usr/lib/xulrunner-addons/plugins --plugin-path=/usr/lib/firefox/plugins --plugin-path=/usr/lib/xulrunner/plugins --plugin-path=/usr/lib/iceape/plugins
+	./configure --prefix=/usr --disable-pkcs11 --plugin-path=/usr/lib/iceweasel/plugins --plugin-path=/usr/lib/mozilla/plugins --plugin-path=/usr/lib/midbrowser/plugins --plugin-path=/usr/lib/xulrunner-addons/plugins --plugin-path=/usr/lib/firefox/plugins --plugin-path=/usr/lib/xulrunner/plugins --plugin-path=/usr/lib/iceape/plugins
 	touch $@
 
 build: build-stamp
