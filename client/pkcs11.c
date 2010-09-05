@@ -249,7 +249,11 @@ static void pkcs11_found_token(Backend *backend, PKCS11_SLOT *slot) {
         goto fail;
 
     token->base.backend = backend;
-    token->base.status = TokenStatus_NeedPassword;
+    if (slot->token->secureLogin == 0) {
+        token->base.status = TokenStatus_NeedPassword;
+    } else {
+        token->base.status = TokenStatus_NeedPIN;
+    }
     token->base.displayName = getNamePropertyByNID(id, NID_commonName);
     token->base.tag = slot->token->label;
     backend->notifier->notifyFunction(&token->base, TokenChange_Added);

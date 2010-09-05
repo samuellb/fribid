@@ -110,6 +110,9 @@ static GtkLabel *signButtonLabel;
 static GtkWidget *signLabel;
 static GtkWidget *signScroller;
 
+static GtkInfoBar *info_bar;
+static GtkLabel *info_label;
+
 static GtkListStore *tokens;
 static BackendNotifier *notifier;
 static bool dialogShown;
@@ -122,9 +125,36 @@ static void showMessage(GtkMessageType type, const char *text) {
     gtk_widget_destroy(dialog);
 }
 
+static void hide_message () {
+    gtk_widget_hide (GTK_WIDGET (info_bar));
+}
+
+static void show_inline_message (GtkMessageType message_type, const char *message) {
+    gtk_widget_show(GTK_WIDGET (info_bar));
+    gtk_info_bar_set_message_type(GTK_INFO_BAR (info_bar),
+                                  message_type);
+    gtk_label_set_text(info_label, message);
+}
+
 static void validateDialog(GtkWidget *ignored1, gpointer *ignored2) {
     gtk_widget_set_sensitive(GTK_WIDGET(signButton),
                              (gtk_combo_box_get_active(tokenCombo) != -1));
+    hide_message();
+    if (gtk_combo_box_get_active(tokenCombo) != -1) {
+        GtkTreeIter iter = { .stamp = 0 };
+
+        Token *token;
+        token = NULL;
+
+        if (gtk_combo_box_get_active_iter(tokenCombo, &iter)) {
+            gtk_tree_model_get(GTK_TREE_MODEL(tokens), &iter,
+                               1, &token, -1);
+            gtk_widget_set_sensitive (GTK_WIDGET (passwordEntry), token_getStatus(token) != TokenStatus_NeedPIN);
+            if (token_getStatus(token) == TokenStatus_NeedPIN) {
+                show_inline_message (GTK_MESSAGE_INFO, _("Please enter PIN on pinpad"));
+            }
+        }
+    }
 }
 
 static TokenError addTokenFile(const char *filename) {
@@ -189,6 +219,8 @@ void platform_startSign(const char *url, const char *hostname, const char *ip,
     
     GtkBuilder *builder = gtk_builder_new();
     GError *error = NULL;
+    GtkVBox *vbox;
+    GtkContainer *content_area;
     
     if (!gtk_builder_add_from_file(builder, UI_GTK_XML, &error)) {
         fprintf(stderr, BINNAME ": Failed to open GtkBuilder XML: %s\n", error->message);
@@ -224,7 +256,17 @@ void platform_startSign(const char *url, const char *hostname, const char *ip,
                      G_CALLBACK(validateDialog), NULL);
     
     passwordEntry = GTK_ENTRY(gtk_builder_get_object(builder, "password_entry"));
-    
+
+    info_bar = GTK_INFO_BAR(gtk_info_bar_new());
+    info_label = GTK_LABEL(gtk_label_new(""));
+
+    content_area = GTK_CONTAINER (gtk_info_bar_get_content_area(GTK_INFO_BAR (info_bar)));
+    gtk_container_add(GTK_CONTAINER(content_area), GTK_WIDGET (info_label));
+    gtk_widget_show(GTK_WIDGET(info_label));
+
+    vbox = GTK_VBOX(gtk_builder_get_object(builder, "vbox1"));
+    gtk_box_pack_end(GTK_BOX(vbox), GTK_WIDGET (info_bar), TRUE, FALSE, 2);
+
     signDialog = GTK_DIALOG(gtk_builder_get_object(builder, "dialog_sign"));
     
     bool transientOk = false;
@@ -280,8 +322,6 @@ void platform_endSign() {
     gtk_widget_destroy(GTK_WIDGET(signDialog));
     g_object_unref(tokens);
 }
-
-
 
 void platform_setMessage(const char *message) {
     if (message == NULL) {
@@ -458,7 +498,7 @@ bool platform_sign(Token **token, char *password, int password_maxlen) {
             gtk_tree_model_get(GTK_TREE_MODEL(tokens), &iter,
                                1, token, -1);
         }
-        
+
         // Copy the password to the secure buffer
         strncpy(password, gtk_entry_get_text(passwordEntry), password_maxlen-1);
         // Be sure to terminate this under all circumstances
