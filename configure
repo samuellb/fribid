@@ -42,7 +42,7 @@ userPrefix="$HOME/.local"
 
 enable_pkcs11=""
 optional_pkcs11="0"
-pkcs11Engine="/usr/$multilib/opensc-pkcs11.so"
+pkcs11Module="/usr/$multilib/opensc-pkcs11.so"
 
 error=""
 
@@ -71,10 +71,10 @@ Options:
     --plugin-path=PATH    Sets the NPAPI plugin path [/usr/$multilib/mozilla/plugin]
                           This option may be repeated if you want to create
                           plugin links in several places.
-    --pkcs11-engine=PATH  Path to pkcs11 engine [/usr/$multilib/opensc-pkcs11.so]
-    --disable-pkcs11      Disable building pkcs11 smartcard support [default autodetect]
-    --enable-pkcs11       Force building pkcs11 smartcard support [default autodetect]
-    --optional-pkcs11     Detect pkcs11 module availability at runtime
+    --pkcs11-engine=PATH  Path to PKCS#11 module [/usr/$multilib/opensc-pkcs11.so]
+    --disable-pkcs11      Disable building PKCS#11 smartcard support
+    --enable-pkcs11       Force building PKCS#11 smartcard support
+    --optional-pkcs11     Detect PKCS#11 module availability at runtime
     --current-user        Selects a per-user installation. Equivalent to:
                               --prefix=$userPrefix
                               --plugin-path=$userPluginPath
@@ -105,7 +105,7 @@ Options:
         fi
         ;;
     --pkcs11-engine=*)
-        pkcs11Engine=${flag#--pkcs11-engine=}
+        pkcs11Module=${flag#--pkcs11-engine=}
         ;;
     --disable-pkcs11)
         enable_pkcs11="0"
@@ -148,7 +148,7 @@ Options:
 done
 
 if [ ! -r "$basedir/common/defines.h" ]; then
-    echo "ERROR: Source code not found."
+    echo "ERROR: Source code not found." >&2
     error=1
 fi
 
@@ -166,9 +166,10 @@ else
     execPath="$execprefix"
 fi
 
-echo "Prefix: $prefixPath"
+echo
+echo "    Prefix:            $prefixPath"
 if [ -n "$execprefix" ]; then
-    echo "Executable/library prefix: $execPath"
+    echo "    Executable prefix: $execPath"
 fi
 
 ### Specific directories
@@ -186,27 +187,28 @@ hasPaths=""
 for path in $pluginPaths; do
     hasPaths="1"
     if [ "$path" = "${path%/plugins}" ]; then
-        echo "WARNING: Plugin path $path doesn't end with /plugins." >&2
+        echo "    WARNING: Plugin path $path doesn't end with /plugins." >&2
     elif [ -d "$path" ]; then
-        echo "Plugin path: $path"
+        echo "    Plugin path:       $path"
     else
-        echo "WARNING: Plugin path $path doesn't exist!"
+        echo "    WARNING: Plugin path $path doesn't exist!" >&2
         if [ -z "$pluginPathSet" ]; then
-            echo "You may need to change it with the --plugin-path=... option." >&2
+            echo "    You may need to change it with the --plugin-path=... option." >&2
         fi
     fi
 done
 
 if [ -z "$hasPaths" ]; then
-    echo "No plugin paths specified."
+    echo "    No plugin paths specified."
 fi
 
+echo
 
 ### Check dependencies
 utilities="make pkg-config msgfmt"
 depError=""
 if ! type $utilities > /dev/null 2> /dev/null; then
-    echo "Error: Missing commands:" >&2
+    echo "ERROR: Missing commands:" >&2
     for utility in $utilities; do
         if ! type "$utility" > /dev/null 2> /dev/null; then
             echo "  $utility" >&2
@@ -223,23 +225,30 @@ oldifs=IFS
 IFS=";"
 pkgconfigDeps="gtk+-2.0 >= 2.12;gdk-2.0;glib-2.0;libcrypto;x11"
 if [ "$enable_pkcs11" = 1 ]; then
-    echo "pkcs11 smartcard support enabled"
+    if [ "$optional_pkcs11" = 0 ]; then
+        echo "    PKCS#11 smartcard support enabled"
+    else
+        echo "    PKCS#11 smartcard support enabled (optional mode)"
+    fi
+    
     pkgconfigDeps="$pkgconfigDeps;libp11"
-    if [ ! -f $pkcs11Engine ]; then
+    echo "    PKCS#11 module:    $pkcs11Module"
+    if [ ! -f "$pkcs11Module" ]; then
         # PKCS#11 module not found
-        errorType="Warning"
+        errorType="    WARNING"
         if [ "$optional_pkcs11" = 0 ]; then
-            errorType="Error"
             depError=1
+            errorType="ERROR"
         fi
-        
-        echo "$errorType: $pkcs11Engine not found"
+        echo
+        echo "$errorType: PKCS#11 module not found" >&2
     fi
 else
-    echo "pkcs11 smartcard support disabled"
+    echo "    PKCS#11 smartcard support disabled"
 fi
+
 if ! pkg-config --exists $pkgconfigDeps; then
-    echo "Error: Unsatisfied dependencies: " >&2
+    echo "ERROR: Unsatisfied dependencies: " >&2
     for dep in $pkgconfigDeps; do
         pkg-config --exists $dep || echo "  $dep" >&2
     done
@@ -267,7 +276,7 @@ cat <<EOT >"$CONFFILE"
 
 #define NPAPI_PLUGIN_PATHS "$pluginPaths"
 
-#define DEFAULT_PKCS11_ENGINE "$pkcs11Engine"
+#define DEFAULT_PKCS11_ENGINE "$pkcs11Module"
 
 #define ENABLE_PKCS11 ${enable_pkcs11:-0}
 #define OPTIONAL_PKCS11 ${optional_pkcs11:-0}
@@ -291,6 +300,6 @@ else
     INSTALLCMD="sudo make install"
 fi
 
-echo "Wrote $CONFFILE."
+echo
 echo "Type \"make\" to compile, and then \"$INSTALLCMD\" to install."
 
