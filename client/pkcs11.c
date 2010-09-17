@@ -274,6 +274,15 @@ static void _backend_scan(Backend *backend) {
     }
 }
 
+static bool expected_error(unsigned long error) {
+#if OPTIONAL_PKCS11
+    // Use PKCS#11 if available, and ignore errors if it's not
+    return ERR_GET_FUNC(error) == SYS_F_FOPEN; // ignore failures to open files
+#else
+    return false;
+#endif
+}
+
 static bool _backend_init(Backend *backend) {
     backend->private = calloc(1, sizeof(*backend->private));
     OpenSSL_add_all_algorithms();
@@ -282,8 +291,11 @@ static bool _backend_init(Backend *backend) {
     /* load pkcs #11 module */
     // TODO: Runtime config parameter
     if (PKCS11_CTX_load(backend->private->ctx, DEFAULT_PKCS11_ENGINE) != 0) {
-        fprintf(stderr, "loading pkcs11 engine failed: %s\n",
-            ERR_reason_error_string(ERR_get_error()));
+        unsigned long error = ERR_get_error();
+        if (!expected_error(error)) {
+            fprintf(stderr, "loading pkcs11 engine failed: %s\n",
+                ERR_reason_error_string(error));
+        }
         PKCS11_CTX_free(backend->private->ctx);
         return false;
     }

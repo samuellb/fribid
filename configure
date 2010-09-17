@@ -40,6 +40,8 @@ pluginPaths="/usr/$multilib/mozilla/plugins"
 userPluginPath="$HOME/.mozilla/plugins"
 userPrefix="$HOME/.local"
 
+enable_pkcs11=""
+optional_pkcs11="0"
 pkcs11Engine="/usr/$multilib/opensc-pkcs11.so"
 
 error=""
@@ -72,6 +74,7 @@ Options:
     --pkcs11-engine=PATH  Path to pkcs11 engine [/usr/$multilib/opensc-pkcs11.so]
     --disable-pkcs11      Disable building pkcs11 smartcard support [default autodetect]
     --enable-pkcs11       Force building pkcs11 smartcard support [default autodetect]
+    --optional-pkcs11     Detect pkcs11 module availability at runtime
     --current-user        Selects a per-user installation. Equivalent to:
                               --prefix=$userPrefix
                               --plugin-path=$userPluginPath
@@ -106,10 +109,13 @@ Options:
         ;;
     --disable-pkcs11)
         enable_pkcs11="0"
-    ;;
+        ;;
     --enable-pkcs11)
         enable_pkcs11="1"
-    ;;
+        ;;
+    --optional-pkcs11)
+        optional_pkcs11="1"
+        ;;
     --current-user)
         if [ -z "$prefixSet" ]; then
             prefix="$userPrefix"
@@ -220,8 +226,14 @@ if [ "$enable_pkcs11" = 1 ]; then
     echo "pkcs11 smartcard support enabled"
     pkgconfigDeps="$pkgconfigDeps;libp11"
     if [ ! -f $pkcs11Engine ]; then
-        echo "Error: $pkcs11Engine not found"
-        depError=1
+        # PKCS#11 module not found
+        errorType="Warning"
+        if [ "$optional_pkcs11" = 0 ]; then
+            errorType="Error"
+            depError=1
+        fi
+        
+        echo "$errorType: $pkcs11Engine not found"
     fi
 else
     echo "pkcs11 smartcard support disabled"
@@ -258,6 +270,7 @@ cat <<EOT >"$CONFFILE"
 #define DEFAULT_PKCS11_ENGINE "$pkcs11Engine"
 
 #define ENABLE_PKCS11 ${enable_pkcs11:-0}
+#define OPTIONAL_PKCS11 ${optional_pkcs11:-0}
 EOT
 
 ### Display success message
