@@ -43,7 +43,7 @@ static void addBackend(BackendNotifier *notifier, Backend *backend) {
     if (!backend->init(backend)) return;
     
     notifier->backends = realloc(notifier->backends,
-                                 notifier->backendCount+1 * sizeof(Backend*));
+                                 (notifier->backendCount+1) * sizeof(Backend*));
     notifier->backends[notifier->backendCount] = backend;
     notifier->backendCount++;
     backend->notifier = notifier;
