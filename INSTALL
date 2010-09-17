@@ -2,15 +2,22 @@
 To build FriBID you need the following software:
 
   * A C99 compiler (like gcc)
-  * A make-compatible program (like GNU make or BSD pmake)
+  * GNU Make
   * pkg-config
   * gettext
   * GTK 2.12 or later
   * GLib 2.8 or later
-  * NSS 3.10 or later
-  * NSPR 4
-  * And development files (headers) for the four
+  * OpenSSL 0.9.8
+  * And development files (headers) for the three
     libraries above.
+
+If you want smartcard support, you also need:
+
+  * libp11
+  * A PKCS#11 module for your card (or OpenSC which supports many cards)
+  * Drivers for your card
+  See http://wiki.fribid.se/sidor/SmartCards (in Swedish)
+
 
 To build and install FriBID on a Unix-like system with sudo, use the
 following command:
