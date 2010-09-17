@@ -24,8 +24,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: FriBID 0.1.4\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2010-06-30 20:40+0200\n"
-"PO-Revision-Date: 2010-06-30 18:23+0200\n"
+"POT-Creation-Date: 2010-09-17 22:36+0200\n"
+"PO-Revision-Date: 2010-09-17 22:54+0200\n"
 "Last-Translator: Samuel Lidén Borell <samuel@slbdata.se>\n"
 "Language-Team: Swedish\n"
 "MIME-Version: 1.0\n"
@@ -52,6 +52,10 @@ msgstr "Felaktigt lösenord"
 #: ../client/gtk.c:63
 msgid "Incorrect PIN"
 msgstr "Felaktig PIN"
+
+#: ../client/gtk.c:154
+msgid "Please enter PIN on pinpad"
+msgstr "PIN anges på kortläsaren"
 
 #: ../client/gtk.c:291
 msgid "Identification"
