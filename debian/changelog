@@ -1,3 +1,18 @@
+fribid (0.2.0) unstable; urgency=low
+
+  * Support for card readers. See http://wiki.fribid.se/sidor/SmartCards
+    Thanks to Marcus Carlson and Henrik Nordström.
+  * Updated the version string to the latest one of the official Linux
+    client (4.15.0.14).
+  * Replaced the dependency on the NSS crypto library with OpenSSL.
+  * Added a simple web page for testing certificate requesting.
+  * The Debian package no longer suggests that Java should be installed,
+    Java hasn't been used by BankID sites for a long time now.
+  * Add Chromium to the list of recommended browsers in the Debian package.
+  * Code cleanup.
+
+ -- Samuel Lidén Borell <samuel@slbdata.se>  Fri, 17 Sep 2010 23:49:23 +0200
+
 fribid (0.1.4) unstable; urgency=low
 
   * Fixed a problem that occurred on Försäkringskassan's web site. Thanks
