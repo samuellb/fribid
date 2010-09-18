@@ -3,13 +3,15 @@ Section: web
 Priority: extra
 Maintainer: Samuel Lidén Borell <samuel@slbdata.se>
 Build-Depends: debhelper (>= 7), pkg-config, gettext, libgtk2.0-dev (>= 2.14), libglib2.0-dev (>= 2.8), libssl-dev (>= 0.9.8), libp11-dev (>= 0.2.3)
-Standards-Version: 3.8.3
+Standards-Version: 3.8.4
 Homepage: http://www.fribid.se/
+Vcs-Browser: http://git.fribid.se/fribid/
+Vcs-Git: git://git.fribid.se/fribid
 
 Package: fribid
 Architecture: any
 # These are generated from shlibs but have been modified to not be unecessarily strict
-Depends: libc6, libglib2.0-0 (>= 2.8), libgtk2.0-0 (>= 2.14), libssl0.9.8, libp11-1 (>= 0.2.3)
+Depends: ${misc:Depends}, libc6, libglib2.0-0 (>= 2.8), libgtk2.0-0 (>= 2.14), libssl0.9.8, libp11-1 (>= 0.2.3)
 Recommends: iceweasel (>= 3) | firefox (>= 3) | midori (>= 0.2) | epiphany-browser (>= 2.22) | iceape-browser (>= 2) | chromium-browser
 Suggests: libopensc2, pcscd, opensc
 Description: web browser plugin for BankID
