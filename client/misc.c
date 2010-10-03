@@ -105,7 +105,7 @@ char *base64_encode(const char *data, const int length) {
 }
 
 char *base64_decode(const char *encoded) {
-    unsigned int length;
+    gsize length;
 
     char *temp = (char*)g_base64_decode(encoded, &length);
     if (!temp) return NULL;
@@ -123,7 +123,7 @@ char *base64_decode(const char *encoded) {
 
 bool is_canonical_base64(const char *encoded) {
     /* Try to decode */
-    unsigned int length;
+    gsize length;
     char *decoded = (char*)g_base64_decode(encoded, &length);
     if (!decoded) return false;
     
