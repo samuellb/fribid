@@ -26,6 +26,7 @@ MANDIR=`../configure --internal--get-define=MANDIR`
 LANGUAGES=sv
 
 all:
+clean:
 
 install:
 	install -d $(DESTDIR)$(MANDIR)/man7
@@ -41,7 +42,7 @@ uninstall:
 	    rm -f $(DESTDIR)$(MANDIR)/$$lang/man7/fribid.7.gz || exit 1; \
 	done
 
-.PHONY: all install uninstall
+.PHONY: all clean install uninstall
 
 ../common/config.h:
 	@echo "You must run ./configure first." >&2 && false
