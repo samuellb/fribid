@@ -1,3 +1,10 @@
+0.2.1 - 2010-10-10
+  * Added a manual page.
+  * Corrected the version number of GTK in the INSTALL document.
+  * Moved the source files for building Debian packages to a separate
+    repostitory at http://github.com/samuellb/fribid-debian
+
+
 0.2.0 - 2010-09-17
   * Support for card readers. See http://wiki.fribid.se/sidor/SmartCards
     Thanks to Marcus Carlson and Henrik Nordström.
