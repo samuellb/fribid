@@ -1,0 +1,67 @@
+.\"  Copyright (c) 2010 Samuel Lidén Borell <samuel@slbdata.se>
+.\"
+.\"  Permission is hereby granted, free of charge, to any person obtaining a copy
+.\"  of this software and associated documentation files (the "Software"), to deal
+.\"  in the Software without restriction, including without limitation the rights
+.\"  to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+.\"  copies of the Software, and to permit persons to whom the Software is
+.\"  furnished to do so, subject to the following conditions:
+.\"  
+.\"  The above copyright notice and this permission notice shall be included in
+.\"  all copies or substantial portions of the Software.
+.\"  
+.\"  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+.\"  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+.\"  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+.\"  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+.\"  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+.\"  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+.\"  THE SOFTWARE.
+
+.TH fribid 7 "2010-10-10" "" "FriBID"
+
+.SH NAMN
+fribid \- en webbläsarplugin för BankID
+
+.SH BESKRIVNING
+FriBID är en webbläsarplugin för BankID, som är en vanlig form av e-legitimation i Sverige.
+
+.SH BEGRÄNSNINGAR
+FriBID stödjer både e-legitimation på fil och e-legitimation på kort, med några begränsningar:
+.LP
+.IP -
+Det nya filformaten (NGE/NGP) från den officiella klienten av version 4.15.0.15 stöds ej.
+.IP -
+Det går inte att hämta nya e-legitimationer på fil.
+.IP -
+För att ändra lösenord/PIN behövs ett separat program (såsom openssl med underkommandot pkcs12).
+.IP -
+För att kunna använda e-legitimationer på kort krävs lite konfiguration, se http://wiki.fribid.se/sidor/SmartCards
+.LP
+Den officiella programvaran, BankID Säkerhetsprogram, har inte dessa begränsningar men stödjer å andra sidan inte alla platformar och webbläsare som FriBID stödjer.
+.LP
+FriBID är endast kompatibelt med den andra versionen av BankID, och inte den äldre som använder Java-applettar.
+
+.SH IMPORT OCH EXPORT
+FriBID använder katalogerna
+.B cbt
+och
+.B .cbt
+(en dold katalog) i din hemkatalog för att lagra e-legitimationer på fil. För att importera och exportera legitimationer kopierar du dem till eller från denna någon av dessa kataloger. Om ingen av katalogerna finns kan du skapa någon av dem. Observera att endast P12-formatet stöds, formaten NGE och NGP som används av de senaste versionerna av den officiella programvaran kan ej användas i FriBID.
+
+.SH ATT ANVÄNDA FRIBID
+FriBID startas automatiskt när du besöker en webbsida som använder BankID för inloggning eller signering. Du kan testa ditt BankID-program \- vare sig du använder FriBID eller BankID Säkerhetsprogram \- på:
+.LP
+http://test.bankid.com/
+
+.SH VIKTIGT
+FriBID är
+.B inte
+en officiell BankID-klient, och används helt på egen risk!
+
+.SH VIDARE INFORMATION
+Mer information hittar du på webbsidan:
+.LP
+http://fribid.se/
+
+

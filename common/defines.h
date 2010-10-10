@@ -41,6 +41,7 @@
 #define LIB_PATH            LIBDIR "/" BINNAME
 #define SHARE_PATH          DATADIR "/" BINNAME
 #define DOC_PATH            DATADIR "/doc/" BINNAME
+#define MANDIR              DATADIR "/man"
 #define LOCALEDIR           DATADIR "/locale"
 
 #define SIGNING_EXECUTABLE  LIB_PATH "/sign"

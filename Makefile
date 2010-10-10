@@ -20,7 +20,7 @@
 #  THE SOFTWARE.
 #
 
-SUBDIRS=client plugin translations
+SUBDIRS=client plugin translations doc
 
 DISTNAME=`./configure --internal--get-define=BINNAME`-`./configure --internal--get-define=PACKAGEVERSION`
 
