@@ -48,13 +48,16 @@ function test(sign, visibleText, nonVisibleText) {
     plugin.SetParam((sign ? "Nonce" : "Challenge"), "MTIzNDU2Nzg5");
     plugin.SetParam("TextToBeSigned", visibleText);
     plugin.SetParam("NonVisibleData", nonVisibleText);
+    var retval = plugin.SetParam("ServerTime", "1290536889");
+    output.value += "retval of sp = "+retval+" ("+typeof(retval)+")\n";
     output.value += "Calling SetParam(Policys)\n";
-    var retval = plugin.SetParam("Policys", "MS4yLjc1Mi43OC4xLjE7MS4yLjc1Mi43OC4xLjI7MS4yLjMuNC41OzEuMi4zLjQuMTA=");
+    retval = plugin.SetParam("Policys", "MS4yLjc1Mi43OC4xLjE7MS4yLjc1Mi43OC4xLjI7MS4yLjMuNC41OzEuMi4zLjQuMTA=");
     output.value += "retval of sp = "+retval+" ("+typeof(retval)+")\n";
 
     output.value += "\nGetParam:\n";
     output.value += outparam(plugin, "Challenge");
     output.value += outparam(plugin, "Nonce");
+    output.value += outparam(plugin, "ServerTime");
     output.value += outparam(plugin, "Policys");
     output.value += outparam(plugin, "TextToBeSigned");
     output.value += outparam(plugin, "NonVisibleData");

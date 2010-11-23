@@ -23,9 +23,12 @@
 */
 
 #define _BSD_SOURCE 1
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <stdbool.h>
+#include <stdint.h>
+#include <inttypes.h>
 #include <assert.h>
 #include "../common/biderror.h"
 
@@ -133,6 +136,21 @@ static char **getParamPointer(Plugin *plugin, const char *name) {
 }
 
 char *sign_getParam(Plugin *plugin, const char *name) {
+    // Handle special parameters
+    bool authOrSign = (plugin->type == PT_Authentication ||
+                       plugin->type == PT_Signer);
+    
+    // Server time
+    if (authOrSign && !strcmp(name, "ServerTime")) {
+        int32_t value = plugin->info.auth.serverTime;
+        if (value <= 0) return strdup("");
+        
+        char *s = malloc(11);
+        sprintf(s, "%" PRIu32, value);
+        return s;
+    }
+    
+    // Handle string parameters
     char **valuePtr = getParamPointer(plugin, name);
     
     if (valuePtr && *valuePtr) return strdup(*valuePtr);
@@ -140,6 +158,39 @@ char *sign_getParam(Plugin *plugin, const char *name) {
 }
 
 bool sign_setParam(Plugin *plugin, const char *name, const char *value) {
+    // Handle special parameters
+    bool authOrSign = (plugin->type == PT_Authentication ||
+                       plugin->type == PT_Signer);
+    
+    // Server time: This value is a 10-digit integer
+    if (authOrSign && !strcmp(name, "ServerTime")) {
+        plugin->lastError = BIDERR_OK;
+        
+        size_t length = strlen(value);
+        if (length > 10) {
+            plugin->lastError = BIDERR_ValueTooLong;
+            plugin->info.auth.serverTime = 0;
+            return false;
+        }
+        
+        plugin->info.auth.serverTime = (int32_t)atoi(value);
+        
+        if (plugin->info.auth.serverTime <= 0) {
+            plugin->lastError = BIDERR_InvalidValue;
+            plugin->info.auth.serverTime = 0;
+            return false;
+        }
+        
+        if (length < 10) {
+            // Accept the value but return an error code
+            plugin->lastError = BIDERR_InvalidValue;
+            return false;
+        }
+        
+        return true;
+    }
+    
+    // Handle string parameters
     char **valuePtr = getParamPointer(plugin, name);
     
     if (valuePtr == NULL) {

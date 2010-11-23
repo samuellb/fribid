@@ -125,6 +125,7 @@ char *version_getVersion(Plugin *plugin) {
 
 static void sendSignCommon(PipeInfo pipeinfo, Plugin *plugin) {
     pipe_sendString(pipeinfo.out, plugin->info.auth.challenge);
+    pipe_sendInt(pipeinfo.out, plugin->info.auth.serverTime);
     pipe_sendOptionalString(pipeinfo.out, plugin->info.auth.policys);
     pipe_sendOptionalString(pipeinfo.out, plugin->info.auth.subjectFilter);
     pipe_sendString(pipeinfo.out, plugin->url);

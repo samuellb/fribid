@@ -25,6 +25,7 @@
 #ifndef __PLUGIN_H__
 #define __PLUGIN_H__
 
+#include <stdint.h>
 #include <X11/X.h>
 
 typedef enum {
@@ -51,6 +52,7 @@ typedef struct {
         struct {
             /* Input parameters */
             char *challenge;
+            int32_t serverTime;
             char *policys;
             char *subjectFilter;
             void *dummy0, *dummy1; // To be compatible with .sign below
@@ -60,6 +62,7 @@ typedef struct {
         struct {
             /* Input parameters */
             char *challenge;
+            int32_t serverTime;
             char *policys;
             char *subjectFilter;
             char *message;

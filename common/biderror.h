@@ -32,8 +32,10 @@ typedef enum {
     BIDERR_InvalidParameter = 8004,
     BIDERR_InvalidAction =    8008,
     BIDERR_InvalidPIN =       8013,
+    BIDERR_InvalidValue =     8014,
     BIDERR_NotSSL =           8015,
     BIDERR_MissingParameter = 8016,
+    BIDERR_ValueTooLong =     8018,
     BIDERR_HostnameIsIP =     8019,
     BIDERR_BlockedPIN =       8102,
 } BankIDError;

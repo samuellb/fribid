@@ -1,6 +1,6 @@
 /*
 
-  Copyright (c) 2009 Samuel Lidén Borell <samuel@slbdata.se>
+  Copyright (c) 2009-2010 Samuel Lidén Borell <samuel@slbdata.se>
  
   Permission is hereby granted, free of charge, to any person obtaining a copy
   of this software and associated documentation files (the "Software"), to deal
@@ -67,6 +67,7 @@ void pipeData() {
         case PMC_Authenticate:
         case PMC_Sign: {
             char *challenge = pipe_readString(stdin);
+            int32_t serverTime = pipe_readInt(stdin);
             free(pipe_readOptionalString(stdin)); // Just ignore the policies list for now
             char *subjectFilter = pipe_readOptionalString(stdin);
             char *url = pipe_readString(stdin);
@@ -159,11 +160,12 @@ void pipeData() {
                 
                 // Try to authenticate/sign
                 if (command == PMC_Authenticate) {
-                    error = bankid_authenticate(token, challenge, hostname, ip,
-                                                &signature);
+                    error = bankid_authenticate(token, challenge, serverTime,
+                                                hostname, ip, &signature);
                 } else {
-                    error = bankid_sign(token, challenge, hostname, ip,
-                                        message, invisibleMessage, &signature);
+                    error = bankid_sign(token, challenge, serverTime,
+                                        hostname, ip, message,
+                                        invisibleMessage, &signature);
                 }
                 
                 guaranteed_memset(password, 0, password_maxsize);

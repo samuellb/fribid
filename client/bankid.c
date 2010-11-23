@@ -226,9 +226,10 @@ char *bankid_getVersion() {
 /* Authentication and signing objects */
 static const char sign_template[] =
     "<bankIdSignedData xmlns=\"http://www.bankid.com/signature/v1.0.0/types\" Id=\"bidSignedData\">"
-        "%s"
+        "%s" /* Any signed message is inserted here */
         "<srvInfo>"
             "<nonce>%s</nonce>"
+            "%s" /* Optional server time value */
         "</srvInfo>"
         "<clientInfo>"
             "<funcId>%s</funcId>"
@@ -259,6 +260,8 @@ static const char signobj_id[] = "bidSignedData";
  *                   If the key of the token encrypted, you must call
  *                   backend_login() on it first.
  * @param challenge  The nonce sent by the server
+ * @param serverTime A positive 32-bit, 10-digit integer from server.
+ *                   Set it to 0 if absent.
  * @param hostname   Hostname of the server that requested the signature
  * @param ip         IP address of the server
  * @param purpose    Either "Identification" or "Signing"
@@ -271,7 +274,7 @@ static const char signobj_id[] = "bidSignedData";
  * @return  A status code (see ../common/biderror.h)
  */
 static BankIDError sign(Token *token,
-                        const char *challenge,
+                        const char *challenge, int32_t serverTime,
                         const char *hostname, const char *ip,
                         const char *purpose, const char *extra,
                         char **signature) {
@@ -281,8 +284,16 @@ static BankIDError sign(Token *token,
     char *version = base64_encode(versionStr, strlen(versionStr));
     free(versionStr);
     
-    char *object = rasprintf(sign_template, extra, challenge,
+    char *timeElement = "";
+    if (serverTime) {
+        timeElement = rasprintf("<serverTime>%" PRIu32 "</serverTime>",
+                                serverTime);
+    }
+    
+    char *object = rasprintf(sign_template, extra, challenge, timeElement,
                              purpose, hostname, ip, version);
+    
+    if (serverTime) free(timeElement);
     free(version);
     
     // Sign
@@ -301,15 +312,15 @@ static BankIDError sign(Token *token,
 }
 
 BankIDError bankid_authenticate(Token *token,
-                                const char *challenge,
+                                const char *challenge, int32_t serverTime,
                                 const char *hostname, const char *ip,
                                 char **signature) {
-    return sign(token, challenge, hostname, ip,
+    return sign(token, challenge, serverTime, hostname, ip,
                 "Identification", "", signature);
 }
 
 BankIDError bankid_sign(Token *token,
-                        const char *challenge,
+                        const char *challenge, int32_t serverTime,
                         const char *hostname, const char *ip,
                         const char *message, const char *invisibleMessage,
                         char **signature) {
@@ -321,7 +332,7 @@ BankIDError bankid_sign(Token *token,
         extra = rasprintf_append(extra, signedInvisibleText_template, invisibleMessage);
     }
     
-    error = sign(token, challenge, hostname, ip,
+    error = sign(token, challenge, serverTime, hostname, ip,
                  "Signing", extra, signature);
     
     free(extra);

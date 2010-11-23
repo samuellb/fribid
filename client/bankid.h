@@ -1,6 +1,6 @@
 /*
 
-  Copyright (c) 2009 Samuel Lidén Borell <samuel@slbdata.se>
+  Copyright (c) 2009-2010 Samuel Lidén Borell <samuel@slbdata.se>
  
   Permission is hereby granted, free of charge, to any person obtaining a copy
   of this software and associated documentation files (the "Software"), to deal
@@ -26,6 +26,7 @@
 #define __BANKID_H__
 
 #include <stdbool.h>
+#include <stdint.h>
 
 #include "backend.h"
 #include "../common/biderror.h"
@@ -36,12 +37,12 @@ char *bankid_getVersion();
 
 
 BankIDError bankid_authenticate(Token *token,
-                                const char *challenge,
+                                const char *challenge, int32_t serverTime,
                                 const char *hostname, const char *ip,
                                 char **signature);
 
 BankIDError bankid_sign(Token *token,
-                        const char *challenge,
+                        const char *challenge, int32_t serverTime,
                         const char *hostname, const char *ip,
                         const char *message, const char *invisibleMessage,
                         char **signature);
