@@ -31,15 +31,16 @@ LIB_PATH=`../configure --internal--get-define=LIB_PATH`
 NPAPI_PLUGIN_LIB=`../configure --internal--get-define=NPAPI_PLUGIN_LIB`
 NPAPI_PLUGIN_PATHS=`../configure --internal--get-define=NPAPI_PLUGIN_PATHS`
 
-OBJECTS=ipc.o npmain.o npobject.o plugin.o pipe.o npn_gate.o np_entry.o
+OBJECTS=ipc.o npmain.o npobject.o plugin.o pluginutil.o pipe.o npn_gate.o np_entry.o
 
 all: libfribidplugin.so
 
 ipc.o: ../common/defines.h ../common/pipe.h plugin.h
 npmain.o: ../common/defines.h npobject.h plugin.h
-npobject.o: npobject.h plugin.h
+npobject.o: npobject.h plugin.h pluginutil.h
 pipe.o: ../common/pipe.h ../common/pipe.c
 plugin.o: ../common/biderror.h plugin.h
+pluginutil.o: pluginutil.h
 np_entry.o: ../npapi/np_entry.c
 npn_gate.o: ../npapi/npn_gate.c
 
