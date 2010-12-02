@@ -55,8 +55,10 @@ static void openPipes(PipeInfo *pipeinfo, const char *argv[]) {
     int pipeIn[2];
     int pipeOut[2];
     
-    pipe(pipeIn);
-    pipe(pipeOut);
+    if (pipe(pipeIn) == -1 || pipe(pipeOut) == -1) {
+        perror(BINNAME ": Failed to create pipe");
+        return;
+    }
     
     pipeinfo->child = fork();
     if (pipeinfo->child == 0) {
