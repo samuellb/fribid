@@ -27,17 +27,13 @@
 
 #include <stdint.h>
 #include <X11/X.h>
+#include "../common/biderror.h"
 
 typedef enum {
     PT_Version,
     PT_Authentication,
     PT_Signer,
 } PluginType;
-
-typedef enum {
-    PE_OK = 0,
-    PE_UnknownError = 1, // Maybe this is used for something else in the original plugin?
-} PluginError;
 
 typedef struct {
     PluginType type;
@@ -46,7 +42,7 @@ typedef struct {
     char *hostname;
     char *ip;
     Window windowId;
-    PluginError lastError;
+    BankIDError lastError;
     
     union {
         struct {

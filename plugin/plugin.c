@@ -214,7 +214,7 @@ static bool hasSignParams(const Plugin *plugin) {
 }
 
 int sign_performAction(Plugin *plugin, const char *action) {
-    plugin->lastError = PE_UnknownError;
+    plugin->lastError = BIDERR_InternalError;
     if ((plugin->type == PT_Authentication) && !strcmp(action, "Authenticate")) {
         if (!hasSignParams(plugin)) {
             return BIDERR_MissingParameter;
