@@ -19,7 +19,7 @@ bool copyIdentifierName(NPIdentifier ident, char *name, size_t maxLength);
 
 
 #define IS_CALL(NAME, ARGCOUNT) (!strcmp(name, (NAME)) && (argCount == (ARGCOUNT)))
-#define ARG(N, TYPE) NPVARIANT_IS_##TYPE(args[0])
+#define ARG(N, TYPE) NPVARIANT_IS_##TYPE(args[N])
 
 #define IS_CALL_0(NAME) IS_CALL((NAME), 0)
 #define IS_CALL_1(NAME, T1) (IS_CALL((NAME), 1) && ARG(0, T1))
