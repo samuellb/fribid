@@ -28,10 +28,10 @@
 #include "config.h"
 
 #define PACKAGENAME         "FriBID"
-#define PACKAGEVERSION      "0.2.1a"
+#define PACKAGEVERSION      "0.2.2"
 
 #define BINNAME             "fribid"
-#define RELEASE_TIME        1286749916
+#define RELEASE_TIME        1292676673
 #define IPCVERSION          "4"
 
 #define EMULATED_VERSION    "4.15.0.14"

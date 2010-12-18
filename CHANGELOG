@@ -1,3 +1,12 @@
+0.2.2 - 2010-12-18
+  * Fixed a 64-bit type error. (Henrik Nordström)
+  * Implemented the ServerTime parameter which is used on at least
+    www.forex.se, and possibly other sites. (Samuel Lidén Borell)
+  * Fix incorrectly detected library path on 64-bit systems. (Samuel Lidén
+    Borell)
+  * Code refactoring/cleanup. (Samuel Lidén Borell)
+
+
 0.2.1a - 2010-10-11
   * Fixed a problem with one of the Makefiles.
 
