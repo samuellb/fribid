@@ -55,7 +55,7 @@ NPError NPP_Destroy(NPP instance, NPSavedData **save) {
 NPError NPP_GetValue(NPP instance, NPPVariable variable, void *value) {
     switch (variable) {
         case NPPVpluginNameString:
-            *((const char**)value) = PACKAGENAME;
+            *((const char**)value) = "Nexus Personal";
             return NPERR_NO_ERROR;
         case NPPVpluginDescriptionString:
             *((const char**)value) = PACKAGENAME " version " PACKAGEVERSION;
