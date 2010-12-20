@@ -33,4 +33,9 @@ rights):
 
 This will install FriBID on your user account only.
 
+The plugin will show up in your web browser after it has been restarted.
+You may need to uninstall Nexus Personal / BankID Säkerhetsprogram. Note that
+FriBID will show up as "Nexus Personal" in your browser (for compatibility
+reasons) but the description and the filename should be "FriBID version X"
+and "libfribidplugin.so", respectively.
 
