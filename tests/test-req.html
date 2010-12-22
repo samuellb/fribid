@@ -4,7 +4,7 @@
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
 <!--
 
-  Copyright (c) 2009 Samuel Lidén Borell <samuel@slbdata.se>
+  Copyright (c) 2009-2010 Samuel Lidén Borell <samuel@slbdata.se>
  
   Permission is hereby granted, free of charge, to any person obtaining a copy
   of this software and associated documentation files (the "Software"), to deal
@@ -29,40 +29,22 @@
 <script type="text/javascript">
 
 var output;
-var pluginVersion;
+var plugin;
 
 function getPar(key) {
     output = document.getElementById('output');
-    plugin = document.getElementById('plugin');
-    output.value += "Calling GetParam("+key+")\n";
-    var value = plugin.GetParam(key);
-    output.value += "    value = "+value+"\n";
-    output.value += "    GetLastError() = "+plugin.GetLastError()+"\n";
-    return value;
+    value = plugin.GetParam(key);
+    output.value += "gam(\""+key+"\") (error: "+plugin.GetLastError()+") = "+value+" ("+typeof(value)+")\n";
 }
 
 function setPar(key, value) {
-    /*if (value == '') {
-    getPar(key);
-    return;
-    }*/
     output = document.getElementById('output');
-    plugin = document.getElementById('plugin');
-    /*output.value += "Calling SetParam(\""+key+"\", ...)\n";
-    output.value += "    return value = "+plugin.SetParam(key, value)+"\n";
-    output.value += "    GetLastError() = "+plugin.GetLastError()+"\n";*/
-    
     plugin.SetParam(key, value);
-    output.value += "result "+plugin.GetLastError()+" from parameter "+key+"\n";
-    // 8012 = invalid value?
+    output.value += "SetParam(\""+key+"\", \""+value+"\") (error: "+plugin.GetLastError()+")\n";
 }
 
 function init() {
     output = document.getElementById('output');
-    pluginVersion = document.getElementById('pluginVersion');
-    output.value = "";
-    /*output.value += "Version: >";
-    output.value += pluginVersion.GetVersion()+"<\n\n";*/
     
     plugin = document.getElementById('plugin');
     
@@ -113,7 +95,7 @@ function init() {
 </script>
 </head>
 <body onload="init()" style="background: #FFFFDD">
-<p> Plugin installerad: 
+<p> Plugin installed:
 <script type="text/javascript">
 var pluginInstalled = false;
 
@@ -122,7 +104,7 @@ var pluginInstalled =
     navigator.mimeTypes["application/x-personal-version"] &&
     navigator.mimeTypes["application/x-personal-version"].enabledPlugin);
 
-document.write(pluginInstalled ? "Ja" : "Nej");
+document.write(pluginInstalled ? "Yes" : "No");
 </script>
 </p>
 

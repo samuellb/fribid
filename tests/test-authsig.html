@@ -25,52 +25,55 @@
   THE SOFTWARE.
 
 -->
-<title>BankID test</title>
+<title>BankID signing test</title>
 <script type="text/javascript">
 
 var output;
 var pluginVersion;
+var plugin;
 
-function outparam(plugin, name) {
-    value = plugin.GetParam(name);
-    return "    " + name + ": \"" + value + "\" (" + typeof(value) + ")\n";
+function getPar(key) {
+    output = document.getElementById('output');
+    value = plugin.GetParam(key);
+    output.value += "GetParam(\""+key+"\") (error: "+plugin.GetLastError()+") = "+value+" ("+typeof(value)+")\n";
+}
+
+function setPar(key, value) {
+    output = document.getElementById('output');
+    plugin.SetParam(key, value);
+    output.value += "SetParam(\""+key+"\", \""+value+"\") (error: "+plugin.GetLastError()+")\n";
 }
 
 function test(sign, visibleText, nonVisibleText) {
     output = document.getElementById('output');
     pluginVersion = document.getElementById('pluginVersion');
-    output.value = "";
-    output.value += "Version: \"";
-    output.value += pluginVersion.GetVersion()+"\"\n\n";
+    output.value = "Version: \""+pluginVersion.GetVersion()+"\"\n\n";
     
     plugin = document.getElementById(sign ? 'pluginSign' : 'pluginAuth');
-    output.value += "Calling SetParam(Challenge)\n";
-    plugin.SetParam((sign ? "Nonce" : "Challenge"), "MTIzNDU2Nzg5");
-    plugin.SetParam("TextToBeSigned", visibleText);
-    plugin.SetParam("NonVisibleData", nonVisibleText);
-    var retval = plugin.SetParam("ServerTime", "1290536889");
-    output.value += "retval of sp = "+retval+" ("+typeof(retval)+")\n";
-    output.value += "Calling SetParam(Policys)\n";
-    retval = plugin.SetParam("Policys", "MS4yLjc1Mi43OC4xLjE7MS4yLjc1Mi43OC4xLjI7MS4yLjMuNC41OzEuMi4zLjQuMTA=");
-    output.value += "retval of sp = "+retval+" ("+typeof(retval)+")\n";
-
-    output.value += "\nGetParam:\n";
-    output.value += outparam(plugin, "Challenge");
-    output.value += outparam(plugin, "Nonce");
-    output.value += outparam(plugin, "ServerTime");
-    output.value += outparam(plugin, "Policys");
-    output.value += outparam(plugin, "TextToBeSigned");
-    output.value += outparam(plugin, "NonVisibleData");
-    output.value += outparam(plugin, "Subjects");
-    output.value += outparam(plugin, "Signature");
+    
+    setPar((sign ? "Nonce" : "Challenge"), "MTIzNDU2Nzg5");
+    setPar("TextToBeSigned", visibleText);
+    setPar("NonVisibleData", nonVisibleText);
+    setPar("ServerTime", "1290536889");
+    setPar("Policys", "MS4yLjc1Mi43OC4xLjE7MS4yLjc1Mi43OC4xLjI7MS4yLjMuNC41OzEuMi4zLjQuMTA=");
+    
+    output.value += "\n";
+    var params = [
+        "Challenge", "Nonce", "ServerTime", "Policys", "TextToBeSigned",
+        "NonVisibleData", "Subjects", "Signature"
+    ];
+    
+    for (var i = 0; i < params.length; i++) {
+        getPar(params[i]);
+    }
     
     command = (sign ? "Sign" : "Authenticate");
     output.value += "\nInvoking PerformAction("+command+"):\n";
     output.value += "    return value = "+plugin.PerformAction(command)+"\n";
     output.value += "    GetLastError() = "+plugin.GetLastError()+"\n";
     
-    output.value += "\nGetParam:\n";
-    output.value += "    Signature: \""+plugin.GetParam("Signature")+"\"\n";
+    output.value += "\n";
+    getPar("Signature");
 }
 
 function testWithDefaults(sign) {
@@ -83,10 +86,9 @@ function testWithDefaults(sign) {
 
 <p>You can use this file to verify that FriBID works. To do so,
 put this file on an SSL-enabled server and open it in a web browser
-(you can use a self-signed SSL-certificate if you don't want to
-buy one).</p>
+(you can use a self-signed SSL-certificate).</p>
 
-<p> Plugin installed: 
+<p> Plugin installed:
 <script type="text/javascript">
 var pluginInstalled = false;
 
