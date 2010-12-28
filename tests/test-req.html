@@ -34,7 +34,7 @@ var plugin;
 function getPar(key) {
     output = document.getElementById('output');
     value = plugin.GetParam(key);
-    output.value += "gam(\""+key+"\") (error: "+plugin.GetLastError()+") = "+value+" ("+typeof(value)+")\n";
+    output.value += "GetParam(\""+key+"\") (error: "+plugin.GetLastError()+") = "+value+" ("+typeof(value)+")\n";
 }
 
 function setPar(key, value) {
