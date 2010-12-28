@@ -148,7 +148,7 @@ int sign_performAction_Authenticate(Plugin *plugin) {
     PipeInfo pipeinfo;
     
     openInteractivePipes(&pipeinfo, plugin);
-    pipe_sendCommand(pipeinfo.out, PMC_Authenticate);
+    pipe_sendCommand(pipeinfo.out, PC_Authenticate);
     
     sendSignCommon(pipeinfo, plugin);
     
@@ -162,7 +162,7 @@ int sign_performAction_Sign(Plugin *plugin) {
     PipeInfo pipeinfo;
     
     openInteractivePipes(&pipeinfo, plugin);
-    pipe_sendCommand(pipeinfo.out, PMC_Sign);
+    pipe_sendCommand(pipeinfo.out, PC_Sign);
     
     sendSignCommon(pipeinfo, plugin);
     pipe_sendString(pipeinfo.out, plugin->info.sign.message);

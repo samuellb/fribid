@@ -62,10 +62,10 @@ static void notifyCallback(Token *token, TokenChange change) {
  * plugin object is called.
  */
 void pipeData() {
-    int command = pipe_readCommand(stdin);
+    PipeCommand command = pipe_readCommand(stdin);
     switch (command) {
-        case PMC_Authenticate:
-        case PMC_Sign: {
+        case PC_Authenticate:
+        case PC_Sign: {
             char *challenge = pipe_readString(stdin);
             int32_t serverTime = pipe_readInt(stdin);
             free(pipe_readOptionalString(stdin)); // Just ignore the policies list for now
@@ -74,7 +74,7 @@ void pipeData() {
             char *hostname = pipe_readString(stdin);
             char *ip = pipe_readString(stdin);
             char *message = NULL, *invisibleMessage = NULL;
-            if (command == PMC_Sign) {
+            if (command == PC_Sign) {
                 message = pipe_readString(stdin);
                 invisibleMessage = pipe_readOptionalString(stdin);
             }
@@ -87,7 +87,7 @@ void pipeData() {
             } else if (!is_canonical_base64(challenge) ||
                        !is_valid_hostname(hostname) ||
                        !is_valid_ip_address(ip) ||
-                       (command == PMC_Sign && (
+                       (command == PC_Sign && (
                            !is_canonical_base64(message) ||
                            (invisibleMessage && !is_canonical_base64(invisibleMessage))
                        ))) {
@@ -136,7 +136,7 @@ void pipeData() {
             platform_startSign(url, hostname, ip, browserWindowId);
             BackendNotifier *notifier = backend_createNotifier(
                 decodedSubjectFilter,
-                (command == PMC_Sign ?
+                (command == PC_Sign ?
                     KeyUsage_Signing : KeyUsage_Authentication),
                 notifyCallback);
             platform_setNotifier(notifier);
@@ -159,7 +159,7 @@ void pipeData() {
                 token_usePassword(token, password);
                 
                 // Try to authenticate/sign
-                if (command == PMC_Authenticate) {
+                if (command == PC_Authenticate) {
                     error = bankid_authenticate(token, challenge, serverTime,
                                                 hostname, ip, &signature);
                 } else {

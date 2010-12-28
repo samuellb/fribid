@@ -68,11 +68,11 @@ void pipe_waitData(FILE *file) {
     }
 }
 
-int pipe_readCommand(FILE *in) {
+PipeCommand pipe_readCommand(FILE *in) {
     return pipe_readInt(in);
 }
 
-void pipe_sendCommand(FILE *out, int command) {
+void pipe_sendCommand(FILE *out, PipeCommand command) {
     fprintf(out, "%d;", command);
 }
 
