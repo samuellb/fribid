@@ -201,7 +201,7 @@ void pipeData() {
             RegutilInfo input;
             memset(&input, 0, sizeof(input));
             
-            while (pipe_readInt(stdin)) {
+            while (pipe_readInt(stdin) == PLS_MoreData) {
                 // PKCS10
                 RegutilPKCS10 *pkcs10 = malloc(sizeof(RegutilPKCS10));
                 pkcs10->keyUsage = pipe_readInt(stdin);
@@ -212,7 +212,7 @@ void pipeData() {
                 input.pkcs10 = pkcs10;
             }
             
-            while (pipe_readInt(stdin)) {
+            while (pipe_readInt(stdin) == PLS_MoreData) {
                 // CMC
                 RegutilCMC *cmc = malloc(sizeof(RegutilCMC));
                 cmc->oneTimePassword = pipe_readString(stdin);
@@ -221,6 +221,9 @@ void pipeData() {
                 cmc->next = input.cmc;
                 input.cmc = cmc;
             }
+            
+            // Check for broken pipe
+            if (feof(stdin)) goto createReq_error;
             
             // Ask for a new password
             // TODO
@@ -233,6 +236,7 @@ void pipeData() {
             
             // Send result
             if (error) {
+              createReq_error:
                 pipe_sendInt(stdout, BIDERR_InternalError);
                 pipe_sendString(stdout, "");
             } else {
