@@ -1,6 +1,6 @@
 /*
 
-  Copyright (c) 2009 Samuel Lidén Borell <samuel@slbdata.se>
+  Copyright (c) 2009-2011 Samuel Lidén Borell <samuel@slbdata.se>
  
   Permission is hereby granted, free of charge, to any person obtaining a copy
   of this software and associated documentation files (the "Software"), to deal
@@ -30,6 +30,7 @@
 #define MIME_VERSION "application/x-personal-version"
 #define MIME_AUTHENTICATION "application/x-personal-authentication"
 #define MIME_SIGNER "application/x-personal-signer2"
+#define MIME_REGUTIL "application/x-personal-regutil"
 
 typedef struct {
     NPObject base;

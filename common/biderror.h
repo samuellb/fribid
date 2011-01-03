@@ -1,6 +1,6 @@
 /*
 
-  Copyright (c) 2009 Samuel Lidén Borell <samuel@slbdata.se>
+  Copyright (c) 2009-2011 Samuel Lidén Borell <samuel@slbdata.se>
  
   Permission is hereby granted, free of charge, to any person obtaining a copy
   of this software and associated documentation files (the "Software"), to deal
@@ -38,6 +38,10 @@ typedef enum {
     BIDERR_ValueTooLong =     8018,
     BIDERR_HostnameIsIP =     8019,
     BIDERR_BlockedPIN =       8102,
+    
+    // Errors from regutil
+    RUERR_InvalidParameter =   640,
+    RUERR_InvalidValue =      1028,
 } BankIDError;
 
 #endif

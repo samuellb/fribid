@@ -1,6 +1,6 @@
 /*
 
-  Copyright (c) 2009-2010 Samuel Lidén Borell <samuel@slbdata.se>
+  Copyright (c) 2009-2011 Samuel Lidén Borell <samuel@slbdata.se>
  
   Permission is hereby granted, free of charge, to any person obtaining a copy
   of this software and associated documentation files (the "Software"), to deal
@@ -193,6 +193,45 @@ void pipeData() {
             pipe_flush(stdout);
             
             free(signature);
+            platform_leaveMainloop();
+            break;
+        }
+        case PC_CreateRequest: {
+            // Read input
+            RegutilInfo input;
+            memset(&input, 0, sizeof(input));
+            
+            while (pipe_readInt(stdin)) {
+                // PKCS10
+                RegutilPKCS10 *pkcs10 = malloc(sizeof(RegutilPKCS10));
+                pkcs10->keyUsage = pipe_readInt(stdin);
+                pkcs10->keySize = pipe_readInt(stdin);
+                pkcs10->subjectDN = pipe_readString(stdin);
+                
+                pkcs10->next = input.pkcs10;
+                input.pkcs10 = pkcs10;
+            }
+            
+            while (pipe_readInt(stdin)) {
+                // CMC
+                RegutilCMC *cmc = malloc(sizeof(RegutilCMC));
+                cmc->oneTimePassword = pipe_readString(stdin);
+                cmc->rfc2729cmcoid = pipe_readString(stdin);
+                
+                cmc->next = input.cmc;
+                input.cmc = cmc;
+            }
+            
+            // Generate key pair
+            // TODO
+            
+            // Construct the request
+            
+            // Send result
+            // TODO
+            pipe_sendInt(stdout, BIDERR_InternalError);
+            pipe_sendString(stdout, "");
+            
             platform_leaveMainloop();
             break;
         }

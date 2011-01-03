@@ -26,12 +26,7 @@
 #define __BACKEND_H__
 
 #include <stdbool.h>
-
-typedef enum {
-    KeyUsage_Issuing,
-    KeyUsage_Signing,
-    KeyUsage_Authentication,
-} KeyUsage;
+#include "../common/bidtypes.h"
 
 typedef struct _Token Token;
 

@@ -1,6 +1,6 @@
 /*
 
-  Copyright (c) 2009-2010 Samuel Lidén Borell <samuel@slbdata.se>
+  Copyright (c) 2009-2011 Samuel Lidén Borell <samuel@slbdata.se>
  
   Permission is hereby granted, free of charge, to any person obtaining a copy
   of this software and associated documentation files (the "Software"), to deal
@@ -172,6 +172,43 @@ int sign_performAction_Sign(Plugin *plugin) {
     plugin->info.auth.signature = pipe_readString(pipeinfo.in);
     closePipes(&pipeinfo);
     return plugin->lastError;
+}
+
+void regutil_createRequest(Plugin *plugin) {
+    PipeInfo pipeinfo;
+    
+    openInteractivePipes(&pipeinfo, plugin);
+    pipe_sendCommand(pipeinfo.out, PC_CreateRequest);
+    // TODO should send URL here, maybe it should be a common parameter?
+    
+    // Send PKCS10 info
+    RegutilPKCS10 *pkcs10 = plugin->info.regutil.input.pkcs10;
+    while (pkcs10) {
+        pipe_sendInt(pipeinfo.out, PLS_MoreData);
+        
+        pipe_sendInt(pipeinfo.out, pkcs10->keyUsage);
+        pipe_sendInt(pipeinfo.out, pkcs10->keySize);
+        pipe_sendString(pipeinfo.out, pkcs10->subjectDN);
+        
+        pkcs10 = pkcs10->next;
+    }
+    pipe_sendInt(pipeinfo.out, PLS_End);
+    
+    // Send CMC info
+    RegutilCMC *cmc = plugin->info.regutil.input.cmc;
+    while (cmc) {
+        pipe_sendInt(pipeinfo.out, PLS_MoreData);
+        
+        pipe_sendString(pipeinfo.out, cmc->oneTimePassword);
+        pipe_sendString(pipeinfo.out, cmc->rfc2729cmcoid);
+        
+        cmc = cmc->next;
+    }
+    pipe_sendInt(pipeinfo.out, PLS_End);
+    
+    plugin->lastError = waitReply(&pipeinfo);
+    plugin->info.regutil.request = pipe_readString(pipeinfo.in);
+    closePipes(&pipeinfo);
 }
 
 

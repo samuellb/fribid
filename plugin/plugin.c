@@ -1,6 +1,6 @@
 /*
 
-  Copyright (c) 2009-2010 Samuel Lidén Borell <samuel@slbdata.se>
+  Copyright (c) 2009-2011 Samuel Lidén Borell <samuel@slbdata.se>
  
   Permission is hereby granted, free of charge, to any person obtaining a copy
   of this software and associated documentation files (the "Software"), to deal
@@ -23,6 +23,7 @@
 */
 
 #define _BSD_SOURCE 1
+#include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -57,6 +58,26 @@ Plugin *plugin_new(PluginType pluginType, const char *url,
     return plugin;
 }
 
+static void freePKCS10s(RegutilPKCS10 *pkcs10) {
+    while (pkcs10) {
+        RegutilPKCS10 *next = pkcs10->next;
+        free(pkcs10->subjectDN);
+        free(pkcs10);
+        pkcs10 = next;
+    }
+}
+
+static void freeCMCs(RegutilCMC *cmc) {
+    while (cmc) {
+        RegutilCMC *next = cmc->next;
+        free(cmc->oneTimePassword);
+        free(cmc->rfc2729cmcoid);
+        free(cmc);
+        cmc = next;
+    }
+}
+
+
 void plugin_free(Plugin *plugin) {
     switch (plugin->type) {
         case PT_Version:
@@ -74,6 +95,12 @@ void plugin_free(Plugin *plugin) {
             free(plugin->info.sign.message);
             free(plugin->info.sign.invisibleMessage);
             free(plugin->info.sign.signature);
+            break;
+        case PT_Regutil:
+            freePKCS10s(&plugin->info.regutil.currentPKCS10);
+            freePKCS10s(plugin->info.regutil.input.pkcs10);
+            freeCMCs(&plugin->info.regutil.currentCMC);
+            freeCMCs(plugin->info.regutil.input.cmc);
             break;
     }
     free(plugin->url);
@@ -130,6 +157,20 @@ static char **getParamPointer(Plugin *plugin, const char *name) {
             if (!strcmp(name, "TextToBeSigned")) return &plugin->info.sign.message;
             if (!strcmp(name, "NonVisibleData")) return &plugin->info.sign.invisibleMessage;
             return getCommonParamPointer(plugin, name);
+        case PT_Regutil:
+            if (!strcmp(name, "SubjectDN")) return &plugin->info.regutil.currentPKCS10.subjectDN;
+            if (!strcmp(name, "OneTimePassword")) return &plugin->info.regutil.currentCMC.oneTimePassword;
+            return NULL;
+        default:
+            return NULL;
+    }
+}
+
+static int *getIntParamPointer(Plugin *plugin, const char *name) {
+    switch (plugin->type) {
+        case PT_Regutil:
+            if (!strcmp(name, "KeySize")) return &plugin->info.regutil.currentPKCS10.keySize;
+            return NULL;
         default:
             return NULL;
     }
@@ -235,8 +276,63 @@ int sign_performAction(Plugin *plugin, const char *action) {
     return ret;
 }
 
-int sign_getLastError(Plugin *plugin) {
-    return plugin->lastError;
+void regutil_setParam(Plugin *plugin, const char *name, const char *value) {
+    char **strPtr;
+    int *intPtr;
+    
+    // Special parameters
+    if (!strcmp(name, "KeyUsage")) {
+        if (!strcmp(value, "digitalSignature")) {
+            plugin->info.regutil.currentPKCS10.keyUsage = KeyUsage_Authentication;
+        } else if (!strcmp(value, "nonRepudiation")) {
+            plugin->info.regutil.currentPKCS10.keyUsage = KeyUsage_Signing;
+        }
+        
+        plugin->lastError = BIDERR_OK; // Never return failure
+    } else if ((intPtr = getIntParamPointer(plugin, name)) != NULL) {
+        // Integer parameters
+        errno = 0;
+        int intval = strtol(value, NULL, 10);
+        if (!errno) *intPtr = intval;
+        plugin->lastError = (!errno ? BIDERR_OK : RUERR_InvalidValue);
+    } else if ((strPtr = getParamPointer(plugin, name)) != NULL) {
+        // String parameters
+        free(*strPtr);
+        *strPtr = strdup(value);
+        plugin->lastError = (*strPtr ? BIDERR_OK : BIDERR_InternalError);
+    } else {
+        // Invalid parameter name
+        plugin->lastError = RUERR_InvalidParameter;
+    }
 }
 
+/**
+ * Stores the current parameters so they get included with the request.
+ */
+void regutil_initRequest(Plugin *plugin, const char *type) {
+    if (!strcmp(type, "pkcs10")) {
+        // PKCS10
+        RegutilPKCS10 *copy = malloc(sizeof(RegutilPKCS10));
+        copy->keyUsage = plugin->info.regutil.currentPKCS10.keyUsage;
+        copy->keySize = plugin->info.regutil.currentPKCS10.keySize;
+        copy->subjectDN = strdup(plugin->info.regutil.currentPKCS10.subjectDN);
+        
+        copy->next = plugin->info.regutil.input.pkcs10;
+        plugin->info.regutil.input.pkcs10 = copy;
+        
+        plugin->lastError = BIDERR_OK;
+    } else if (!strcmp(type, "cmc")) {
+        // CMC
+        RegutilCMC *copy = malloc(sizeof(RegutilCMC));
+        copy->oneTimePassword = strdup(plugin->info.regutil.currentCMC.oneTimePassword);
+        copy->rfc2729cmcoid = strdup(plugin->info.regutil.currentCMC.rfc2729cmcoid);
+        
+        copy->next = plugin->info.regutil.input.cmc;
+        plugin->info.regutil.input.cmc = copy;
+        
+        plugin->lastError = BIDERR_OK;
+    } else {
+        plugin->lastError = RUERR_InvalidValue;
+    }
+}
 

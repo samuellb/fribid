@@ -1,6 +1,6 @@
 /*
 
-  Copyright (c) 2009-2010 Samuel Lidén Borell <samuel@slbdata.se>
+  Copyright (c) 2009-2011 Samuel Lidén Borell <samuel@slbdata.se>
  
   Permission is hereby granted, free of charge, to any person obtaining a copy
   of this software and associated documentation files (the "Software"), to deal
@@ -79,7 +79,8 @@ NPError NPP_GetValue(NPP instance, NPPVariable variable, void *value) {
 char *NPP_GetMIMEDescription() {
     return MIME_VERSION ":" NO_FILE_EXTENSIONS ":Version;"
            MIME_AUTHENTICATION ":" NO_FILE_EXTENSIONS ":Authentication;"
-           MIME_SIGNER ":" NO_FILE_EXTENSIONS ":Signer2";
+           MIME_SIGNER ":" NO_FILE_EXTENSIONS ":Signer2;"
+           MIME_REGUTIL ":" NO_FILE_EXTENSIONS ":Regutil";
 }
 
 NPError NPP_Initialize() {

@@ -1,6 +1,6 @@
 /*
 
-  Copyright (c) 2009-2010 Samuel Lidén Borell <samuel@slbdata.se>
+  Copyright (c) 2009-2011 Samuel Lidén Borell <samuel@slbdata.se>
  
   Permission is hereby granted, free of charge, to any person obtaining a copy
   of this software and associated documentation files (the "Software"), to deal
@@ -61,6 +61,10 @@ static bool objHasMethod(NPObject *npobj, NPIdentifier ident) {
         case PT_Signer:
             return !strcmp(name, "GetParam") || !strcmp(name, "SetParam") ||
                    !strcmp(name, "PerformAction") || !strcmp(name, "GetLastError");
+        case PT_Regutil:
+            return !strcmp(name, "GetParam") || !strcmp(name, "SetParam") ||
+                   !strcmp(name, "InitRequest") || !strcmp(name, "CreateRequest") ||
+                   !strcmp(name, "GetLastError");
         default:
             return false;
     }
@@ -125,8 +129,56 @@ static bool objInvoke(NPObject *npobj, NPIdentifier ident,
                 return true;
             } else if (IS_CALL_0("GetLastError")) {
                 // Get last error
-                int ret = sign_getLastError(this->plugin);
-                INT32_TO_NPVARIANT((int32_t)ret, *result);
+                INT32_TO_NPVARIANT((int32_t)this->plugin->lastError, *result);
+                return true;
+            }
+            return false;
+        case PT_Regutil:
+            if (IS_CALL_1("GetParam", STRING)) {
+                // Get parameter. Seems to always return null
+                this->plugin->lastError = RUERR_InvalidParameter;
+                NULL_TO_NPVARIANT(*result);
+                return true;
+            } else if (IS_CALL_2("SetParam", STRING, STRING)) {
+                // Set parameter
+                // TODO fix code duplication!
+                if (NPVARIANT_TO_STRING(args[1]).utf8length >= 10*1024*1024) {
+                    // Value is larger than 10 MiB
+                    return false;
+                }
+                
+                char *param = variantToStringZ(&args[0]);
+                char *value = variantToStringZ(&args[1]);
+                bool ok = (param && value);
+                
+                if (ok) {
+                    regutil_setParam(this->plugin, param, value);
+                    INT32_TO_NPVARIANT((int32_t)this->plugin->lastError, *result);
+                }
+                
+                free(param);
+                free(value);
+                
+                return ok;
+            } else if (IS_CALL_1("InitRequest", STRING)) {
+                // Init request
+                char *type = variantToStringZ(&args[0]);
+                if (!type) return false;
+                
+                regutil_initRequest(this->plugin, type);
+                
+                free(type);
+                INT32_TO_NPVARIANT((int32_t)this->plugin->lastError, *result);
+                return true;
+            } else if (IS_CALL_0("CreateRequest")) {
+                // Create request
+                regutil_createRequest(this->plugin);
+                INT32_TO_NPVARIANT((int32_t)this->plugin->lastError, *result);
+                return true;
+            } else if (IS_CALL_0("GetLastError")) {
+                // Get last error
+                // TODO fix code duplication!
+                INT32_TO_NPVARIANT((int32_t)this->plugin->lastError, *result);
                 return true;
             }
             return false;
@@ -216,6 +268,8 @@ NPObject *npobject_fromMIME(NPP instance, NPMIMEType mimeType) {
         return npobject_new(instance, PT_Authentication);
     } else if (!strcmp(mimeType, MIME_SIGNER)) {
         return npobject_new(instance, PT_Signer);
+    } else if (!strcmp(mimeType, MIME_REGUTIL)) {
+        return npobject_new(instance, PT_Regutil);
     } else {
         return NULL;
     }

@@ -1,6 +1,6 @@
 /*
 
-  Copyright (c) 2009-2010 Samuel Lidén Borell <samuel@slbdata.se>
+  Copyright (c) 2009-2011 Samuel Lidén Borell <samuel@slbdata.se>
  
   Permission is hereby granted, free of charge, to any person obtaining a copy
   of this software and associated documentation files (the "Software"), to deal
@@ -28,11 +28,13 @@
 #include <stdint.h>
 #include <X11/X.h>
 #include "../common/biderror.h"
+#include "../common/bidtypes.h"
 
 typedef enum {
     PT_Version,
     PT_Authentication,
     PT_Signer,
+    PT_Regutil,
 } PluginType;
 
 typedef struct {
@@ -66,6 +68,16 @@ typedef struct {
             /* Output parameters */
             char *signature;
         } sign;
+        struct {
+            RegutilCMC currentCMC;
+            RegutilPKCS10 currentPKCS10;
+            
+            /* Input parameters */
+            RegutilInfo input;
+            
+            /* Output parameters */
+            char *request;
+        } regutil;
     } info;
 } Plugin;
 
@@ -83,8 +95,12 @@ bool sign_setParam(Plugin *plugin, const char *name, const char *value);
 int sign_performAction(Plugin *plugin, const char *action);
 int sign_performAction_Authenticate(Plugin *plugin);
 int sign_performAction_Sign(Plugin *plugin);
-int sign_getLastError(Plugin *plugin);
 // TODO more functions...
+
+void regutil_setParam(Plugin *plugin, const char *name, const char *value);
+void regutil_initRequest(Plugin *plugin, const char *type);
+void regutil_createRequest(Plugin *plugin);
+
 
 #endif
 
