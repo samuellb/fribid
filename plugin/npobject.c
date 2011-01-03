@@ -172,9 +172,8 @@ static bool objInvoke(NPObject *npobj, NPIdentifier ident,
                 return true;
             } else if (IS_CALL_0("CreateRequest")) {
                 // Create request
-                regutil_createRequest(this->plugin);
-                INT32_TO_NPVARIANT((int32_t)this->plugin->lastError, *result);
-                return true;
+                char *value = regutil_createRequest(this->plugin);
+                return convertStringZToVariant(value, result);
             } else if (IS_CALL_0("GetLastError")) {
                 // Get last error
                 // TODO fix code duplication!

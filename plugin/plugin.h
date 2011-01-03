@@ -74,9 +74,6 @@ typedef struct {
             
             /* Input parameters */
             RegutilInfo input;
-            
-            /* Output parameters */
-            char *request;
         } regutil;
     } info;
 } Plugin;
@@ -99,7 +96,7 @@ int sign_performAction_Sign(Plugin *plugin);
 
 void regutil_setParam(Plugin *plugin, const char *name, const char *value);
 void regutil_initRequest(Plugin *plugin, const char *type);
-void regutil_createRequest(Plugin *plugin);
+char *regutil_createRequest(Plugin *plugin);
 
 
 #endif

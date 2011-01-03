@@ -174,7 +174,7 @@ int sign_performAction_Sign(Plugin *plugin) {
     return plugin->lastError;
 }
 
-void regutil_createRequest(Plugin *plugin) {
+char *regutil_createRequest(Plugin *plugin) {
     PipeInfo pipeinfo;
     
     openInteractivePipes(&pipeinfo, plugin);
@@ -207,8 +207,9 @@ void regutil_createRequest(Plugin *plugin) {
     pipe_sendInt(pipeinfo.out, PLS_End);
     
     plugin->lastError = waitReply(&pipeinfo);
-    plugin->info.regutil.request = pipe_readString(pipeinfo.in);
+    char *request = pipe_readString(pipeinfo.in);
     closePipes(&pipeinfo);
+    return request;
 }
 
 
