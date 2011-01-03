@@ -1,6 +1,6 @@
 /*
 
-  Copyright (c) 2010 Samuel Lidén Borell <samuel@slbdata.se>
+  Copyright (c) 2010-2011 Samuel Lidén Borell <samuel@slbdata.se>
  
   Permission is hereby granted, free of charge, to any person obtaining a copy
   of this software and associated documentation files (the "Software"), to deal
@@ -61,6 +61,16 @@ struct _Backend {
      */
     TokenError (*addFile)(Backend *backend, const char *data, size_t length,
                           void *tag);
+                              
+    /**
+     * Generates a key pair and creates a certificate request for it.
+     *
+     * TODO change the backend interface to support pinpads too
+     */
+    TokenError (*createRequest)(const RegutilInfo *info,
+                                const char *password,
+                                char **request, size_t *reqlen);
+
     
     
     TokenError (*getBase64Chain)(const TokenType *token,

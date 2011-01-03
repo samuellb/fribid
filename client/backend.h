@@ -1,6 +1,6 @@
 /*
 
-  Copyright (c) 2010 Samuel Lidén Borell <samuel@slbdata.se>
+  Copyright (c) 2010-2011 Samuel Lidén Borell <samuel@slbdata.se>
  
   Permission is hereby granted, free of charge, to any person obtaining a copy
   of this software and associated documentation files (the "Software"), to deal
@@ -55,6 +55,7 @@ typedef enum {
 typedef enum  {
     TokenError_Success =      0,
     TokenError_Unknown =      1,
+    TokenError_NotImplemented,
     // File errors
     TokenError_FileNotReadable,
     TokenError_BadFile,
@@ -74,6 +75,12 @@ void backend_scanTokens();
 /* Function to manually add files */
 TokenError backend_addFile(BackendNotifier *notifier,
                            const char *file, size_t length, void *tag);
+
+/* Enrollment */
+TokenError backend_createRequest(const RegutilInfo *info,
+                                 const char *password,
+                                 char **request, size_t *reqlen);
+//TokenError backend_storeCertificates(...);
 
 /* Token methods */
 TokenStatus token_getStatus(const Token *token);

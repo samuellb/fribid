@@ -222,16 +222,26 @@ void pipeData() {
                 input.cmc = cmc;
             }
             
-            // Generate key pair
+            // Ask for a new password
             // TODO
+            char *password = "123456qwerty";
             
-            // Construct the request
+            // Generate key pair and construct the request
+            char *request;
+            BankIDError error = bankid_createRequest(&input, password,
+                                                     &request);
             
             // Send result
-            // TODO
-            pipe_sendInt(stdout, BIDERR_InternalError);
-            pipe_sendString(stdout, "");
+            if (error) {
+                pipe_sendInt(stdout, BIDERR_InternalError);
+                pipe_sendString(stdout, "");
+            } else {
+                // TODO send BIDERR_OK here when the implementation is complete
+                pipe_sendInt(stdout, BIDERR_InternalError);
+                pipe_sendString(stdout, request);
+            }
             
+            pipe_flush(stdout);
             platform_leaveMainloop();
             break;
         }

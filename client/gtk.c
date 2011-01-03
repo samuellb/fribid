@@ -1,6 +1,6 @@
 /*
 
-  Copyright (c) 2009-2010 Samuel Lidén Borell <samuel@slbdata.se>
+  Copyright (c) 2009-2011 Samuel Lidén Borell <samuel@slbdata.se>
  
   Permission is hereby granted, free of charge, to any person obtaining a copy
   of this software and associated documentation files (the "Software"), to deal
@@ -49,6 +49,8 @@ static const char *const errorStrings[] = {
     NULL,
     // TokenError_Unknown
     translatable("An unknown error occurred"),
+    // TokenError_NotImplemented
+    translatable("Not implemented yet"),
     
     // File errors
     // TokenError_FileNotReadable

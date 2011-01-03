@@ -1,6 +1,6 @@
 /*
 
-  Copyright (c) 2010 Samuel Lidén Borell <samuel@slbdata.se>
+  Copyright (c) 2010-2011 Samuel Lidén Borell <samuel@slbdata.se>
  
   Permission is hereby granted, free of charge, to any person obtaining a copy
   of this software and associated documentation files (the "Software"), to deal
@@ -118,6 +118,19 @@ void backend_scanTokens(BackendNotifier *notifier)
 }
 
 /**
+ * Generates a key pair and creates a certificate request for it.
+ */
+TokenError backend_createRequest(const RegutilInfo *info,
+                                 const char *password,
+                                 char **request, size_t *reqlen) {
+    // TODO support smartcards too (if this is used anywhere)
+    Backend *backend = pkcs12_getBackend();
+    return (backend->createRequest ?
+        backend->createRequest(info, password, request, reqlen) :
+        TokenError_NotImplemented);
+}
+
+/**
  * Gets the status of a token.
  */
 TokenStatus token_getStatus(const Token *token) {
@@ -177,6 +190,4 @@ void token_free(Token *token) {
 TokenError token_getLastError(const Token *token) {
     return token->lastError;
 }
-
-
 

@@ -58,21 +58,21 @@ Plugin *plugin_new(PluginType pluginType, const char *url,
     return plugin;
 }
 
-static void freePKCS10s(RegutilPKCS10 *pkcs10) {
+static void freePKCS10s(RegutilPKCS10 *pkcs10, bool freeSelf) {
     while (pkcs10) {
         RegutilPKCS10 *next = pkcs10->next;
         free(pkcs10->subjectDN);
-        free(pkcs10);
+        if (freeSelf) free(pkcs10);
         pkcs10 = next;
     }
 }
 
-static void freeCMCs(RegutilCMC *cmc) {
+static void freeCMCs(RegutilCMC *cmc, bool freeSelf) {
     while (cmc) {
         RegutilCMC *next = cmc->next;
         free(cmc->oneTimePassword);
         free(cmc->rfc2729cmcoid);
-        free(cmc);
+        if (freeSelf) free(cmc);
         cmc = next;
     }
 }
@@ -97,10 +97,10 @@ void plugin_free(Plugin *plugin) {
             free(plugin->info.sign.signature);
             break;
         case PT_Regutil:
-            freePKCS10s(&plugin->info.regutil.currentPKCS10);
-            freePKCS10s(plugin->info.regutil.input.pkcs10);
-            freeCMCs(&plugin->info.regutil.currentCMC);
-            freeCMCs(plugin->info.regutil.input.cmc);
+            freePKCS10s(&plugin->info.regutil.currentPKCS10, false);
+            freePKCS10s(plugin->info.regutil.input.pkcs10, true);
+            freeCMCs(&plugin->info.regutil.currentCMC, false);
+            freeCMCs(plugin->info.regutil.input.cmc, true);
             break;
     }
     free(plugin->url);

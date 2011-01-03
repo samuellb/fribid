@@ -1,6 +1,6 @@
 /*
 
-  Copyright (c) 2009-2010 Samuel Lidén Borell <samuel@slbdata.se>
+  Copyright (c) 2009-2011 Samuel Lidén Borell <samuel@slbdata.se>
  
   Permission is hereby granted, free of charge, to any person obtaining a copy
   of this software and associated documentation files (the "Software"), to deal
@@ -337,5 +337,29 @@ BankIDError bankid_sign(Token *token,
     
     free(extra);
     return error;
+}
+
+/**
+ * Generates a new key pair and creates a certificate request.
+ *
+ * @param params     Parameters (from SetParam/InitRequest calls).
+ * @param password   A password or PIN entered on the keyboard.
+ * @param request    The certificate request, Base64 encoded.
+ */
+BankIDError bankid_createRequest(const RegutilInfo *params,
+                                 const char *password,
+                                 char **request) {
+    *request = NULL;
+    
+    char *binaryRequest;
+    size_t brlen;
+    TokenError error = backend_createRequest(params, password,
+                                             &binaryRequest, &brlen);
+    if (error) return BIDERR_InternalError;
+    
+    // Encode with Base64
+    *request = base64_encode(binaryRequest, brlen);
+    free(binaryRequest);
+    return (*request ? BIDERR_OK : BIDERR_InternalError);
 }
 
