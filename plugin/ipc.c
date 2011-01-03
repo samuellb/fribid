@@ -188,7 +188,7 @@ char *regutil_createRequest(Plugin *plugin) {
         
         pipe_sendInt(pipeinfo.out, pkcs10->keyUsage);
         pipe_sendInt(pipeinfo.out, pkcs10->keySize);
-        pipe_sendString(pipeinfo.out, pkcs10->subjectDN);
+        pipe_sendOptionalString(pipeinfo.out, pkcs10->subjectDN);
         
         pkcs10 = pkcs10->next;
     }
@@ -199,8 +199,8 @@ char *regutil_createRequest(Plugin *plugin) {
     while (cmc) {
         pipe_sendInt(pipeinfo.out, PLS_MoreData);
         
-        pipe_sendString(pipeinfo.out, cmc->oneTimePassword);
-        pipe_sendString(pipeinfo.out, cmc->rfc2729cmcoid);
+        pipe_sendOptionalString(pipeinfo.out, cmc->oneTimePassword);
+        pipe_sendOptionalString(pipeinfo.out, cmc->rfc2729cmcoid);
         
         cmc = cmc->next;
     }
