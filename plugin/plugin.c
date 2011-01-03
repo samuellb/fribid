@@ -306,6 +306,10 @@ void regutil_setParam(Plugin *plugin, const char *name, const char *value) {
     }
 }
 
+static char *safestrdup(const char *s) {
+    return (s ? strdup(s) : NULL);
+}
+
 /**
  * Stores the current parameters so they get included with the request.
  */
@@ -315,7 +319,7 @@ void regutil_initRequest(Plugin *plugin, const char *type) {
         RegutilPKCS10 *copy = malloc(sizeof(RegutilPKCS10));
         copy->keyUsage = plugin->info.regutil.currentPKCS10.keyUsage;
         copy->keySize = plugin->info.regutil.currentPKCS10.keySize;
-        copy->subjectDN = strdup(plugin->info.regutil.currentPKCS10.subjectDN);
+        copy->subjectDN = safestrdup(plugin->info.regutil.currentPKCS10.subjectDN);
         
         copy->next = plugin->info.regutil.input.pkcs10;
         plugin->info.regutil.input.pkcs10 = copy;
@@ -324,8 +328,8 @@ void regutil_initRequest(Plugin *plugin, const char *type) {
     } else if (!strcmp(type, "cmc")) {
         // CMC
         RegutilCMC *copy = malloc(sizeof(RegutilCMC));
-        copy->oneTimePassword = strdup(plugin->info.regutil.currentCMC.oneTimePassword);
-        copy->rfc2729cmcoid = strdup(plugin->info.regutil.currentCMC.rfc2729cmcoid);
+        copy->oneTimePassword = safestrdup(plugin->info.regutil.currentCMC.oneTimePassword);
+        copy->rfc2729cmcoid = safestrdup(plugin->info.regutil.currentCMC.rfc2729cmcoid);
         
         copy->next = plugin->info.regutil.input.cmc;
         plugin->info.regutil.input.cmc = copy;
