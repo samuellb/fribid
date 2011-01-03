@@ -208,6 +208,11 @@ char *regutil_createRequest(Plugin *plugin) {
     
     plugin->lastError = waitReply(&pipeinfo);
     char *request = pipe_readString(pipeinfo.in);
+    if (plugin->lastError) {
+        free(request);
+        request = NULL;
+    }
+    
     closePipes(&pipeinfo);
     return request;
 }
