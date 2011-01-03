@@ -214,28 +214,25 @@ static bool hasSignParams(const Plugin *plugin) {
 }
 
 int sign_performAction(Plugin *plugin, const char *action) {
-    plugin->lastError = BIDERR_InternalError;
+    int ret = BIDERR_InvalidAction;
+    
+    if (!lockURL(plugin->url)) return BIDERR_InternalError;
+    
     if ((plugin->type == PT_Authentication) && !strcmp(action, "Authenticate")) {
-        if (!hasSignParams(plugin)) {
-            return BIDERR_MissingParameter;
-        } else {
-            if (!lockURL(plugin->url)) return BIDERR_InternalError;
-            int ret = sign_performAction_Authenticate(plugin);
-            unlockURL(plugin->url);
-            return ret;
-        }
+        ret = (hasSignParams(plugin) ?
+            sign_performAction_Authenticate(plugin) : BIDERR_MissingParameter);
+        
     } else if ((plugin->type == PT_Signer) && !strcmp(action, "Sign")) {
         if (!hasSignParams(plugin) || !plugin->info.sign.message) {
             return BIDERR_MissingParameter;
-        } else {
-            if (!lockURL(plugin->url)) return BIDERR_InternalError;
-            int ret = sign_performAction_Sign(plugin);
-            unlockURL(plugin->url);
-            return ret;
         }
-    } else {
-        return BIDERR_InvalidAction;
+        ret = (hasSignParams(plugin) && plugin->info.sign.message ?
+            sign_performAction_Sign(plugin) : BIDERR_MissingParameter);
     }
+    
+    unlockURL(plugin->url);
+    plugin->lastError = ret;
+    return ret;
 }
 
 int sign_getLastError(Plugin *plugin) {
