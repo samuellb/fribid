@@ -42,6 +42,11 @@ typedef enum {
     // Errors from regutil
     RUERR_InvalidParameter =   640,
     RUERR_InvalidValue =      1028,
+    RUERR_UserCancel =        1034,
+    // KeySize not set = 1024
+    // InitRequest('cmc') not called = 1025
+    // KeyUsage not set = 1025
+    // InitRequest('pkcs10') not called = 1030
 } BankIDError;
 
 #endif
