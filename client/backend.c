@@ -124,10 +124,14 @@ TokenError backend_createRequest(const RegutilInfo *info,
                                  const char *password,
                                  char **request, size_t *reqlen) {
     // TODO support smartcards too (if this is used anywhere)
+    TokenError error = TokenError_NotImplemented;
+    
     Backend *backend = pkcs12_getBackend();
-    return (backend->createRequest ?
-        backend->createRequest(info, password, request, reqlen) :
-        TokenError_NotImplemented);
+    if (backend->init(backend) && backend->createRequest)
+        error = backend->createRequest(info, password, request, reqlen);
+    
+    backend->free(backend);
+    return error;
 }
 
 /**
