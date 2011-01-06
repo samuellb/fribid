@@ -1,6 +1,6 @@
 /*
 
-  Copyright (c) 2009-2010 Samuel Lidén Borell <samuel@slbdata.se>
+  Copyright (c) 2009-2011 Samuel Lidén Borell <samuel@slbdata.se>
   Copyright (c) 2010 Marcus Carlson <marcus@mejlamej.nu>
  
   Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -54,6 +54,12 @@ struct _PKCS12Token {
     SharedPKCS12 *sharedP12;
     int p12Index;
     const X509_NAME *subjectName;
+};
+
+static const int opensslKeyUsages[] = {
+    X509v3_KU_KEY_CERT_SIGN,     // KeyUsage_Issuing
+    X509v3_KU_NON_REPUDIATION,   // KeyUsage_Signing
+    X509v3_KU_DIGITAL_SIGNATURE, // KeyUsage_Authentication
 };
 
 static bool _backend_init(Backend *backend) {
@@ -216,18 +222,14 @@ static char *der_encode(X509 *cert) {
  * authentication or signing).
  */
 static bool has_keyusage(X509 *cert, KeyUsage keyUsage) {
-    static const int openSSLUsages[] = {
-        X509v3_KU_KEY_CERT_SIGN,     // KeyUsage_Issuing
-        X509v3_KU_NON_REPUDIATION,   // KeyUsage_Signing
-        X509v3_KU_DIGITAL_SIGNATURE, // KeyUsage_Authentication
-    };
     ASN1_BIT_STRING *usage;
     bool supported = false;
 
     usage = X509_get_ext_d2i(cert, NID_key_usage, NULL, NULL);
     if (usage) {
+        const int opensslKeyUsage = opensslKeyUsages[keyUsage];
         supported = (usage->length > 0) &&
-                    ((usage->data[0] & openSSLUsages[keyUsage]) == openSSLUsages[keyUsage]);
+                    ((usage->data[0] & opensslKeyUsage) == opensslKeyUsage);
         ASN1_BIT_STRING_free(usage);
     }
     return supported;
@@ -430,6 +432,119 @@ static TokenError _backend_sign(PKCS12Token *token,
     }
 }
 
+typedef struct CertReq {
+    struct CertReq *next;
+    
+    const RegutilPKCS10 *pkcs10;
+    EVP_PKEY *privkey;
+    RSA *rsa;
+    X509 *x509;
+} CertReq;
+
+// This is just what Nexus Personal uses
+#define MAC_ITER 8192
+#define ENC_ITER 8192
+#define ENC_NID NID_pbe_WithSHA1And3_Key_TripleDES_CBC
+// EVP_R_UNKNOWN_PBE_ALGORITHM (!)
+
+// Debug stuff
+#define errstr (ERR_error_string(ERR_get_error(), NULL))
+#include <openssl/err.h>
+
+static TokenError saveKeys(const CertReq *reqs, const char *password,
+                           FILE *file) {
+    // TODO error handling
+    ERR_load_crypto_strings();
+    ERR_clear_error();
+    
+    // Add PKCS7 safes with the keys
+    STACK_OF(PKCS7) *authsafes = NULL;
+    while (reqs) {
+        STACK_OF(SAFEBAG) *bags = NULL;
+        
+        PKCS12_SAFEBAG *bag = PKCS12_add_key(&bags, reqs->privkey,
+            opensslKeyUsages[reqs->pkcs10->keyUsage], ENC_ITER, ENC_NID, (char*)password);
+        // TODO extract name from subject DN
+        //      maybe we can add the whole DN somehow?
+        char *name = "names are not implemented yet";
+        // friendlyName is always blank in asn1dump, why? (also in other P12 files)
+        X509at_add1_attr_by_NID(&bag->attrib, NID_friendlyName, MBSTRING_UTF8,
+                                (unsigned char*)name, strlen(name));
+        //PKCS12_add_friendlyname(bag, name, strlen(name)); -- doesn't work either
+        
+        fprintf(stderr, "bag: %p,  bags: %p:   %s\n", bag, bags, errstr);
+        PKCS12_add_safe(&authsafes, bags, -1, 0, NULL);
+        sk_PKCS12_SAFEBAG_pop_free(bags, PKCS12_SAFEBAG_free);
+        reqs = reqs->next;
+    }
+    fprintf(stderr, "safes: %p:  %s\n", authsafes, errstr);
+    
+    // Create the PKCS12 wrapper
+    PKCS12 *p12 = PKCS12_add_safes(authsafes, 0);
+    fprintf(stderr, "p12: %p:    %s\n", p12, errstr);
+    sk_PKCS7_pop_free(authsafes, PKCS7_free);
+    PKCS12_set_mac(p12, (char*)password, -1, NULL, 0, MAC_ITER, NULL);
+    
+    // Save file
+    i2d_PKCS12_fp(file, p12);
+    PKCS12_free(p12);
+    return TokenError_Success;
+}
+
+TokenError _backend_createRequest(const RegutilInfo *info,
+                                  const char *password,
+                                  char **request, size_t *reqlen) {
+    // OpenSSL seeds the PRNG automatically, see the manual page for RAND_add.
+    
+    // Create certificate requests
+    CertReq *reqs = NULL;
+    for (const RegutilPKCS10 *pkcs10 = info->pkcs10; pkcs10 != NULL;
+         pkcs10 = pkcs10->next) {
+        // Generate key pair
+        // FIXME deprecated function
+        // TODO use OPENSSL_NO_DEPRECATED
+        RSA *rsa = RSA_generate_key(pkcs10->keySize, RSA_F4, NULL, NULL);
+        EVP_PKEY *privkey = EVP_PKEY_new();
+        EVP_PKEY_assign_RSA(privkey, rsa);
+        
+        // Create request
+        // TODO
+        //X509_REQ *x509 = X509_REQ_new();
+        //X509_REQ_set_pubkey(x509, pubkey);
+        
+        // Store in list
+        CertReq *req = malloc(sizeof(CertReq));
+        req->pkcs10 = pkcs10;
+        req->privkey = privkey;
+        req->rsa = rsa;
+        //req->x509 = x509;
+        req->next = reqs;
+        reqs = req;
+    }
+    
+    // Build the certificate request
+    // TODO
+    
+    // Create the key file in ~/.cbt/name.p12
+    // TODO get path
+    FILE *keyfile = fopen("/home/samuellb/test_output.p12", "wb");
+    TokenError error = saveKeys(reqs, password, keyfile);
+    fclose(keyfile);
+    
+    // Free reqs
+    while (reqs) {
+        X509_free(reqs->x509);
+        RSA_free(reqs->rsa);
+        EVP_PKEY_free(reqs->privkey);
+        
+        CertReq *next = reqs->next;
+        free(reqs);
+        reqs = next;
+    }
+    
+    return error;
+}
+
 
 /* Backend functions */
 static const Backend backend_template = {
@@ -437,6 +552,7 @@ static const Backend backend_template = {
     .free = _backend_free,
     .freeToken = _backend_freeToken,
     .addFile = _backend_addFile,
+    .createRequest = _backend_createRequest,
     .getBase64Chain = _backend_getBase64Chain,
     .sign = _backend_sign,
 };
