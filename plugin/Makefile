@@ -35,11 +35,11 @@ OBJECTS=ipc.o npmain.o npobject.o plugin.o pluginutil.o pipe.o npn_gate.o np_ent
 
 all: libfribidplugin.so
 
-ipc.o: ../common/defines.h ../common/pipe.h plugin.h
-npmain.o: ../common/defines.h npobject.h plugin.h
-npobject.o: npobject.h plugin.h pluginutil.h
+ipc.o: ../common/defines.h ../common/pipe.h ../common/bidtypes.h plugin.h
+npmain.o: ../common/defines.h ../common/bidtypes.h  npobject.h plugin.h
+npobject.o: ../common/bidtypes.h npobject.h plugin.h pluginutil.h
 pipe.o: ../common/pipe.h ../common/pipe.c
-plugin.o: ../common/biderror.h plugin.h
+plugin.o: ../common/biderror.h ../common/bidtypes.h plugin.h
 pluginutil.o: pluginutil.h
 np_entry.o: ../npapi/np_entry.c
 npn_gate.o: ../npapi/npn_gate.c

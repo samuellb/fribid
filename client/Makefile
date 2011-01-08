@@ -40,14 +40,14 @@ OBJECTS=backend.o bankid.o $(if $(ENABLE_PKCS11),pkcs11.o) pkcs12.o main.o misc.
 
 all: sign
 
-backend.o: backend.h backend_private.h
-bankid.o: ../common/biderror.h bankid.h backend.h misc.h platform.h xmldsig.h
+backend.o: ../common/biderror.h ../common/bidtypes.h backend.h backend_private.h
+bankid.o: ../common/biderror.h ../common/bidtypes.h bankid.h backend.h misc.h platform.h xmldsig.h
 glibconfig.o: platform.h
-gtk.o: ../common/biderror.h backend.h bankid.h platform.h misc.h
-main.o: ../common/biderror.h bankid.h misc.h secmem.h platform.h ../common/pipe.h
+gtk.o: ../common/biderror.h ../common/bidtypes.h backend.h bankid.h platform.h misc.h
+main.o: ../common/biderror.h ../common/bidtypes.h ../common/pipe.h backend.h bankid.h misc.h platform.h secmem.h
 misc.o: misc.h
-pkcs11.o: backend.h backend_private.h misc.h
-pkcs12.o: backend.h backend_private.h misc.h
+pkcs11.o: ../common/biderror.h ../common/bidtypes.h backend.h backend_private.h misc.h
+pkcs12.o: ../common/biderror.h ../common/bidtypes.h backend.h backend_private.h misc.h
 pipe.o: ../common/pipe.h ../common/pipe.c
 posix.o: platform.h
 xmldsig.o: xmldsig.h backend.h misc.h
