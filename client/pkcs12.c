@@ -533,9 +533,8 @@ TokenError _backend_createRequest(const RegutilInfo *info,
     
     // Free reqs
     while (reqs) {
-        X509_free(reqs->x509);
+        //X509_free(reqs->x509);
         RSA_free(reqs->rsa);
-        EVP_PKEY_free(reqs->privkey);
         
         CertReq *next = reqs->next;
         free(reqs);
