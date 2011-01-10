@@ -195,16 +195,9 @@ char *regutil_createRequest(Plugin *plugin) {
     pipe_sendInt(pipeinfo.out, PLS_End);
     
     // Send CMC info
-    RegutilCMC *cmc = plugin->info.regutil.input.cmc;
-    while (cmc) {
-        pipe_sendInt(pipeinfo.out, PLS_MoreData);
-        
-        pipe_sendOptionalString(pipeinfo.out, cmc->oneTimePassword);
-        pipe_sendOptionalString(pipeinfo.out, cmc->rfc2729cmcoid);
-        
-        cmc = cmc->next;
-    }
-    pipe_sendInt(pipeinfo.out, PLS_End);
+    RegutilCMC *cmc = &plugin->info.regutil.input.cmc;
+    pipe_sendOptionalString(pipeinfo.out, cmc->oneTimePassword);
+    pipe_sendOptionalString(pipeinfo.out, cmc->rfc2729cmcoid);
     
     plugin->lastError = waitReply(&pipeinfo);
     char *request = pipe_readString(pipeinfo.in);

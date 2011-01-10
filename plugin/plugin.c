@@ -100,7 +100,7 @@ void plugin_free(Plugin *plugin) {
             freePKCS10s(&plugin->info.regutil.currentPKCS10, false);
             freePKCS10s(plugin->info.regutil.input.pkcs10, true);
             freeCMCs(&plugin->info.regutil.currentCMC, false);
-            freeCMCs(plugin->info.regutil.input.cmc, true);
+            freeCMCs(&plugin->info.regutil.input.cmc, true);
             break;
     }
     free(plugin->url);
@@ -327,12 +327,9 @@ void regutil_initRequest(Plugin *plugin, const char *type) {
         plugin->lastError = BIDERR_OK;
     } else if (!strcmp(type, "cmc")) {
         // CMC
-        RegutilCMC *copy = malloc(sizeof(RegutilCMC));
-        copy->oneTimePassword = safestrdup(plugin->info.regutil.currentCMC.oneTimePassword);
-        copy->rfc2729cmcoid = safestrdup(plugin->info.regutil.currentCMC.rfc2729cmcoid);
-        
-        copy->next = plugin->info.regutil.input.cmc;
-        plugin->info.regutil.input.cmc = copy;
+        RegutilCMC *cmc = &plugin->info.regutil.input.cmc;
+        cmc->oneTimePassword = safestrdup(plugin->info.regutil.currentCMC.oneTimePassword);
+        cmc->rfc2729cmcoid = safestrdup(plugin->info.regutil.currentCMC.rfc2729cmcoid);
         
         plugin->lastError = BIDERR_OK;
     } else {

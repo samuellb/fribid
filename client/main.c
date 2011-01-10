@@ -212,15 +212,9 @@ void pipeData() {
                 input.pkcs10 = pkcs10;
             }
             
-            while (pipe_readInt(stdin) == PLS_MoreData) {
-                // CMC
-                RegutilCMC *cmc = malloc(sizeof(RegutilCMC));
-                cmc->oneTimePassword = pipe_readString(stdin);
-                cmc->rfc2729cmcoid = pipe_readString(stdin);
-                
-                cmc->next = input.cmc;
-                input.cmc = cmc;
-            }
+            // CMC
+            input.cmc.oneTimePassword = pipe_readString(stdin);
+            input.cmc.rfc2729cmcoid = pipe_readString(stdin);
             
             // Check for broken pipe
             if (feof(stdin)) goto createReq_error;

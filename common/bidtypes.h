@@ -51,7 +51,7 @@ typedef struct {
     // TODO password restrictions (MinLen, etc)
     
     RegutilPKCS10 *pkcs10;
-    RegutilCMC *cmc;
+    RegutilCMC cmc;
 } RegutilInfo;
 
 #endif
