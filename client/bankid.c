@@ -355,7 +355,10 @@ BankIDError bankid_createRequest(const RegutilInfo *params,
     size_t brlen;
     TokenError error = backend_createRequest(params, password,
                                              &binaryRequest, &brlen);
-    if (error) return BIDERR_InternalError;
+    if (error) {
+        free(binaryRequest);
+        return BIDERR_InternalError;
+    }
     
     // Encode with Base64
     *request = base64_encode(binaryRequest, brlen);
