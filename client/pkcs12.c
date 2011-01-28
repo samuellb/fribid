@@ -41,6 +41,7 @@ typedef struct _PKCS12Token PKCS12Token;
 
 #include "../common/defines.h"
 #include "misc.h"
+#include "request.h"
 #include "backend_private.h"
 
 typedef struct {
@@ -438,7 +439,8 @@ typedef struct CertReq {
     const RegutilPKCS10 *pkcs10;
     EVP_PKEY *privkey;
     RSA *rsa;
-    X509 *x509;
+    //X509 *x509;
+    X509_REQ *x509;
 } CertReq;
 
 // This is just what Nexus Personal uses
@@ -461,6 +463,8 @@ static TokenError saveKeys(const CertReq *reqs, const char *password,
     STACK_OF(PKCS7) *authsafes = NULL;
     while (reqs) {
         STACK_OF(SAFEBAG) *bags = NULL;
+        
+        // FIXME can we use the X509 here?
         
         PKCS12_SAFEBAG *bag = PKCS12_add_key(&bags, reqs->privkey,
             opensslKeyUsages[reqs->pkcs10->keyUsage], ENC_ITER, ENC_NID, (char*)password);
@@ -498,6 +502,8 @@ TokenError _backend_createRequest(const RegutilInfo *info,
     
     // Create certificate requests
     CertReq *reqs = NULL;
+    //STACK_OF(X509) *x509s = NULL;
+    STACK *x509reqs = sk_new_null();
     for (const RegutilPKCS10 *pkcs10 = info->pkcs10; pkcs10 != NULL;
          pkcs10 = pkcs10->next) {
         // Generate key pair
@@ -508,9 +514,11 @@ TokenError _backend_createRequest(const RegutilInfo *info,
         EVP_PKEY_assign_RSA(privkey, rsa);
         
         // Create request
-        // TODO
-        //X509_REQ *x509 = X509_REQ_new();
-        //X509_REQ_set_pubkey(x509, pubkey);
+        X509_REQ *x509req = X509_REQ_new();
+        X509_REQ_set_pubkey(x509req, privkey); // appears to be correct(!)
+        //X509 *x509 = X509_REQ_to_X509(x509req, 0, privkey);
+        //fprintf(stderr, "x509: %d\n");
+        // TODO set attributes...
         
         // Store in list
         CertReq *req = malloc(sizeof(CertReq));
@@ -518,12 +526,19 @@ TokenError _backend_createRequest(const RegutilInfo *info,
         req->privkey = privkey;
         req->rsa = rsa;
         //req->x509 = x509;
+        req->x509 = x509req;
         req->next = reqs;
         reqs = req;
+        
+        //sk_X509_push(x509s, x509);
+        sk_push(x509reqs, (char*)x509req);
     }
     
     // Build the certificate request
     // TODO
+    fprintf(stderr, "call req wrap\n");
+    request_wrap(x509reqs, request, reqlen);
+    fprintf(stderr, "leave req wrap\n");
     
     // Create the key file in ~/.cbt/name.p12
     // TODO get path
@@ -533,14 +548,15 @@ TokenError _backend_createRequest(const RegutilInfo *info,
     
     // Free reqs
     while (reqs) {
-        //X509_free(reqs->x509);
         RSA_free(reqs->rsa);
+        // The X509_REQs are free'd in request_wrap
         
         CertReq *next = reqs->next;
         free(reqs);
         reqs = next;
     }
     
+    fprintf(stderr, "returning %d\n", error);
     return error;
 }
 

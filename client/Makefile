@@ -36,7 +36,7 @@ SIGNING_EXECUTABLE=`../configure --internal--get-define=SIGNING_EXECUTABLE`
 UI_GTK_XML=`../configure --internal--get-define=UI_GTK_XML`
 ENABLE_PKCS11=$(shell ../configure --internal--get-define=ENABLE_PKCS11|grep 1)
 
-OBJECTS=backend.o bankid.o $(if $(ENABLE_PKCS11),pkcs11.o) pkcs12.o main.o misc.o pipe.o posix.o glibconfig.o gtk.o xmldsig.o secmem.o
+OBJECTS=backend.o bankid.o $(if $(ENABLE_PKCS11),pkcs11.o) pkcs12.o request.o main.o misc.o pipe.o posix.o glibconfig.o gtk.o xmldsig.o secmem.o
 
 all: sign
 
@@ -47,9 +47,10 @@ gtk.o: ../common/biderror.h ../common/bidtypes.h backend.h bankid.h platform.h m
 main.o: ../common/biderror.h ../common/bidtypes.h ../common/pipe.h backend.h bankid.h misc.h platform.h secmem.h
 misc.o: misc.h
 pkcs11.o: ../common/biderror.h ../common/bidtypes.h backend.h backend_private.h misc.h
-pkcs12.o: ../common/biderror.h ../common/bidtypes.h backend.h backend_private.h misc.h
+pkcs12.o: ../common/biderror.h ../common/bidtypes.h backend.h backend_private.h misc.h request.h
 pipe.o: ../common/pipe.h ../common/pipe.c
 posix.o: platform.h
+request.o: request.h
 xmldsig.o: xmldsig.h backend.h misc.h
 secmem.o: secmem.h
 
