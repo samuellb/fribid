@@ -32,6 +32,7 @@
 #include <assert.h>
 
 #include <openssl/x509.h>
+#include <openssl/x509v3.h>
 #include <openssl/pkcs12.h>
 #include <openssl/safestack.h>
                     #include <stdio.h>
@@ -495,6 +496,22 @@ static TokenError saveKeys(const CertReq *reqs, const char *password,
     return TokenError_Success;
 }
 
+/**
+ * Adds a key usage extension to the list of extensions in a request.
+ */
+void addKeyUsage(STACK_OF(X509_EXTENSION) *exts, KeyUsage keyUsage) {
+    static const char *const keyUsages[] = {
+        NULL,                /* Issuing */
+        "nonRepudiation",    /* Signing */
+        "digitalSignature",  /* Authentication (yes, this is correct!) */
+    };
+    
+    X509_EXTENSION *ext = X509V3_EXT_conf_nid(NULL, NULL,
+        NID_key_usage, (char*)keyUsages[keyUsage]);
+    if (!ext) abort();
+    sk_X509_EXTENSION_push(exts, ext);
+}
+
 TokenError _backend_createRequest(const RegutilInfo *info,
                                   const char *password,
                                   char **request, size_t *reqlen) {
@@ -521,9 +538,13 @@ TokenError _backend_createRequest(const RegutilInfo *info,
         X509_REQ *x509req = X509_REQ_new();
         X509_REQ_set_subject_name(x509req, subject);
         X509_REQ_set_pubkey(x509req, privkey); // appears to be correct(!)
-        //X509 *x509 = X509_REQ_to_X509(x509req, 0, privkey);
-        //fprintf(stderr, "x509: %d\n");
-        // TODO set attributes...
+        
+        // Set attributes
+        STACK_OF(X509_EXTENSION) *exts = sk_X509_EXTENSION_new_null();
+        addKeyUsage(exts, pkcs10->keyUsage);
+        X509_REQ_add_extensions(x509req, exts);
+        
+        // Add signature
         X509_REQ_sign(x509req, privkey, EVP_sha1());
         
         // Store in list
