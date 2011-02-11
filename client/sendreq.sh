@@ -18,7 +18,7 @@ CreateRequest
 MoreData
     sendint 1                # KeyUsage
     sendint 2048             # KeySize
-    sendstring 'CN=Test Person' # SubjectDN
+    sendstring 'CN=TEST PERSON,OID.2.5.4.41=(090102 12.30) TEST PERSON - BankID på fil,SN=197711223334,G=TEST,S=PERSON' # SubjectDN
 EndOfData
 
 # CMC

@@ -513,8 +513,13 @@ TokenError _backend_createRequest(const RegutilInfo *info,
         EVP_PKEY *privkey = EVP_PKEY_new();
         EVP_PKEY_assign_RSA(privkey, rsa);
         
+        // Subject name
+        // FIXME check for NULL subjectDN and return value
+        X509_NAME *subject = dn_from_string(pkcs10->subjectDN);
+        
         // Create request
         X509_REQ *x509req = X509_REQ_new();
+        X509_REQ_set_subject_name(x509req, subject);
         X509_REQ_set_pubkey(x509req, privkey); // appears to be correct(!)
         //X509 *x509 = X509_REQ_to_X509(x509req, 0, privkey);
         //fprintf(stderr, "x509: %d\n");
