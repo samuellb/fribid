@@ -524,6 +524,7 @@ TokenError _backend_createRequest(const RegutilInfo *info,
         //X509 *x509 = X509_REQ_to_X509(x509req, 0, privkey);
         //fprintf(stderr, "x509: %d\n");
         // TODO set attributes...
+        X509_REQ_sign(x509req, privkey, EVP_sha1());
         
         // Store in list
         CertReq *req = malloc(sizeof(CertReq));
