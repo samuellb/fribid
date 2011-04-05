@@ -135,6 +135,21 @@ TokenError backend_createRequest(const RegutilInfo *info,
 }
 
 /**
+ * Stores a certificate chain for a request.
+ */
+TokenError backend_storeCertificates(const char *p7data, size_t length) {
+    // TODO support smartcards too (if this is used anywhere)
+    TokenError error = TokenError_NotImplemented;
+    
+    Backend *backend = pkcs12_getBackend();
+    if (backend->init(backend) && backend->storeCertificates)
+        error = backend->storeCertificates(p7data, length);
+    
+    backend->free(backend);
+    return error;
+}
+
+/**
  * Gets the status of a token.
  */
 TokenStatus token_getStatus(const Token *token) {

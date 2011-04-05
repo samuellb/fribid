@@ -35,7 +35,7 @@
 #include <openssl/x509v3.h>
 #include <openssl/pkcs12.h>
 #include <openssl/safestack.h>
-                    #include <stdio.h>
+#include <stdio.h>
 
 typedef struct _PKCS12Token PKCS12Token;
 #define TokenType PKCS12Token
@@ -589,6 +589,13 @@ TokenError _backend_createRequest(const RegutilInfo *info,
 }
 
 
+TokenError _backend_storeCertificates(const char *p7data, size_t length) {
+    // TODO
+    fprintf(stderr, BINNAME ": StoreCertificates has not been implemented yet! (data=%p, length=%d)\n", p7data, length);
+    return TokenError_NotImplemented;
+}
+
+
 /* Backend functions */
 static const Backend backend_template = {
     .init = _backend_init,
@@ -596,6 +603,7 @@ static const Backend backend_template = {
     .freeToken = _backend_freeToken,
     .addFile = _backend_addFile,
     .createRequest = _backend_createRequest,
+    .storeCertificates = _backend_storeCertificates,
     .getBase64Chain = _backend_getBase64Chain,
     .sign = _backend_sign,
 };

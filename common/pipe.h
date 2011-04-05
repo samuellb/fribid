@@ -32,6 +32,7 @@ typedef enum {
     PC_Authenticate = 1,
     PC_Sign,
     PC_CreateRequest,
+    PC_StoreCertificates,
 } PipeCommand;
 
 typedef enum {

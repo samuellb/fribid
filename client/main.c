@@ -244,6 +244,20 @@ void pipeData() {
             platform_leaveMainloop();
             break;
         }
+        case PC_StoreCertificates: {
+            // TODO maybe we should only allow the web site that called
+            //      CreateRequest to store certificates?
+            
+            char *certs = pipe_readString(stdin);
+            
+            BankIDError error = bankid_storeCertificates(certs);
+            
+            pipe_sendInt(stdout, error);
+            pipe_flush(stdout);
+            
+            platform_leaveMainloop();
+            break;
+        }
     }
 }
 

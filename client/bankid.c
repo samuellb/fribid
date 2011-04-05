@@ -366,3 +366,20 @@ BankIDError bankid_createRequest(const RegutilInfo *params,
     return (*request ? BIDERR_OK : BIDERR_InternalError);
 }
 
+/**
+ * Stores a certificate chain for a newly created key.
+ */
+BankIDError bankid_storeCertificates(const char *certs) {
+    
+    size_t length;
+    char *p7data = base64_decode_binary(certs, &length);
+    
+    if (!p7data) return BIDERR_InternalError;
+    
+    BankIDError error = backend_storeCertificates(p7data, length);
+    
+    free(p7data);
+    return error;
+}
+
+

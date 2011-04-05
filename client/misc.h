@@ -1,6 +1,6 @@
 /*
 
-  Copyright (c) 2009-2010 Samuel Lidén Borell <samuel@slbdata.se>
+  Copyright (c) 2009-2011 Samuel Lidén Borell <samuel@slbdata.se>
  
   Permission is hereby granted, free of charge, to any person obtaining a copy
   of this software and associated documentation files (the "Software"), to deal
@@ -33,6 +33,7 @@ void *guaranteed_memset(void *v, int c, size_t n);
 
 char *base64_encode(const char *data, const int length);
 char *base64_decode(const char *encoded);
+char *base64_decode_binary(const char *encoded, size_t *decodedLength);
 bool is_canonical_base64(const char *encoded);
 char *sha_base64(const char *str);
 

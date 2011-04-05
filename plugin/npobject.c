@@ -64,7 +64,7 @@ static bool objHasMethod(NPObject *npobj, NPIdentifier ident) {
         case PT_Regutil:
             return !strcmp(name, "GetParam") || !strcmp(name, "SetParam") ||
                    !strcmp(name, "InitRequest") || !strcmp(name, "CreateRequest") ||
-                   !strcmp(name, "GetLastError");
+                   !strcmp(name, "StoreCertificates") || !strcmp(name, "GetLastError");
         default:
             return false;
     }
@@ -174,6 +174,25 @@ static bool objInvoke(NPObject *npobj, NPIdentifier ident,
                 // Create request
                 char *value = regutil_createRequest(this->plugin);
                 return convertStringZToVariant(value, result);
+            } else if (IS_CALL_2("StoreCertificates", STRING, STRING)) {
+                // Store a certificate chain
+                // TODO check string lengths
+                
+                const NPString *type_nps = &NPVARIANT_TO_STRING(args[0]);
+                bool type_is_p7c = (type_nps->utf8length == 3 &&
+                                    !strcmp(type_nps->utf8characters, "p7c"));
+                char *certs = variantToStringZ(&args[1]);
+                
+                // TODO set the error code instead of just failing and throwing a script exception
+                bool ok = (type_is_p7c && certs);
+                
+                if (ok) {
+                    regutil_storeCertificates(this->plugin, certs);
+                }
+                
+                free(certs);
+                INT32_TO_NPVARIANT((int32_t)this->plugin->lastError, *result);
+                return ok;
             } else if (IS_CALL_0("GetLastError")) {
                 // Get last error
                 // TODO fix code duplication!

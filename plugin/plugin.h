@@ -97,6 +97,7 @@ int sign_performAction_Sign(Plugin *plugin);
 void regutil_setParam(Plugin *plugin, const char *name, const char *value);
 void regutil_initRequest(Plugin *plugin, const char *type);
 char *regutil_createRequest(Plugin *plugin);
+void regutil_storeCertificates(Plugin *plugin, const char *certs);
 
 
 #endif

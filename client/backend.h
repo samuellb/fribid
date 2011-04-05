@@ -80,7 +80,7 @@ TokenError backend_addFile(BackendNotifier *notifier,
 TokenError backend_createRequest(const RegutilInfo *info,
                                  const char *password,
                                  char **request, size_t *reqlen);
-//TokenError backend_storeCertificates(...);
+TokenError backend_storeCertificates(const char *p7data, size_t length);
 
 /* Token methods */
 TokenStatus token_getStatus(const Token *token);

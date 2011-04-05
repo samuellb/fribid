@@ -211,4 +211,16 @@ char *regutil_createRequest(Plugin *plugin) {
     return request;
 }
 
+void regutil_storeCertificates(Plugin *plugin, const char *certs) {
+    PipeInfo pipeinfo;
+    
+    openInteractivePipes(&pipeinfo, plugin);
+    pipe_sendCommand(pipeinfo.out, PC_StoreCertificates);
+    
+    pipe_sendOptionalString(pipeinfo.out, certs);
+    
+    plugin->lastError = waitReply(&pipeinfo);
+    closePipes(&pipeinfo);    
+}
+
 

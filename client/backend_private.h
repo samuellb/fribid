@@ -70,7 +70,8 @@ struct _Backend {
     TokenError (*createRequest)(const RegutilInfo *info,
                                 const char *password,
                                 char **request, size_t *reqlen);
-
+    
+    TokenError (*storeCertificates)(const char *p7data, size_t length);
     
     
     TokenError (*getBase64Chain)(const TokenType *token,

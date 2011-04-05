@@ -52,5 +52,7 @@ BankIDError bankid_createRequest(const RegutilInfo *info,
                                  const char *password,
                                  char **request);
 
+BankIDError bankid_storeCertificates(const char *certs);
+
 #endif
 

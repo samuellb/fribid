@@ -35,8 +35,8 @@ sendstring true
 echo 'hack'
 
 
-} | valgrind --leak-check=no -q ./sign --internal--ipc=6 | tr ';' '\n' | {
-#} | ./sign --internal--ipc=6 | tr ';' '\n' | {
+} | valgrind --leak-check=no -q ./sign --internal--ipc=7 | tr ';' '\n' | {
+#} | ./sign --internal--ipc=7 | tr ';' '\n' | {
 
 #### Parse response ####
 read error
