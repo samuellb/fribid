@@ -536,6 +536,7 @@ TokenError _backend_createRequest(const RegutilInfo *info,
         
         // Create request
         X509_REQ *x509req = X509_REQ_new();
+        X509_REQ_set_version(x509req, 0);
         X509_REQ_set_subject_name(x509req, subject);
         X509_REQ_set_pubkey(x509req, privkey); // appears to be correct(!)
         
