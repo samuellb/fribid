@@ -300,6 +300,11 @@ void regutil_setParam(Plugin *plugin, const char *name, const char *value) {
         free(*strPtr);
         *strPtr = strdup(value);
         plugin->lastError = (*strPtr ? BIDERR_OK : BIDERR_InternalError);
+        
+        if (!strcmp(name, "SubjectDN")) {
+            plugin->info.regutil.currentPKCS10.includeFullDN = true;
+        }
+        
     } else {
         // Invalid parameter name
         plugin->lastError = RUERR_InvalidParameter;
@@ -317,13 +322,13 @@ void regutil_initRequest(Plugin *plugin, const char *type) {
     if (!strcmp(type, "pkcs10")) {
         // PKCS10
         RegutilPKCS10 *copy = malloc(sizeof(RegutilPKCS10));
-        copy->keyUsage = plugin->info.regutil.currentPKCS10.keyUsage;
-        copy->keySize = plugin->info.regutil.currentPKCS10.keySize;
+        memcpy(copy, &plugin->info.regutil.currentPKCS10, sizeof(RegutilPKCS10));
         copy->subjectDN = safestrdup(plugin->info.regutil.currentPKCS10.subjectDN);
         
         copy->next = plugin->info.regutil.input.pkcs10;
         plugin->info.regutil.input.pkcs10 = copy;
         
+        plugin->info.regutil.currentPKCS10.includeFullDN = false;
         plugin->lastError = BIDERR_OK;
     } else if (!strcmp(type, "cmc")) {
         // CMC

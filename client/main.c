@@ -207,6 +207,7 @@ void pipeData() {
                 pkcs10->keyUsage = pipe_readInt(stdin);
                 pkcs10->keySize = pipe_readInt(stdin);
                 pkcs10->subjectDN = pipe_readString(stdin);
+                pkcs10->includeFullDN = pipe_readInt(stdin);
                 
                 pkcs10->next = input.pkcs10;
                 input.pkcs10 = pkcs10;

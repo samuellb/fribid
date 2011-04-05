@@ -25,6 +25,8 @@
 #ifndef __BIDTYPES_H__
 #define __BIDTYPES_H__
 
+#include <stdbool.h>
+
 typedef enum {
     KeyUsage_Issuing,
     KeyUsage_Signing,
@@ -38,6 +40,7 @@ typedef struct PKCS10Request {
     KeyUsage keyUsage;
     int keySize;
     char *subjectDN;
+    bool includeFullDN;
 } RegutilPKCS10;
 
 typedef struct CMCRequest {

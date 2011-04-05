@@ -65,6 +65,8 @@ function init() {
     
     // init 2
     setPar('KeyUsage', 'nonRepudiation');
+    //setPar('SubjectDN', 'CN=TEST PXXXX,OID.2.5.4.41=(090102 12.30) TEST PYYYY - BankID på fil,SN=222221223334,G=TEST,S=PZZZZZ');
+    //setPar('SubjectDN', 'CN=TEST PERSON,OID.2.5.4.41=(090102 12.30) TEST PERSON - BankID på fil,SN=197711223334,G=TEST,S=PERSON');
     output.value += "InitRequest('pkcs10')\n";
     output.value += "    retval = "+plugin.InitRequest('pkcs10');
     output.value += "    GetLastError() = "+plugin.GetLastError()+"\n";

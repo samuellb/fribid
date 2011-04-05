@@ -189,6 +189,7 @@ char *regutil_createRequest(Plugin *plugin) {
         pipe_sendInt(pipeinfo.out, pkcs10->keyUsage);
         pipe_sendInt(pipeinfo.out, pkcs10->keySize);
         pipe_sendOptionalString(pipeinfo.out, pkcs10->subjectDN);
+        pipe_sendInt(pipeinfo.out, pkcs10->includeFullDN);
         
         pkcs10 = pkcs10->next;
     }

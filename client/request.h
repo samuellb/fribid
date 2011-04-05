@@ -25,10 +25,11 @@
 #ifndef __REQUEST_H__
 #define __REQUEST_H__
 
+#include <stdbool.h>
 #include <openssl/ssl.h>
 
 void request_wrap(STACK *reqs, char **der, size_t *derLength);
-X509_NAME *dn_from_string(const char *s);
+X509_NAME *dn_from_string(const char *s, bool fullDN);
 
 #endif
 

@@ -19,6 +19,12 @@ MoreData
     sendint 1                # KeyUsage
     sendint 2048             # KeySize
     sendstring 'CN=TEST PERSON,OID.2.5.4.41=(090102 12.30) TEST PERSON - BankID på fil,SN=197711223334,G=TEST,S=PERSON' # SubjectDN
+    sendint 0                # Include full DN
+MoreData
+    sendint 2                # KeyUsage
+    sendint 2048             # KeySize
+    sendstring 'CN=TEST PERSON,OID.2.5.4.41=(090102 12.30) TEST PERSON - BankID på fil,SN=197711223334,G=TEST,S=PERSON' # SubjectDN
+    sendint 1                # Include full DN
 EndOfData
 
 # CMC
@@ -29,8 +35,8 @@ sendstring true
 echo 'hack'
 
 
-} | valgrind --leak-check=no -q ./sign --internal--ipc=5 | tr ';' '\n' | {
-#} | ./sign --internal--ipc=5 | tr ';' '\n' | {
+} | valgrind --leak-check=no -q ./sign --internal--ipc=6 | tr ';' '\n' | {
+#} | ./sign --internal--ipc=6 | tr ';' '\n' | {
 
 #### Parse response ####
 read error

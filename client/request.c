@@ -243,8 +243,10 @@ static int determine_string_type(const char *s, int length) {
 /**
  * Parses a subject name in RFC 2253 format, for example:
  *  CN=John Doe,SN=197711223334
+ *
+ * If fullDN is false, then only the name (OID 2.5.4.41) is included.
  */
-X509_NAME *dn_from_string(const char *s) {
+X509_NAME *dn_from_string(const char *s, bool fullDN) {
     X509_NAME *subject = X509_NAME_new();
     
     // First all attributes are parsed and are stored here, then they are
@@ -270,13 +272,15 @@ X509_NAME *dn_from_string(const char *s) {
         g_free(field);
         if (!ok) return false;
         
-        // Add attribute
-        if (entries[position]) {
-            X509_NAME_ENTRY_free(entries[position]);
-        } else {
-            entries[position] = X509_NAME_ENTRY_create_by_NID(NULL, nid,
-                determine_string_type(value, valueLength),
-                (unsigned char*)value, valueLength);
+        if (fullDN || nid == NID_name) {
+            // Add attribute
+            if (entries[position]) {
+                X509_NAME_ENTRY_free(entries[position]);
+            } else {
+                entries[position] = X509_NAME_ENTRY_create_by_NID(NULL, nid,
+                    determine_string_type(value, valueLength),
+                    (unsigned char*)value, valueLength);
+            }
         }
         
         // Go to next attribute

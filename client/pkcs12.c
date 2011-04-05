@@ -532,7 +532,7 @@ TokenError _backend_createRequest(const RegutilInfo *info,
         
         // Subject name
         // FIXME check for NULL subjectDN and return value
-        X509_NAME *subject = dn_from_string(pkcs10->subjectDN);
+        X509_NAME *subject = dn_from_string(pkcs10->subjectDN, pkcs10->includeFullDN);
         
         // Create request
         X509_REQ *x509req = X509_REQ_new();
