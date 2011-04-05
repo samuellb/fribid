@@ -499,7 +499,7 @@ static TokenError saveKeys(const CertReq *reqs, const char *password,
 /**
  * Adds a key usage extension to the list of extensions in a request.
  */
-void addKeyUsage(STACK_OF(X509_EXTENSION) *exts, KeyUsage keyUsage) {
+static void addKeyUsage(STACK_OF(X509_EXTENSION) *exts, KeyUsage keyUsage) {
     static const char *const keyUsages[] = {
         NULL,                /* Issuing */
         "nonRepudiation",    /* Signing */

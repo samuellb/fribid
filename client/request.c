@@ -270,7 +270,7 @@ X509_NAME *dn_from_string(const char *s, bool fullDN) {
         int nid, position;
         bool ok = get_non_rfc2256(field, &nid, &position);
         g_free(field);
-        if (!ok) return false;
+        if (!ok) goto error; // Unsupported attribute
         
         if (fullDN || nid == NID_name) {
             // Add attribute
