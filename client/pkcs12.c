@@ -30,12 +30,13 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <assert.h>
+#include <arpa/inet.h>
+#include <netinet/in.h>
 
 #include <openssl/x509.h>
 #include <openssl/x509v3.h>
 #include <openssl/pkcs12.h>
 #include <openssl/safestack.h>
-#include <stdio.h>
 
 typedef struct _PKCS12Token PKCS12Token;
 #define TokenType PKCS12Token
@@ -462,11 +463,12 @@ static TokenError saveKeys(const CertReq *reqs, const char *password,
     
     // Add PKCS7 safes with the keys
     STACK_OF(PKCS7) *authsafes = NULL;
+    uint32_t localKeyId = 0;
     while (reqs) {
         STACK_OF(SAFEBAG) *bags = NULL;
+        uint32_t keyid = htonl(localKeyId++);
         
-        // FIXME can we use the X509 here?
-        
+        // Add private key
         PKCS12_SAFEBAG *bag = PKCS12_add_key(&bags, reqs->privkey,
             opensslKeyUsages[reqs->pkcs10->keyUsage], ENC_ITER, ENC_NID, (char*)password);
         // TODO extract name from subject DN
@@ -476,6 +478,12 @@ static TokenError saveKeys(const CertReq *reqs, const char *password,
         X509at_add1_attr_by_NID(&bag->attrib, NID_friendlyName, MBSTRING_UTF8,
                                 (unsigned char*)name, strlen(name));
         //PKCS12_add_friendlyname(bag, name, strlen(name)); -- doesn't work either
+        PKCS12_add_localkeyid(bag, (unsigned char*)&keyid, sizeof(keyid));
+        
+        // Add a certificate so we can find the key by the subject name
+        X509 *cert = X509_REQ_to_X509(reqs->x509, 36500, reqs->privkey);
+        X509_keyid_set1(cert, (unsigned char*)&keyid, sizeof(keyid));
+        PKCS12_add_cert(&bags, cert);
         
         fprintf(stderr, "bag: %p,  bags: %p:   %s\n", bag, bags, errstr);
         PKCS12_add_safe(&authsafes, bags, -1, 0, NULL);
