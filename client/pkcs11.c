@@ -254,7 +254,7 @@ static void pkcs11_found_token(Backend *backend, PKCS11_SLOT *slot) {
     } else {
         token->base.status = TokenStatus_NeedPIN;
     }
-    token->base.displayName = getNamePropertyByNID(id, NID_commonName);
+    token->base.displayName = getNamePropertyByNID(id, NID_name);
     token->base.tag = slot->token->label;
     backend->notifier->notifyFunction(&token->base, TokenChange_Added);
     return;
