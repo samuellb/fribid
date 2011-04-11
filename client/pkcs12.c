@@ -531,7 +531,7 @@ static TokenError saveKeys(const CertReq *reqs, const char *password,
             goto loop_end;
         
         // Add a certificate so we can find the key by the subject name
-        cert = X509_REQ_to_X509(reqs->x509, 36500, reqs->privkey);
+        cert = X509_REQ_to_X509(reqs->x509, 3650, reqs->privkey);
         if (!cert ||
             !X509_keyid_set1(cert, (unsigned char*)&keyid, sizeof(keyid)))
             goto loop_end;
