@@ -556,36 +556,61 @@ TokenError _backend_createRequest(const RegutilInfo *info,
     // OpenSSL seeds the PRNG automatically, see the manual page for RAND_add.
     
     // Create certificate requests
+    bool ok = true;
     CertReq *reqs = NULL;
-    //STACK_OF(X509) *x509s = NULL;
     STACK *x509reqs = sk_new_null();
     for (const RegutilPKCS10 *pkcs10 = info->pkcs10; pkcs10 != NULL;
          pkcs10 = pkcs10->next) {
+        
+        RSA *rsa = NULL;
+        EVP_PKEY *privkey = NULL;
+        X509_NAME *subject = NULL;
+        X509_REQ *x509req = NULL;
+        STACK_OF(X509_EXTENSION) *exts = NULL;
+        
+        // Check the parameters.
+        // Maximum key size in OpenSSL:
+        // http://www.mail-archive.com/openssl-users@openssl.org/msg58229.html
+        if (!pkcs10->subjectDN || pkcs10->keySize < 1024 ||
+            pkcs10->keySize > 65536)
+            goto req_error;
+        
         // Generate key pair
         // FIXME deprecated function
         // TODO use OPENSSL_NO_DEPRECATED
-        RSA *rsa = RSA_generate_key(pkcs10->keySize, RSA_F4, NULL, NULL);
-        EVP_PKEY *privkey = EVP_PKEY_new();
+        rsa = RSA_generate_key(pkcs10->keySize, RSA_F4, NULL, NULL);
+        if (!rsa) goto req_error;
+        privkey = EVP_PKEY_new();
+        if (!privkey) goto req_error;
         EVP_PKEY_assign_RSA(privkey, rsa);
         
         // Subject name
-        // FIXME check for NULL subjectDN and return value
-        X509_NAME *subject = dn_from_string(pkcs10->subjectDN, pkcs10->includeFullDN);
+        subject = dn_from_string(pkcs10->subjectDN, pkcs10->includeFullDN);
+        if (!subject) goto req_error;
         
         // Create request
-        X509_REQ *x509req = X509_REQ_new();
-        X509_REQ_set_version(x509req, 0);
-        X509_REQ_set_subject_name(x509req, subject);
-        X509_REQ_set_pubkey(x509req, privkey); // appears to be correct(!)
+        x509req = X509_REQ_new();
+        if (!x509req ||
+            !X509_REQ_set_version(x509req, 0) ||
+            !X509_REQ_set_subject_name(x509req, subject) ||
+            !X509_REQ_set_pubkey(x509req, privkey)) // yes this is correct(!)
+            goto req_error;
         
         // Set attributes
-        STACK_OF(X509_EXTENSION) *exts = sk_X509_EXTENSION_new_null();
+        exts = sk_X509_EXTENSION_new_null();
+        if (!exts) goto req_error;
+        
         X509_EXTENSION *ext = makeKeyUsageExt(pkcs10->keyUsage);
-        sk_X509_EXTENSION_push(exts, ext);
-        X509_REQ_add_extensions(x509req, exts);
+        if (!ext || !sk_X509_EXTENSION_push(exts, ext))
+            goto req_error;
+        
+        if (!X509_REQ_add_extensions(x509req, exts))
+            goto req_error;
+        exts = NULL;
         
         // Add signature
-        X509_REQ_sign(x509req, privkey, EVP_sha1());
+        if (!X509_REQ_sign(x509req, privkey, EVP_sha1()))
+            goto req_error;
         
         // Store in list
         CertReq *req = malloc(sizeof(CertReq));
@@ -597,31 +622,49 @@ TokenError _backend_createRequest(const RegutilInfo *info,
         req->next = reqs;
         reqs = req;
         
-        //sk_X509_push(x509s, x509);
         sk_push(x509reqs, (char*)x509req);
+        
+        continue;
+        
+      req_error:
+        // Clean up and set error flag
+        if (privkey) EVP_PKEY_free(privkey);
+        else if (rsa) RSA_free(rsa);
+        
+        if (subject) X509_NAME_free(subject);
+        if (exts) sk_X509_EXTENSION_pop_free(exts, X509_EXTENSION_free);
+        if (x509req) X509_REQ_free(x509req);
+        
+        ok = false;
     }
     
-    // Build the certificate request
-    // TODO
-    fprintf(stderr, "call req wrap\n");
-    request_wrap(x509reqs, request, reqlen);
-    fprintf(stderr, "leave req wrap\n");
+    TokenError error = TokenError_Unknown;
     
-    // Create the key file in ~/.cbt/name.p12
-    // TODO get path
-    FILE *keyfile = fopen("/home/samuellb/test_output.p12", "wb");
-    TokenError error = saveKeys(reqs, password, keyfile);
-    fclose(keyfile);
+    if (ok) {
+        // Build the certificate request
+        request_wrap(x509reqs, request, reqlen);
+        
+        if (request) {
+            // Create the key file in ~/.cbt/name.p12
+            // TODO get path
+            FILE *keyfile = fopen("/home/samuellb/test_output.p12", "wb");
+            error = saveKeys(reqs, password, keyfile);
+            fclose(keyfile);
+            
+            if (error) free(request);
+        }
+    }
     
     // Free reqs
     while (reqs) {
-        RSA_free(reqs->rsa);
-        // The X509_REQs are free'd in request_wrap
+        RSA_free(reqs->rsa); // This free's privkey too
+        X509_REQ_free(reqs->x509);
         
         CertReq *next = reqs->next;
         free(reqs);
         reqs = next;
     }
+    sk_free(x509reqs);
     
     fprintf(stderr, "returning %d\n", error);
     return error;
