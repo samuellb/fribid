@@ -4,7 +4,7 @@
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
 <!--
 
-  Copyright (c) 2010 Samuel Lidén Borell <samuel@slbdata.se>
+  Copyright (c) 2010-2011 Samuel Lidén Borell <samuel@slbdata.se>
  
   Permission is hereby granted, free of charge, to any person obtaining a copy
   of this software and associated documentation files (the "Software"), to deal
@@ -40,11 +40,14 @@ var testsRun = 0;
 var verObj = [];
 var authObj = [];
 var signObj = [];
-var types = ["ver", "auth", "sign"];
+var types = ["ver", "auth", "sign", "reg"];
 var base64test = "MTIzNA==";
 
 var paramList = [
+    // Auth/sign
     "Challenge", "Nonce", "Policys", "Signature", "Subjects", "TextToBeSigned",
+    // Regutil (enrollment)
+    "KeySize", "KeyUsage", "SubjectDN", "OneTimePassword",
 ];
 
 var actionList = [
@@ -77,6 +80,9 @@ var fuzzParams = [
     "'\\0"+base64test+"'", "[]", "document",
     "'"+base64test+"'", "'"+base64test+" '", "' '",
     "false", "true", "-1", "1",
+    "3", "1024", "1025", "2048", "9999999", "1024.0",
+    "'digitalSignature'", "'nonRepudiation'",
+    "'cmc'", "'p7c'",
 ];
 
 function fuzz(f, start, count) {
@@ -94,7 +100,7 @@ function fuzzFunction(f) {
     fuzz(f, "", 2);
 }
 
-var staticTestCount = 4;
+var staticTestCount = 5;
 
 function performStaticTest(test, i) {
     //debug("performTest("+test+", "+i+")... ");
@@ -116,12 +122,22 @@ function performStaticTest(test, i) {
                 tryEval(types[j]+"["+i+"].NonExistent();");
             }
             break;
+        case 5: // Basic fuzzing on regutil object
+            var obj = regObj;
+            fuzzFunction(obj+".GetLastError");
+            fuzzFunction(obj+".GetParam");
+            fuzzFunction(obj+".SetParam");
+            // Unfortunately, this will never add any valid requests...
+            fuzzFunction(obj+".InitRequest");
+            fuzzFunction(obj+".CreateRequest");
+            fuzzFunction(obj+".StoreCertificates");
+            break;
     }
     //debug("done\n");
 }
 
 function fuzzGetSetParam(n, f, p, v, i) {
-    var type = (n % 2 == 0 ? "authObj" : "signObj");
+    var type = ["authObj", "signObj", "regObj"][n % 3];
     var func = (f % 2 == 0 ? "GetParam" : "SetParam");
     
     tryEval(type+"["+i+"]."+func+"(\""+paramList[p]+
@@ -201,6 +217,7 @@ function init() {
     verObj = createMany("application/x-personal-version", objCount);
     authObj = createMany("application/x-personal-authentication", objCount);
     signObj = createMany("application/x-personal-signer2", objCount);
+    regObj = createMany("application/x-personal-regutil", objCount);
     
     runStaticTests();
     
