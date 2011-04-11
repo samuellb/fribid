@@ -331,13 +331,42 @@ static TokenError _backend_addFile(Backend *backend,
     return TokenError_Success;
 }
 
+static bool compareX509Names(const X509_NAME *a, const X509_NAME *b,
+                             bool orderMightDiffer) {
+#if 0   // this might work in OpenSSL 1.0.0
+    return X509_NAME_cmp(a, b);
+#else
+    if (!orderMightDiffer) return X509_NAME_cmp(a, b);
+    
+    int num = sk_X509_NAME_ENTRY_num(a->entries);
+    if (sk_X509_NAME_ENTRY_num(b->entries) != num) return false;
+    
+    for (int i = 0; i < num; i++) {
+        bool match = false;
+        for (int j = i; j < num; j++) {
+            X509_NAME_ENTRY *ae = sk_X509_NAME_ENTRY_value(a->entries, i);
+            X509_NAME_ENTRY *be = sk_X509_NAME_ENTRY_value(b->entries, j);
+            
+            if (!OBJ_cmp(ae->object, be->object) &&
+                !ASN1_STRING_cmp(ae->value, be->value)) {
+                match = true;
+                break;
+            }
+        }
+        if (!match) return false;
+    }
+    return true;
+#endif
+}
+
 static X509 *findCert(const STACK_OF(X509) *certList,
                       const X509_NAME *name,
-                      const KeyUsage keyUsage) {
+                      const KeyUsage keyUsage,
+                      bool orderMightDiffer) {
     int num = sk_X509_num(certList);
     for (int i = 0; i < num; i++) {
         X509 *cert = sk_X509_value(certList, i);
-        if (!X509_NAME_cmp(X509_get_subject_name(cert), name) &&
+        if (!compareX509Names(X509_get_subject_name(cert), name, orderMightDiffer) &&
             has_keyusage(cert, keyUsage)) {
             return cert;
         }
@@ -359,7 +388,7 @@ static TokenError _backend_getBase64Chain(const PKCS12Token *token,
     if (!certList) return TokenError_Unknown;
     
     X509 *cert = findCert(certList, token->subjectName,
-                          token->base.backend->notifier->keyUsage);
+                          token->base.backend->notifier->keyUsage, false);
     if (!cert) {
         sk_X509_pop_free(certList, X509_free);
         return TokenError_Unknown;
@@ -371,7 +400,7 @@ static TokenError _backend_getBase64Chain(const PKCS12Token *token,
     
     X509_NAME *issuer = X509_get_issuer_name(cert);
     while (issuer != NULL) {
-        cert = findCert(certList, issuer, KeyUsage_Issuing);
+        cert = findCert(certList, issuer, KeyUsage_Issuing, false);
         if (!cert) break;
         
         issuer = X509_get_issuer_name(cert);
@@ -399,7 +428,7 @@ static TokenError _backend_sign(PKCS12Token *token,
     if (!certList) return TokenError_Unknown;
     
     X509 *cert = findCert(certList, token->subjectName,
-                          token->base.backend->notifier->keyUsage);             
+                          token->base.backend->notifier->keyUsage, false);
     if (!cert) {
         sk_X509_pop_free(certList, X509_free);
         return TokenError_Unknown;
@@ -455,6 +484,20 @@ typedef struct CertReq {
 #define errstr (ERR_error_string(ERR_get_error(), NULL))
 #include <openssl/err.h>
 
+/**
+ * Adds a key usage extension to the list of extensions in a request.
+ */
+static X509_EXTENSION *makeKeyUsageExt(KeyUsage keyUsage) {
+    static const char *const keyUsages[] = {
+        NULL,                /* Issuing */
+        "nonRepudiation",    /* Signing */
+        "digitalSignature",  /* Authentication (yes, this is correct!) */
+    };
+    
+    return X509V3_EXT_conf_nid(NULL, NULL,
+        NID_key_usage, (char*)keyUsages[keyUsage]);
+}
+
 static TokenError saveKeys(const CertReq *reqs, const char *password,
                            FILE *file) {
     // TODO error handling
@@ -483,6 +526,9 @@ static TokenError saveKeys(const CertReq *reqs, const char *password,
         // Add a certificate so we can find the key by the subject name
         X509 *cert = X509_REQ_to_X509(reqs->x509, 36500, reqs->privkey);
         X509_keyid_set1(cert, (unsigned char*)&keyid, sizeof(keyid));
+        
+        X509_add_ext(cert, makeKeyUsageExt(reqs->pkcs10->keyUsage), -1);
+        
         PKCS12_add_cert(&bags, cert);
         
         fprintf(stderr, "bag: %p,  bags: %p:   %s\n", bag, bags, errstr);
@@ -502,22 +548,6 @@ static TokenError saveKeys(const CertReq *reqs, const char *password,
     i2d_PKCS12_fp(file, p12);
     PKCS12_free(p12);
     return TokenError_Success;
-}
-
-/**
- * Adds a key usage extension to the list of extensions in a request.
- */
-static void addKeyUsage(STACK_OF(X509_EXTENSION) *exts, KeyUsage keyUsage) {
-    static const char *const keyUsages[] = {
-        NULL,                /* Issuing */
-        "nonRepudiation",    /* Signing */
-        "digitalSignature",  /* Authentication (yes, this is correct!) */
-    };
-    
-    X509_EXTENSION *ext = X509V3_EXT_conf_nid(NULL, NULL,
-        NID_key_usage, (char*)keyUsages[keyUsage]);
-    if (!ext) abort();
-    sk_X509_EXTENSION_push(exts, ext);
 }
 
 TokenError _backend_createRequest(const RegutilInfo *info,
@@ -550,7 +580,8 @@ TokenError _backend_createRequest(const RegutilInfo *info,
         
         // Set attributes
         STACK_OF(X509_EXTENSION) *exts = sk_X509_EXTENSION_new_null();
-        addKeyUsage(exts, pkcs10->keyUsage);
+        X509_EXTENSION *ext = makeKeyUsageExt(pkcs10->keyUsage);
+        sk_X509_EXTENSION_push(exts, ext);
         X509_REQ_add_extensions(x509req, exts);
         
         // Add signature
@@ -597,10 +628,166 @@ TokenError _backend_createRequest(const RegutilInfo *info,
 }
 
 
+static PKCS7 *parseP7SignedData(const char *p7data, size_t length) {
+    // Parse data
+    BIO *bio = BIO_new_mem_buf((void *)p7data, length);
+    if (!bio) return NULL;
+    PKCS7 *p7 = d2i_PKCS7_bio(bio, NULL);
+    BIO_free(bio);
+    
+    // Check that it's valid
+    if (!PKCS7_type_is_signed(p7) || !p7->d.sign || !p7->d.sign->cert) {
+        PKCS7_free(p7);
+        return NULL;
+    }
+    
+    return p7;
+}
+
+static TokenError storeCertificates(STACK_OF(X509) *certs,
+                                    const char *filename) {
+    TokenError error = TokenError_Unknown;
+    PKCS12 *p12 = NULL;
+    STACK_OF(PKCS7) *authsafes = NULL;
+    
+    // Load file
+    FILE *orig = fopen(filename, "rb");
+    if (!orig) goto end;
+    d2i_PKCS12_fp(orig, &p12);
+    fclose(orig);
+    if (!p12) goto end;
+    
+    bool modified = false;
+    
+    // For each PKCS7 safe
+    authsafes = PKCS12_unpack_authsafes(p12);
+    int nump = sk_PKCS7_num(authsafes);
+    for (int p = 0; p < nump; p++) {
+        PKCS7 *p7 = sk_PKCS7_value(authsafes, p);
+        if (!p7) continue;
+        
+        STACK_OF(PKCS12_SAFEBAG) *safebags = PKCS12_unpack_p7data(p7);
+        if (!safebags) continue;
+        
+        // For each safebag
+        bool match = false;
+        int numsb = sk_PKCS12_SAFEBAG_num(safebags);
+        for (int i = 0; i < numsb; i++) {
+            PKCS12_SAFEBAG *bag = sk_PKCS12_SAFEBAG_value(safebags, i);
+            if (!bag || M_PKCS12_bag_type(bag) != NID_certBag) continue;
+            
+            fprintf(stderr, "bag type: %d\n", M_PKCS12_bag_type(bag));
+            fprintf(stderr, "friendlyname: %s\n", PKCS12_get_friendlyname(bag));
+            
+            // Extract cert from bag
+            X509 *cert = PKCS12_certbag2x509(bag);
+            
+            // Get subject name and key usage
+            X509_NAME *name = X509_get_subject_name(cert);
+            
+            ASN1_BIT_STRING *usage = X509_get_ext_d2i(cert, NID_key_usage,
+                                                      NULL, NULL);
+            fprintf(stderr, "name=%p  usage=%p  usagelen=%d\n", (void*)name, (void*)usage, (usage ? usage->length : -1));
+            if (name && usage && usage->length > 0) {
+                const KeyUsage keyUsage =
+                    ((usage->data[0] & X509v3_KU_NON_REPUDIATION) == X509v3_KU_NON_REPUDIATION ?
+                        KeyUsage_Signing : KeyUsage_Authentication);
+                
+                // Check if it matches
+                fprintf(stderr, "looking for cert with usage = %d\n", keyUsage);
+                X509 *issuedCert = findCert(certs, name, keyUsage, true);
+                if (issuedCert) {
+                    fprintf(stderr, "found one!\n");
+                    // Remove temporary cert
+                    (void)sk_PKCS12_SAFEBAG_delete(safebags, i);
+                    int lkidLength;
+                    unsigned char *lkid = X509_keyid_get0(cert, &lkidLength);
+                    
+                    // Link this cert to the key
+                    if (lkid) {
+                        X509_keyid_set1(issuedCert, lkid, lkidLength);
+                    }
+                    
+                    X509_free(cert);
+                    cert = NULL;
+                    match = true;
+                    
+                }
+            }
+            
+            if (cert && name) X509_NAME_free(name);
+            if (cert && usage) ASN1_BIT_STRING_free(usage);
+        }
+        
+        if (match) {
+            fprintf(stderr, "match!\n");
+            
+            // Add certs
+            int num_certs = sk_X509_num(certs);
+            fprintf(stderr, "num certs: %d\n", num_certs);
+            for (int ci = 0; ci < num_certs; ci++) {
+                X509 *cert = sk_X509_value(certs, ci);
+                fprintf(stderr, "add cert %p\n", (void*)cert);
+                PKCS12_add_cert(&safebags, cert);
+            }
+            
+            
+            // Update PKCS12
+            (void)sk_PKCS7_delete(authsafes, p);
+            PKCS12_add_safe(&authsafes, safebags, -1, 0, NULL);
+            sk_PKCS12_SAFEBAG_pop_free(safebags, PKCS12_SAFEBAG_free);
+            
+            p12 = PKCS12_add_safes(authsafes, 0);
+            sk_PKCS7_pop_free(authsafes, PKCS7_free);
+            
+            // TODO We don't add a MAC here. Does the official client require
+            //      a MAC in PKCS#12 certs? Obviously we need the password
+            //      to add a MAC, which we no longer have at this point.
+            //
+            //      The process that created the request (and asked for a
+            //      password) could stay alive (it knows the password) a
+            //      few minutes so StoreCertificates could add a MAC or
+            //      even add certificates through it.
+            //PKCS12_set_mac(p12, "123456qwerty", -1, NULL, 0, MAC_ITER, NULL);
+            
+            modified = true;
+            break;
+        }
+    }
+    
+    if (!modified) goto end;
+    
+    // Save
+    char *tempname = rasprintf("%s.tmp", filename);
+    if (!tempname) goto end;
+    FILE *newFile = fopen(tempname, "wb");
+    free(tempname);
+    
+    if (newFile) {
+       i2d_PKCS12_fp(newFile, p12);
+       fclose(newFile);
+       
+       // Replace old file with the new one
+       // TODO uncomment when the code has been tested more
+       //rename(tempname, filename);
+       
+       error = TokenError_Success;
+    }
+    
+  end:
+    PKCS12_free(p12);
+    return error;
+}
+
 TokenError _backend_storeCertificates(const char *p7data, size_t length) {
+    PKCS7 *p7 = parseP7SignedData(p7data, length);
+    if (!p7) return TokenError_Unknown;
+    
     // TODO
-    fprintf(stderr, BINNAME ": StoreCertificates has not been implemented yet! (data=%p, length=%d)\n", p7data, length);
-    return TokenError_NotImplemented;
+    TokenError error = storeCertificates(p7->d.sign->cert, "/home/samuellb/test_output.p12");
+    
+    PKCS7_free(p7);
+    return error;
 }
 
 
