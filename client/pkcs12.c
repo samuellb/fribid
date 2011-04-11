@@ -636,8 +636,8 @@ static PKCS7 *parseP7SignedData(const char *p7data, size_t length) {
     BIO_free(bio);
     
     // Check that it's valid
-    if (!PKCS7_type_is_signed(p7) || !p7->d.sign || !p7->d.sign->cert) {
-        PKCS7_free(p7);
+    if (!p7 || !PKCS7_type_is_signed(p7) || !p7->d.sign || !p7->d.sign->cert) {
+        if (p7) PKCS7_free(p7);
         return NULL;
     }
     
@@ -661,6 +661,7 @@ static TokenError storeCertificates(STACK_OF(X509) *certs,
     
     // For each PKCS7 safe
     authsafes = PKCS12_unpack_authsafes(p12);
+    if (!authsafes) goto end;
     int nump = sk_PKCS7_num(authsafes);
     for (int p = 0; p < nump; p++) {
         PKCS7 *p7 = sk_PKCS7_value(authsafes, p);
@@ -681,6 +682,7 @@ static TokenError storeCertificates(STACK_OF(X509) *certs,
             
             // Extract cert from bag
             X509 *cert = PKCS12_certbag2x509(bag);
+            if (!cert) continue;
             
             // Get subject name and key usage
             X509_NAME *name = X509_get_subject_name(cert);
@@ -735,10 +737,8 @@ static TokenError storeCertificates(STACK_OF(X509) *certs,
             // Update PKCS12
             (void)sk_PKCS7_delete(authsafes, p);
             PKCS12_add_safe(&authsafes, safebags, -1, 0, NULL);
-            sk_PKCS12_SAFEBAG_pop_free(safebags, PKCS12_SAFEBAG_free);
             
             p12 = PKCS12_add_safes(authsafes, 0);
-            sk_PKCS7_pop_free(authsafes, PKCS7_free);
             
             // TODO We don't add a MAC here. Does the official client require
             //      a MAC in PKCS#12 certs? Obviously we need the password
@@ -753,9 +753,13 @@ static TokenError storeCertificates(STACK_OF(X509) *certs,
             modified = true;
             break;
         }
+        
+        sk_PKCS12_SAFEBAG_pop_free(safebags, PKCS12_SAFEBAG_free);
     }
     
-    if (!modified) goto end;
+    sk_PKCS7_pop_free(authsafes, PKCS7_free);
+    
+    if (!modified || !p12) goto end;
     
     // Save
     char *tempname = rasprintf("%s.tmp", filename);
@@ -775,7 +779,7 @@ static TokenError storeCertificates(STACK_OF(X509) *certs,
     }
     
   end:
-    PKCS12_free(p12);
+    if (p12) PKCS12_free(p12);
     return error;
 }
 
