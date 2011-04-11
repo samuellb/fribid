@@ -162,7 +162,6 @@ void request_wrap(STACK *reqs, char **der, size_t *derLength) {
     if (!pkidata) goto end;
     
     // Add PKCS10 requests
-    // FIXME something is wrong with the requests
     fprintf(stderr, "add reqs\n");
     STACK *reqParts = pkidata->reqSequence;
     int num = sk_num(reqs);

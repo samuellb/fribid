@@ -470,7 +470,6 @@ typedef struct CertReq {
     const RegutilPKCS10 *pkcs10;
     EVP_PKEY *privkey;
     RSA *rsa;
-    //X509 *x509;
     X509_REQ *x509;
 } CertReq;
 
@@ -478,7 +477,6 @@ typedef struct CertReq {
 #define MAC_ITER 8192
 #define ENC_ITER 8192
 #define ENC_NID NID_pbe_WithSHA1And3_Key_TripleDES_CBC
-// EVP_R_UNKNOWN_PBE_ALGORITHM (!)
 
 // Debug stuff
 #define errstr (ERR_error_string(ERR_get_error(), NULL))
@@ -524,7 +522,6 @@ static TokenError saveKeys(const CertReq *reqs, const char *password,
         // Add name and localKeyId to the key bag
         // TODO extract name from subject DN
         char *name = "names are not implemented yet";
-        // friendlyName is always blank in asn1dump, why? (also in other P12 files)
         if (!X509at_add1_attr_by_NID(&bag->attrib, NID_friendlyName, MBSTRING_UTF8,
                                      (unsigned char*)name, strlen(name)) ||
             !PKCS12_add_localkeyid(bag, (unsigned char*)&keyid, sizeof(keyid)))
@@ -542,7 +539,7 @@ static TokenError saveKeys(const CertReq *reqs, const char *password,
         if (!PKCS12_add_cert(&bags, cert))
             goto loop_end;
         
-        fprintf(stderr, "bag: %p,  bags: %p:   %s\n", bag, bags, errstr);
+        fprintf(stderr, "bag: %p,  bags: %p:   %s\n", (void*)bag, (void*)bags, errstr);
         
         if (!PKCS12_add_safe(&authsafes, bags, -1, 0, NULL))
             goto loop_end;
@@ -556,7 +553,7 @@ static TokenError saveKeys(const CertReq *reqs, const char *password,
         if (bags) sk_PKCS12_SAFEBAG_pop_free(bags, PKCS12_SAFEBAG_free);
         reqs = reqs->next;
     }
-    fprintf(stderr, "safes: %p:  %s\n", authsafes, errstr);
+    fprintf(stderr, "safes: %p:  %s\n", (void*)authsafes, errstr);
     
     if (error_count != 0)
         goto end;
@@ -564,7 +561,7 @@ static TokenError saveKeys(const CertReq *reqs, const char *password,
     // Create the PKCS12 wrapper
     p12 = PKCS12_add_safes(authsafes, 0);
     if (!p12) goto end;
-    fprintf(stderr, "p12: %p:    %s\n", p12, errstr);
+    fprintf(stderr, "p12: %p:    %s\n", (void*)p12, errstr);
     PKCS12_set_mac(p12, (char*)password, -1, NULL, 0, MAC_ITER, NULL);
     
     // Save file
@@ -645,7 +642,6 @@ TokenError _backend_createRequest(const RegutilInfo *info,
         req->pkcs10 = pkcs10;
         req->privkey = privkey;
         req->rsa = rsa;
-        //req->x509 = x509;
         req->x509 = x509req;
         req->next = reqs;
         reqs = req;
