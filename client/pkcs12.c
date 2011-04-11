@@ -500,54 +500,82 @@ static X509_EXTENSION *makeKeyUsageExt(KeyUsage keyUsage) {
 
 static TokenError saveKeys(const CertReq *reqs, const char *password,
                            FILE *file) {
-    // TODO error handling
+    TokenError error = TokenError_Unknown;
+    PKCS12 *p12 = NULL;
+    
     ERR_load_crypto_strings();
     ERR_clear_error();
     
     // Add PKCS7 safes with the keys
     STACK_OF(PKCS7) *authsafes = NULL;
     uint32_t localKeyId = 0;
+    size_t error_count = 0;
     while (reqs) {
         STACK_OF(SAFEBAG) *bags = NULL;
+        X509 *cert = NULL;
         uint32_t keyid = htonl(localKeyId++);
+        error_count++; // Decremented on success
         
         // Add private key
         PKCS12_SAFEBAG *bag = PKCS12_add_key(&bags, reqs->privkey,
             opensslKeyUsages[reqs->pkcs10->keyUsage], ENC_ITER, ENC_NID, (char*)password);
+        if (!bag) goto loop_end;
+        
+        // Add name and localKeyId to the key bag
         // TODO extract name from subject DN
-        //      maybe we can add the whole DN somehow?
         char *name = "names are not implemented yet";
         // friendlyName is always blank in asn1dump, why? (also in other P12 files)
-        X509at_add1_attr_by_NID(&bag->attrib, NID_friendlyName, MBSTRING_UTF8,
-                                (unsigned char*)name, strlen(name));
-        //PKCS12_add_friendlyname(bag, name, strlen(name)); -- doesn't work either
-        PKCS12_add_localkeyid(bag, (unsigned char*)&keyid, sizeof(keyid));
+        if (!X509at_add1_attr_by_NID(&bag->attrib, NID_friendlyName, MBSTRING_UTF8,
+                                     (unsigned char*)name, strlen(name)) ||
+            !PKCS12_add_localkeyid(bag, (unsigned char*)&keyid, sizeof(keyid)))
+            goto loop_end;
         
         // Add a certificate so we can find the key by the subject name
-        X509 *cert = X509_REQ_to_X509(reqs->x509, 36500, reqs->privkey);
-        X509_keyid_set1(cert, (unsigned char*)&keyid, sizeof(keyid));
+        cert = X509_REQ_to_X509(reqs->x509, 36500, reqs->privkey);
+        if (!cert ||
+            !X509_keyid_set1(cert, (unsigned char*)&keyid, sizeof(keyid)))
+            goto loop_end;
         
-        X509_add_ext(cert, makeKeyUsageExt(reqs->pkcs10->keyUsage), -1);
+        if (!X509_add_ext(cert, makeKeyUsageExt(reqs->pkcs10->keyUsage), -1))
+            goto loop_end;
         
-        PKCS12_add_cert(&bags, cert);
+        if (!PKCS12_add_cert(&bags, cert))
+            goto loop_end;
         
         fprintf(stderr, "bag: %p,  bags: %p:   %s\n", bag, bags, errstr);
-        PKCS12_add_safe(&authsafes, bags, -1, 0, NULL);
-        sk_PKCS12_SAFEBAG_pop_free(bags, PKCS12_SAFEBAG_free);
+        
+        if (!PKCS12_add_safe(&authsafes, bags, -1, 0, NULL))
+            goto loop_end;
+        
+        
+        // Success!
+        error_count--;
+        
+      loop_end:
+        if (cert) X509_free(cert);
+        if (bags) sk_PKCS12_SAFEBAG_pop_free(bags, PKCS12_SAFEBAG_free);
         reqs = reqs->next;
     }
     fprintf(stderr, "safes: %p:  %s\n", authsafes, errstr);
     
+    if (error_count != 0)
+        goto end;
+    
     // Create the PKCS12 wrapper
-    PKCS12 *p12 = PKCS12_add_safes(authsafes, 0);
+    p12 = PKCS12_add_safes(authsafes, 0);
+    if (!p12) goto end;
     fprintf(stderr, "p12: %p:    %s\n", p12, errstr);
-    sk_PKCS7_pop_free(authsafes, PKCS7_free);
     PKCS12_set_mac(p12, (char*)password, -1, NULL, 0, MAC_ITER, NULL);
     
     // Save file
-    i2d_PKCS12_fp(file, p12);
-    PKCS12_free(p12);
-    return TokenError_Success;
+    if (i2d_PKCS12_fp(file, p12)) {
+        error = TokenError_Success;
+    }
+    
+  end:
+    if (authsafes) sk_PKCS7_pop_free(authsafes, PKCS7_free);
+    if (p12) PKCS12_free(p12);
+    return error;
 }
 
 TokenError _backend_createRequest(const RegutilInfo *info,
@@ -648,10 +676,12 @@ TokenError _backend_createRequest(const RegutilInfo *info,
             // Create the key file in ~/.cbt/name.p12
             // TODO get path
             FILE *keyfile = fopen("/home/samuellb/test_output.p12", "wb");
-            error = saveKeys(reqs, password, keyfile);
-            fclose(keyfile);
+            if (keyfile) {
+                error = saveKeys(reqs, password, keyfile);
+                fclose(keyfile);
+            }
             
-            if (error) free(request);
+            if (error) free(*request);
         }
     }
     
