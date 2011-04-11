@@ -202,7 +202,7 @@ typedef struct {
     const int nid;
 } DNAttrInfo;
 
-#define NUM_DN_ATTRS 5
+#define NUM_DN_ATTRS 7
 
 /**
  * Returns an object identifier NID for a field name. This function uses
@@ -217,6 +217,8 @@ static bool get_non_rfc2256(const char *field, int *nid, int *position) {
         { "SN", NID_serialNumber, },
         { "OID.2.5.4.41", NID_name, },
         { "CN", NID_commonName, },
+        { "C", NID_countryName, },
+        { "O", NID_organizationName, },
     };
     
     for (size_t i = 0; i < NUM_DN_ATTRS; i++) {
@@ -302,4 +304,5 @@ X509_NAME *dn_from_string(const char *s, bool fullDN) {
     X509_NAME_free(subject);
     return NULL;
 }
+
 
