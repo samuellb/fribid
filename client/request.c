@@ -25,6 +25,7 @@
 #include "request.h"
 
 #include <stdbool.h>
+#include <stdlib.h>
 #include <glib.h>
 #include <openssl/asn1t.h>
 
@@ -124,18 +125,23 @@ static ASN1_IA5STRING *strToIA5(const char *s) {
 
 static REQ_BODY_PART *wrapBodyPartReq(X509_REQ *req, int bodyPartId) {
     REQ_BODY_PART *part = REQ_BODY_PART_new();
-    part->bodyPartID = intToAsn1(bodyPartId);
-    part->csr = req;
+    if (part) {
+        part->bodyPartID = intToAsn1(bodyPartId);
+        part->csr = req;
+    }
     return part;
 }
 
 static OTHERMSG_BODY_PART *makeOtherMsg(const char *oneTimePassword,
                                         int bodyPartId) {
     OTHERMSG_BODY_PART *part = OTHERMSG_BODY_PART_new();
-    part->bodyPartID = intToAsn1(bodyPartId);
-    // 1.2.752.36 is iD2 Technologies AB
-    part->otherMsgType = OBJ_txt2obj("1.2.752.36.4.1.1", 1);
-    part->otherMsgValue = strToIA5(oneTimePassword);
+    if (part) {
+        part->bodyPartID = intToAsn1(bodyPartId);
+        // 1.2.752.36 is iD2 Technologies AB
+        part->otherMsgType = OBJ_txt2obj("1.2.752.36.4.1.1", 1);
+        part->otherMsgValue = strToIA5(oneTimePassword);
+        if (!part->otherMsgType) abort();
+    }
     return part;
 }
 
@@ -148,10 +154,12 @@ static OTHERMSG_BODY_PART *makeOtherMsg(const char *oneTimePassword,
  * @param derLength   Length of DER in bytes
  */
 void request_wrap(STACK *reqs, char **der, size_t *derLength) {
-    // TODO why is there no safestack support for X509_REQ in OpenSSL?
-    // TODO error handling
-    
     PKIDATA *pkidata = PKIDATA_new();
+    ASN1_TYPE *pkitype = NULL;
+    PKCS7 *pkiP7 = NULL;
+    PKCS7 *signdata = NULL;
+    
+    if (!pkidata) goto end;
     
     // Add PKCS10 requests
     // FIXME something is wrong with the requests
@@ -162,38 +170,51 @@ void request_wrap(STACK *reqs, char **der, size_t *derLength) {
         X509_REQ *req = (X509_REQ*)sk_value(reqs, i);
         
         fprintf(stderr, "push wrapBodyReq\n");
-        sk_push(reqParts, (char*)wrapBodyPartReq(req, 0x01000002+i));
+        REQ_BODY_PART *reqPart = wrapBodyPartReq(req, 0x01000002+i);
+        
+        if (!reqPart ||
+            !sk_push(reqParts, (char*)reqPart)) goto end;
     }
-    sk_free(reqs);
     
     // Add "CMC request"
     // TODO use the value from the OneTimePassword parameter
-    sk_push(pkidata->otherMsgSequence,
-            (char*)makeOtherMsg("Not Applicable", 0x01000001));
+    OTHERMSG_BODY_PART *otherMsgPart = makeOtherMsg("Not Applicable", 0x01000001);
+    
+    if (!otherMsgPart ||
+        !sk_push(pkidata->otherMsgSequence, (char*)otherMsgPart)) goto end;
     
     // Wrap in CMC PKIData structure
-    ASN1_TYPE *pkitype = ASN1_TYPE_new();
+    pkitype = ASN1_TYPE_new();
+    if (!pkitype) goto end;
     pkitype->type = V_ASN1_SEQUENCE;
     fprintf(stderr, "wrap in CMC PKIDATA\n");
-    ASN1_pack_string(pkidata, (i2d_of_void*)i2d_PKIDATA,
-                     &pkitype->value.sequence);
-    PKIDATA_free(pkidata);
+    if (!ASN1_pack_string(pkidata, (i2d_of_void*)i2d_PKIDATA,
+                            &pkitype->value.sequence)) goto end;
     
-    PKCS7 *pkiP7 = PKCS7_new();
-    PKCS7_set0_type_other(pkiP7, NID_id_cct_PKIData, pkitype);
+    PKIDATA_free(pkidata);
+    pkidata = NULL;
+    
+    pkiP7 = PKCS7_new();
+    if (!pkiP7 ||
+        !PKCS7_set0_type_other(pkiP7, NID_id_cct_PKIData, pkitype)) goto end;
     
     // Wrap in PKCS7 SignedData structure
-    PKCS7 *signdata = PKCS7_new();
-    PKCS7_set_type(signdata, NID_pkcs7_signed);
-    PKCS7_set_content(signdata, pkiP7);
+    signdata = PKCS7_new();
+    if (!signdata ||
+        !PKCS7_set_type(signdata, NID_pkcs7_signed) ||
+        !PKCS7_set_content(signdata, pkiP7)) goto end;
     
     // Encode data
     fprintf(stderr, "enc der\n");
     *der = NULL;
     *derLength = i2d_PKCS7(signdata, (unsigned char**)der);
     
+  end:
     fprintf(stderr, "free\n");
-    PKCS7_free(signdata);
+    if (signdata) PKCS7_free(signdata);
+    else if (pkiP7) PKCS7_free(pkiP7);
+    else if (pkitype) ASN1_TYPE_free(pkitype);
+    if (pkidata) PKIDATA_free(pkidata);
     fprintf(stderr, "done\n");
 }
 
