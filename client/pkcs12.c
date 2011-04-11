@@ -835,6 +835,7 @@ static TokenError storeCertificates(STACK_OF(X509) *certs,
     if (!modified || !p12) goto end;
     
     // Save
+    // TODO we should use a lock here
     char *tempname = rasprintf("%s.tmp", filename);
     if (!tempname) goto end;
     FILE *newFile = fopen(tempname, "wb");
@@ -845,8 +846,7 @@ static TokenError storeCertificates(STACK_OF(X509) *certs,
        fclose(newFile);
        
        // Replace old file with the new one
-       // TODO uncomment when the code has been tested more
-       //rename(tempname, filename);
+       rename(tempname, filename);
        
        error = TokenError_Success;
     }

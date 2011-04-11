@@ -235,8 +235,7 @@ void pipeData() {
                 pipe_sendInt(stdout, BIDERR_InternalError);
                 pipe_sendString(stdout, "");
             } else {
-                // TODO send BIDERR_OK here when the implementation is complete
-                pipe_sendInt(stdout, BIDERR_InternalError);
+                pipe_sendInt(stdout, BIDERR_OK);
                 pipe_sendString(stdout, request);
             }
             
