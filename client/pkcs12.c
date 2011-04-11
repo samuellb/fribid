@@ -600,7 +600,7 @@ TokenError _backend_createRequest(const RegutilInfo *info,
         // Maximum key size in OpenSSL:
         // http://www.mail-archive.com/openssl-users@openssl.org/msg58229.html
         if (!pkcs10->subjectDN || pkcs10->keySize < 1024 ||
-            pkcs10->keySize > 65536)
+            pkcs10->keySize > 16384)
             goto req_error;
         
         // Generate key pair
