@@ -43,6 +43,7 @@ typedef struct _PKCS12Token PKCS12Token;
 
 #include "../common/defines.h"
 #include "misc.h"
+#include "platform.h"
 #include "request.h"
 #include "backend_private.h"
 
@@ -671,10 +672,12 @@ TokenError _backend_createRequest(const RegutilInfo *info,
         if (request) {
             // Create the key file in ~/.cbt/name.p12
             // TODO get path
-            FILE *keyfile = fopen("/home/samuellb/test_output.p12", "wb");
+            FILE *keyfile = platform_openLocked(
+                "/home/samuellb/test_output.p12", Platform_OpenCreate);
             if (keyfile) {
                 error = saveKeys(reqs, password, keyfile);
-                fclose(keyfile);
+                if (!platform_closeLocked(keyfile) && !error)
+                    error = TokenError_Unknown;
             }
             
             if (error) free(*request);
@@ -718,12 +721,21 @@ static TokenError storeCertificates(STACK_OF(X509) *certs,
     TokenError error = TokenError_Unknown;
     PKCS12 *p12 = NULL;
     STACK_OF(PKCS7) *authsafes = NULL;
+    FILE *newFile = NULL;
+    char *tempname = NULL;
+    
+    // Attempt to create new file first
+    // (to avoid race conditions)
+    tempname = rasprintf("%s.tmp", filename);
+    if (!tempname) goto end;
+    newFile = platform_openLocked(tempname, Platform_OpenCreate);
+    if (!newFile) goto end;
     
     // Load file
-    FILE *orig = fopen(filename, "rb");
+    FILE *orig = platform_openLocked(filename, Platform_OpenRead);
     if (!orig) goto end;
     d2i_PKCS12_fp(orig, &p12);
-    fclose(orig);
+    platform_closeLocked(orig);
     if (!p12) goto end;
     
     bool modified = false;
@@ -831,23 +843,19 @@ static TokenError storeCertificates(STACK_OF(X509) *certs,
     if (!modified || !p12) goto end;
     
     // Save
-    // TODO we should use a lock here
-    char *tempname = rasprintf("%s.tmp", filename);
-    if (!tempname) goto end;
-    FILE *newFile = fopen(tempname, "wb");
-    free(tempname);
+    if (!i2d_PKCS12_fp(newFile, p12)) goto end;
     
-    if (newFile) {
-       i2d_PKCS12_fp(newFile, p12);
-       fclose(newFile);
+    if (platform_closeLocked(newFile)) {
+       newFile = NULL;
        
        // Replace old file with the new one
-       rename(tempname, filename);
-       
-       error = TokenError_Success;
+       if (rename(tempname, filename) == 0)
+           error = TokenError_Success;
     }
     
   end:
+    if (newFile) platform_deleteLocked(newFile, tempname);
+    if (tempname) free(tempname);
     if (p12) PKCS12_free(p12);
     return error;
 }

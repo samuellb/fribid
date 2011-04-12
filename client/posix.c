@@ -38,6 +38,7 @@
 #include <sys/socket.h>
 #include <netdb.h>
 #include <sys/ioctl.h>
+#include <sys/file.h>
 #include <assert.h>
 #include <arpa/inet.h>
 #include <netinet/in.h>
@@ -58,18 +59,51 @@ struct PlatformDirIter {
     struct dirent *entry;
 };
 
+/**
+ * Opens a file and locks it for reading or writing. If Platform_OpenCreate
+ * is specified as the mode then the file is created, and the function fails
+ * if it already exists to prevent overwrites and race conditions.
+ *
+ * @param mode  Either Platform_OpenRead or Platform_OpenCreate
+ */
+FILE *platform_openLocked(const char *filename, PlatformOpenMode mode) {
+    static const char *const stdio_modes[] = { "rb", "wb" };
+    static const int open_flags[] = { O_RDONLY, O_WRONLY|O_CREAT|O_EXCL };
+    static const int lock_flags[] = { LOCK_SH, LOCK_EX };
+    
+    int fd = open(filename, open_flags[mode], 0644);
+    if (fd == -1) return NULL;
+    
+    if (flock(fd, lock_flags[mode]) != 0) {
+        close(fd);
+        return NULL;
+    }
+    
+    return fdopen(fd, stdio_modes[mode]);
+}
+
+bool platform_closeLocked(FILE *file) {
+    flock(fileno(file), LOCK_UN);
+    return (fclose(file) == 0);
+}
+
+bool platform_deleteLocked(FILE *file, const char *filename) {
+    bool deleted = (remove(filename) == 0);
+    return platform_closeLocked(file) && deleted;
+}
+
 bool platform_readFile(const char *filename, char **data, int *length) {
-    FILE *file = fopen(filename, "rb");
+    FILE *file = platform_openLocked(filename, Platform_OpenRead);
     if (!file) return false;
     if (fseek(file, 0, SEEK_END) == -1) {
-        fclose(file);
+        platform_closeLocked(file);
         return false;
     }
     *length = ftell(file);
     fseek(file, 0, SEEK_SET);
     *data = malloc(*length);
     bool ok = (fread(*data, *length, 1, file) == 1);
-    fclose(file);
+    platform_closeLocked(file);
     return ok;
 }
 

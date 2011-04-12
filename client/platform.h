@@ -27,6 +27,7 @@
 
 #include <stdbool.h>
 #include <stdint.h>
+#include <stdio.h>
 #include "backend.h"
 
 /* Initialization */
@@ -40,6 +41,10 @@ typedef void (PlatformPipeFunction) ();
 void platform_setupPipe(PlatformPipeFunction *pipeFunction);
 
 /* File IO */
+typedef enum { Platform_OpenRead, Platform_OpenCreate } PlatformOpenMode;
+FILE *platform_openLocked(const char *filename, PlatformOpenMode mode);
+bool platform_closeLocked(FILE *file);
+bool platform_deleteLocked(FILE *file, const char *filename);
 bool platform_readFile(const char *filename, char **data, int *length);
 
 typedef struct PlatformDirIter PlatformDirIter;
