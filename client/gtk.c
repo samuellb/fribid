@@ -368,7 +368,11 @@ void platform_addKeyDirectories() {
         if (dir) {
             while (platform_iterateDir(dir)) {
                 char *filename = platform_currentPath(dir);
-                addTokenFile(filename);
+                
+                if (!strstr(filename, ".tmp")) {
+                    addTokenFile(filename);
+                }
+                
                 free(filename);
             }
             platform_closeDir(dir);
