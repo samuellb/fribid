@@ -71,7 +71,7 @@ FILE *platform_openLocked(const char *filename, PlatformOpenMode mode) {
     static const int open_flags[] = { O_RDONLY, O_WRONLY|O_CREAT|O_EXCL };
     static const int lock_flags[] = { LOCK_SH, LOCK_EX };
     
-    int fd = open(filename, open_flags[mode], 0644);
+    int fd = open(filename, open_flags[mode], 0600);
     if (fd == -1) return NULL;
     
     if (flock(fd, lock_flags[mode]) != 0) {
