@@ -1,5 +1,5 @@
 #
-#  Copyright (c) 2009-2010 Samuel Lidén Borell <samuel@slbdata.se>
+#  Copyright (c) 2009-2011 Samuel Lidén Borell <samuel@slbdata.se>
 # 
 #  Permission is hereby granted, free of charge, to any person obtaining a copy
 #  of this software and associated documentation files (the "Software"), to deal
@@ -36,18 +36,19 @@ SIGNING_EXECUTABLE=`../configure --internal--get-define=SIGNING_EXECUTABLE`
 UI_GTK_XML=`../configure --internal--get-define=UI_GTK_XML`
 ENABLE_PKCS11=$(shell ../configure --internal--get-define=ENABLE_PKCS11|grep 1)
 
-OBJECTS=backend.o bankid.o $(if $(ENABLE_PKCS11),pkcs11.o) pkcs12.o request.o main.o misc.o pipe.o posix.o glibconfig.o gtk.o xmldsig.o secmem.o
+OBJECTS=backend.o bankid.o certutil.o $(if $(ENABLE_PKCS11),pkcs11.o) pkcs12.o request.o main.o misc.o pipe.o posix.o glibconfig.o gtk.o xmldsig.o secmem.o
 
 all: sign
 
 backend.o: ../common/biderror.h ../common/bidtypes.h backend.h backend_private.h
 bankid.o: ../common/biderror.h ../common/bidtypes.h bankid.h backend.h misc.h platform.h xmldsig.h
+certutil.o: certutil.h
 glibconfig.o: platform.h
 gtk.o: ../common/biderror.h ../common/bidtypes.h backend.h bankid.h platform.h misc.h
 main.o: ../common/biderror.h ../common/bidtypes.h ../common/pipe.h backend.h bankid.h misc.h platform.h secmem.h
 misc.o: misc.h
 pkcs11.o: ../common/biderror.h ../common/bidtypes.h backend.h backend_private.h misc.h
-pkcs12.o: ../common/biderror.h ../common/bidtypes.h backend.h backend_private.h misc.h request.h
+pkcs12.o: ../common/biderror.h ../common/bidtypes.h backend.h backend_private.h certutil.h misc.h request.h
 pipe.o: ../common/pipe.h ../common/pipe.c
 posix.o: platform.h
 request.o: request.h

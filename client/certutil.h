@@ -22,15 +22,15 @@
 
 */
 
-#ifndef __REQUEST_H__
-#define __REQUEST_H__
+#ifndef __CERTUTIL_H__
+#define __CERTUTIL_H__
+
+// Certificate utilities
 
 #include <stdbool.h>
 #include <openssl/ssl.h>
 
-void request_wrap(STACK *reqs, char **der, size_t *derLength);
+X509_NAME *certutil_parse_dn(const char *s, bool fullDN);
 
 #endif
-
-
 

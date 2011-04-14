@@ -42,6 +42,7 @@ typedef struct _PKCS12Token PKCS12Token;
 #define TokenType PKCS12Token
 
 #include "../common/defines.h"
+#include "certutil.h"
 #include "misc.h"
 #include "platform.h"
 #include "request.h"
@@ -611,7 +612,7 @@ TokenError _backend_createRequest(const RegutilInfo *info,
         EVP_PKEY_assign_RSA(privkey, rsa);
         
         // Subject name
-        subject = dn_from_string(pkcs10->subjectDN, pkcs10->includeFullDN);
+        subject = certutil_parse_dn(pkcs10->subjectDN, pkcs10->includeFullDN);
         if (!subject) goto req_error;
         
         // Create request
