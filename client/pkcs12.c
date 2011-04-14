@@ -61,12 +61,6 @@ struct _PKCS12Token {
     const X509_NAME *subjectName;
 };
 
-static const int opensslKeyUsages[] = {
-    X509v3_KU_KEY_CERT_SIGN,     // KeyUsage_Issuing
-    X509v3_KU_NON_REPUDIATION,   // KeyUsage_Signing
-    X509v3_KU_DIGITAL_SIGNATURE, // KeyUsage_Authentication
-};
-
 static bool _backend_init(Backend *backend) {
     OpenSSL_add_all_algorithms();
     //listTokens(backend);
@@ -208,75 +202,6 @@ static STACK_OF(X509) *pkcs12_listCerts(PKCS12 *p12) {
 }
 
 /**
- * Returns the BASE64-encoded DER representation of a certificate.
- */
-static char *der_encode(X509 *cert) {
-    unsigned char *der = NULL;
-    char *base64 = NULL;
-    int len;
-    
-    len = i2d_X509(cert, &der);
-    if (!der) return NULL;
-    base64 = base64_encode((const char*)der, len);
-    free(der);
-    return base64;
-}
-
-/**
- * Returns true if a certificate supports the given key usage (such as
- * authentication or signing).
- */
-static bool has_keyusage(X509 *cert, KeyUsage keyUsage) {
-    ASN1_BIT_STRING *usage;
-    bool supported = false;
-
-    usage = X509_get_ext_d2i(cert, NID_key_usage, NULL, NULL);
-    if (usage) {
-        const int opensslKeyUsage = opensslKeyUsages[keyUsage];
-        supported = (usage->length > 0) &&
-                    ((usage->data[0] & opensslKeyUsage) == opensslKeyUsage);
-        ASN1_BIT_STRING_free(usage);
-    }
-    return supported;
-}
-
-/**
- * Gets a property of an X509_NAME, such as a subject name (NID_commonName),
- */
-static char *getNamePropertyByNID(X509_NAME *name, int nid) {
-    char *text;
-    int length;
-    
-    length = X509_NAME_get_text_by_NID(name, nid, NULL, 0);
-    if (length < 0) return NULL;
-    
-    text = malloc(length+1);
-    text[0] = '\0'; // if the function would fail
-    X509_NAME_get_text_by_NID(name, nid, text, length+1);
-    return text;
-}
-
-static bool matchSubjectFilter(const Backend *backend, X509_NAME *name) {
-    const char *subjectFilter = backend->notifier->subjectFilter;
-    if (!subjectFilter) return true;
-    
-    // TODO use OBJ_txt2nid and support arbitrary OIDs?
-    if ((strncmp(subjectFilter, "2.5.4.5=", 8) != 0) ||
-        (strchr(subjectFilter, ',') != NULL)) {
-        // OID 2.5.4.5 (Serial number) is the only supported/allowed filter
-        return true; // Nothing to filter with
-    }
-    
-    const char *wantedSerial = subjectFilter + 8;
-    
-    char *actualSerial = getNamePropertyByNID(name, NID_serialNumber);
-    
-    bool ok = !strcmp(actualSerial, wantedSerial);
-    free(actualSerial);
-    return ok;
-}
-
-/**
  * Creates a PKCS12 Token structure.
  */
 static PKCS12Token *createToken(const Backend *backend, SharedPKCS12 *sharedP12,
@@ -285,7 +210,7 @@ static PKCS12Token *createToken(const Backend *backend, SharedPKCS12 *sharedP12,
     if (!token) return NULL;
     token->base.backend = backend;
     token->base.status = TokenStatus_NeedPassword;
-    token->base.displayName = getNamePropertyByNID(id, NID_name);
+    token->base.displayName = certutil_getNamePropertyByNID(id, NID_name);
     token->base.tag = tag;
     token->sharedP12 = sharedP12;
     token->subjectName = id;
@@ -314,10 +239,11 @@ static TokenError _backend_addFile(Backend *backend,
     for (int i = 0; i < certCount; i++) {
         X509 *x = sk_X509_value(certList, i);
         
-        if (!has_keyusage(x, backend->notifier->keyUsage)) goto dontAddCert;
+        if (!certutil_hasKeyUsage(x, backend->notifier->keyUsage)) goto dontAddCert;
         
         X509_NAME *id = X509_get_subject_name(x);
-        if (!matchSubjectFilter(backend, id)) goto dontAddCert;
+        if (!certutil_matchSubjectFilter(backend->notifier->subjectFilter, id))
+            goto dontAddCert;
         
         PKCS12Token *token = createToken(backend, p12, id, tag);
         if (token) {
@@ -333,49 +259,6 @@ static TokenError _backend_addFile(Backend *backend,
     return TokenError_Success;
 }
 
-static bool compareX509Names(const X509_NAME *a, const X509_NAME *b,
-                             bool orderMightDiffer) {
-#if 0   // this might work in OpenSSL 1.0.0
-    return X509_NAME_cmp(a, b);
-#else
-    if (!orderMightDiffer) return X509_NAME_cmp(a, b);
-    
-    int num = sk_X509_NAME_ENTRY_num(a->entries);
-    if (sk_X509_NAME_ENTRY_num(b->entries) != num) return false;
-    
-    for (int i = 0; i < num; i++) {
-        bool match = false;
-        for (int j = i; j < num; j++) {
-            X509_NAME_ENTRY *ae = sk_X509_NAME_ENTRY_value(a->entries, i);
-            X509_NAME_ENTRY *be = sk_X509_NAME_ENTRY_value(b->entries, j);
-            
-            if (!OBJ_cmp(ae->object, be->object) &&
-                !ASN1_STRING_cmp(ae->value, be->value)) {
-                match = true;
-                break;
-            }
-        }
-        if (!match) return false;
-    }
-    return true;
-#endif
-}
-
-static X509 *findCert(const STACK_OF(X509) *certList,
-                      const X509_NAME *name,
-                      const KeyUsage keyUsage,
-                      bool orderMightDiffer) {
-    int num = sk_X509_num(certList);
-    for (int i = 0; i < num; i++) {
-        X509 *cert = sk_X509_value(certList, i);
-        if (!compareX509Names(X509_get_subject_name(cert), name, orderMightDiffer) &&
-            has_keyusage(cert, keyUsage)) {
-            return cert;
-        }
-    }
-    return NULL;
-}
-
 /**
  * Returns a list of DER-BASE64 encoded certificates, from the subject
  * to the root CA. This is actually wrong, since the root CA that's
@@ -389,8 +272,9 @@ static TokenError _backend_getBase64Chain(const PKCS12Token *token,
     STACK_OF(X509) *certList = pkcs12_listCerts(token->sharedP12->data);
     if (!certList) return TokenError_Unknown;
     
-    X509 *cert = findCert(certList, token->subjectName,
-                          token->base.backend->notifier->keyUsage, false);
+    X509 *cert = certutil_findCert(certList, token->subjectName,
+                                   token->base.backend->notifier->keyUsage,
+                                   false);
     if (!cert) {
         sk_X509_pop_free(certList, X509_free);
         return TokenError_Unknown;
@@ -398,17 +282,17 @@ static TokenError _backend_getBase64Chain(const PKCS12Token *token,
     
     *count = 1;
     *certs = malloc(sizeof(char*));
-    (*certs)[0] = der_encode(cert);
+    (*certs)[0] = certutil_derEncode(cert);
     
     X509_NAME *issuer = X509_get_issuer_name(cert);
     while (issuer != NULL) {
-        cert = findCert(certList, issuer, KeyUsage_Issuing, false);
+        cert = certutil_findCert(certList, issuer, KeyUsage_Issuing, false);
         if (!cert) break;
         
         issuer = X509_get_issuer_name(cert);
         (*count)++;
         *certs = realloc(*certs, *count * sizeof(char*));
-        (*certs)[*count-1] = der_encode(cert);
+        (*certs)[*count-1] = certutil_derEncode(cert);
     }
     
     sk_X509_pop_free(certList, X509_free);
@@ -429,8 +313,9 @@ static TokenError _backend_sign(PKCS12Token *token,
     STACK_OF(X509) *certList = pkcs12_listCerts(token->sharedP12->data);
     if (!certList) return TokenError_Unknown;
     
-    X509 *cert = findCert(certList, token->subjectName,
-                          token->base.backend->notifier->keyUsage, false);
+    X509 *cert = certutil_findCert(certList, token->subjectName,
+                                   token->base.backend->notifier->keyUsage,
+                                   false);
     if (!cert) {
         sk_X509_pop_free(certList, X509_free);
         return TokenError_Unknown;
@@ -779,7 +664,8 @@ static TokenError storeCertificates(STACK_OF(X509) *certs,
                 
                 // Check if it matches
                 fprintf(stderr, "looking for cert with usage = %d\n", keyUsage);
-                X509 *issuedCert = findCert(certs, name, keyUsage, true);
+                X509 *issuedCert = certutil_findCert(certs, name,
+                                                     keyUsage, true);
                 if (issuedCert) {
                     fprintf(stderr, "found one!\n");
                     // Remove temporary cert

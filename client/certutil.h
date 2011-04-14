@@ -30,7 +30,21 @@
 #include <stdbool.h>
 #include <openssl/ssl.h>
 
+#include "../common/bidtypes.h"
+
+extern const int opensslKeyUsages[];
+
 X509_NAME *certutil_parse_dn(const char *s, bool fullDN);
+char *certutil_derEncode(X509 *cert);
+bool certutil_hasKeyUsage(X509 *cert, KeyUsage keyUsage);
+char *certutil_getNamePropertyByNID(X509_NAME *name, int nid);
+bool certutil_matchSubjectFilter(const char *subjectFilter, X509_NAME *name);
+bool certutil_compareX509Names(const X509_NAME *a, const X509_NAME *b,
+                               bool orderMightDiffer);
+X509 *certutil_findCert(const STACK_OF(X509) *certList,
+                        const X509_NAME *name,
+                        const KeyUsage keyUsage,
+                        bool orderMightDiffer);
 
 #endif
 

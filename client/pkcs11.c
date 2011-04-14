@@ -44,6 +44,7 @@ typedef struct _PKCS11Private PKCS11Private;
 #define BackendPrivateType PKCS11Private
 
 #include "../common/defines.h"
+#include "certutil.h"
 #include "misc.h"
 #include "backend_private.h"
 
@@ -60,79 +61,6 @@ struct _PKCS11Private {
     PKCS11_SLOT *slots;
 };
 
-/**
- * Returns the BASE64-encoded DER representation of a certificate.
- */
-static char *der_encode(X509 *cert) {
-    unsigned char *der = NULL;
-    char *base64 = NULL;
-    int len;
-    
-    len = i2d_X509(cert, &der);
-    if (!der) return NULL;
-    base64 = base64_encode((const char*)der, len);
-    free(der);
-    return base64;
-}
-
-/**
- * Returns true if a certificate supports the given key usage (such as
- * authentication or signing).
- */
-static bool has_keyusage(X509 *cert, KeyUsage keyUsage) {
-    static const int openSSLUsages[] = {
-        X509v3_KU_KEY_CERT_SIGN,     // KeyUsage_Issuing
-        X509v3_KU_NON_REPUDIATION,   // KeyUsage_Signing
-        X509v3_KU_DIGITAL_SIGNATURE, // KeyUsage_Authentication
-    };
-    ASN1_BIT_STRING *usage;
-    bool supported = false;
-
-    usage = X509_get_ext_d2i(cert, NID_key_usage, NULL, NULL);
-    if (usage) {
-        supported = (usage->length > 0) &&
-                    ((usage->data[0] & openSSLUsages[keyUsage]) == openSSLUsages[keyUsage]);
-        ASN1_BIT_STRING_free(usage);
-    }
-    return supported;
-}
-
-/**
- * Gets a property of an X509_NAME, such as a subject name (NID_commonName),
- */
-static char *getNamePropertyByNID(X509_NAME *name, int nid) {
-    char *text;
-    int length;
-    
-    length = X509_NAME_get_text_by_NID(name, nid, NULL, 0);
-    if (length < 0) return NULL;
-    
-    text = malloc(length+1);
-    text[0] = '\0'; // if the function would fail
-    X509_NAME_get_text_by_NID(name, nid, text, length+1);
-    return text;
-}
-
-static bool matchSubjectFilter(const Backend *backend, X509_NAME *name) {
-    const char *subjectFilter = backend->notifier->subjectFilter;
-    if (!subjectFilter) return true;
-    
-    // TODO use OBJ_txt2nid and support arbitrary OIDs?
-    if ((strncmp(subjectFilter, "2.5.4.5=", 8) != 0) ||
-        (strchr(subjectFilter, ',') != NULL)) {
-        // OID 2.5.4.5 (Serial number) is the only supported/allowed filter
-        return true; // Nothing to filter with
-    }
-    
-    const char *wantedSerial = subjectFilter + 8;
-    
-    char *actualSerial = getNamePropertyByNID(name, NID_serialNumber);
-    
-    bool ok = !strcmp(actualSerial, wantedSerial);
-    free(actualSerial);
-    return ok;
-}
-
 static void _backend_freeToken(PKCS11Token *token) {
     free(token);
 }
@@ -143,7 +71,7 @@ static X509 *findCert(const PKCS11Token *token,
     for (unsigned int i = 0; i < token->ncerts; i++) {
         X509 *cert = token->certs[i].x509;
         if (!X509_NAME_cmp(X509_get_subject_name(cert), name) &&
-            has_keyusage(cert, keyUsage)) {
+            certutil_hasKeyUsage(cert, keyUsage)) {
             return cert;
         }
     }
@@ -167,7 +95,7 @@ static TokenError _backend_getBase64Chain(const PKCS11Token *token,
     
     *count = 1;
     *certs = malloc(sizeof(char*));
-    (*certs)[0] = der_encode(cert);
+    (*certs)[0] = certutil_derEncode(cert);
     
     X509_NAME *issuer = X509_get_issuer_name(cert);
     while (issuer != NULL) {
@@ -177,7 +105,7 @@ static TokenError _backend_getBase64Chain(const PKCS11Token *token,
         issuer = X509_get_issuer_name(cert);
         (*count)++;
         *certs = realloc(*certs, *count * sizeof(char*));
-        (*certs)[*count-1] = der_encode(cert);
+        (*certs)[*count-1] = certutil_derEncode(cert);
     }
     
     return TokenError_Success;
@@ -242,10 +170,10 @@ static void pkcs11_found_token(Backend *backend, PKCS11_SLOT *slot) {
     X509 *x = token->certs[0].x509;
     X509_NAME *id = X509_get_subject_name(x);
 
-    if (!has_keyusage(x, backend->notifier->keyUsage))
+    if (!certutil_hasKeyUsage(x, backend->notifier->keyUsage))
         goto fail;
 
-    if (!matchSubjectFilter(backend, id))
+    if (!certutil_matchSubjectFilter(backend->notifier->subjectFilter, id))
         goto fail;
 
     token->base.backend = backend;
@@ -254,7 +182,7 @@ static void pkcs11_found_token(Backend *backend, PKCS11_SLOT *slot) {
     } else {
         token->base.status = TokenStatus_NeedPIN;
     }
-    token->base.displayName = getNamePropertyByNID(id, NID_name);
+    token->base.displayName = certutil_getNamePropertyByNID(id, NID_name);
     token->base.tag = slot->token->label;
     backend->notifier->notifyFunction(&token->base, TokenChange_Added);
     return;

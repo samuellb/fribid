@@ -27,6 +27,7 @@
 #include <glib.h>
 #include <openssl/asn1t.h>
 
+#include "misc.h"
 #include "certutil.h"
 
 typedef struct {
@@ -138,4 +139,120 @@ X509_NAME *certutil_parse_dn(const char *s, bool fullDN) {
 }
 
 
+/**
+ * Returns the BASE64-encoded DER representation of a certificate.
+ */
+char *certutil_derEncode(X509 *cert) {
+    unsigned char *der = NULL;
+    char *base64 = NULL;
+    int len;
+    
+    len = i2d_X509(cert, &der);
+    if (!der) return NULL;
+    base64 = base64_encode((const char*)der, len);
+    free(der);
+    return base64;
+}
+
+const int opensslKeyUsages[] = {
+    X509v3_KU_KEY_CERT_SIGN,     // KeyUsage_Issuing
+    X509v3_KU_NON_REPUDIATION,   // KeyUsage_Signing
+    X509v3_KU_DIGITAL_SIGNATURE, // KeyUsage_Authentication
+};
+
+/**
+ * Returns true if a certificate supports the given key usage (such as
+ * authentication or signing).
+ */
+bool certutil_hasKeyUsage(X509 *cert, KeyUsage keyUsage) {
+    ASN1_BIT_STRING *usage;
+    bool supported = false;
+
+    usage = X509_get_ext_d2i(cert, NID_key_usage, NULL, NULL);
+    if (usage) {
+        const int opensslKeyUsage = opensslKeyUsages[keyUsage];
+        supported = (usage->length > 0) &&
+                    ((usage->data[0] & opensslKeyUsage) == opensslKeyUsage);
+        ASN1_BIT_STRING_free(usage);
+    }
+    return supported;
+}
+
+/**
+ * Gets a property of an X509_NAME, such as a subject name (NID_commonName),
+ */
+char *certutil_getNamePropertyByNID(X509_NAME *name, int nid) {
+    char *text;
+    int length;
+    
+    length = X509_NAME_get_text_by_NID(name, nid, NULL, 0);
+    if (length < 0) return NULL;
+    
+    text = malloc(length+1);
+    text[0] = '\0'; // if the function would fail
+    X509_NAME_get_text_by_NID(name, nid, text, length+1);
+    return text;
+}
+
+bool certutil_matchSubjectFilter(const char *subjectFilter, X509_NAME *name) {
+    if (!subjectFilter) return true;
+    
+    // TODO use OBJ_txt2nid and support arbitrary OIDs?
+    if ((strncmp(subjectFilter, "2.5.4.5=", 8) != 0) ||
+        (strchr(subjectFilter, ',') != NULL)) {
+        // OID 2.5.4.5 (Serial number) is the only supported/allowed filter
+        return true; // Nothing to filter with
+    }
+    
+    const char *wantedSerial = subjectFilter + 8;
+    
+    char *actualSerial = certutil_getNamePropertyByNID(name, NID_serialNumber);
+    
+    bool ok = !strcmp(actualSerial, wantedSerial);
+    free(actualSerial);
+    return ok;
+}
+
+bool certutil_compareX509Names(const X509_NAME *a, const X509_NAME *b,
+                               bool orderMightDiffer) {
+#if 0   // this might work in OpenSSL 1.0.0
+    return X509_NAME_cmp(a, b);
+#else
+    if (!orderMightDiffer) return X509_NAME_cmp(a, b);
+    
+    int num = sk_X509_NAME_ENTRY_num(a->entries);
+    if (sk_X509_NAME_ENTRY_num(b->entries) != num) return false;
+    
+    for (int i = 0; i < num; i++) {
+        bool match = false;
+        for (int j = i; j < num; j++) {
+            X509_NAME_ENTRY *ae = sk_X509_NAME_ENTRY_value(a->entries, i);
+            X509_NAME_ENTRY *be = sk_X509_NAME_ENTRY_value(b->entries, j);
+            
+            if (!OBJ_cmp(ae->object, be->object) &&
+                !ASN1_STRING_cmp(ae->value, be->value)) {
+                match = true;
+                break;
+            }
+        }
+        if (!match) return false;
+    }
+    return true;
+#endif
+}
+
+X509 *certutil_findCert(const STACK_OF(X509) *certList,
+                        const X509_NAME *name,
+                        const KeyUsage keyUsage,
+                        bool orderMightDiffer) {
+    int num = sk_X509_num(certList);
+    for (int i = 0; i < num; i++) {
+        X509 *cert = sk_X509_value(certList, i);
+        if (!certutil_compareX509Names(X509_get_subject_name(cert), name, orderMightDiffer) &&
+            certutil_hasKeyUsage(cert, keyUsage)) {
+            return cert;
+        }
+    }
+    return NULL;
+}
 
