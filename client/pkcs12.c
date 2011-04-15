@@ -467,6 +467,9 @@ TokenError _backend_createRequest(const RegutilInfo *info,
                                   char **request, size_t *reqlen) {
     // OpenSSL seeds the PRNG automatically, see the manual page for RAND_add.
     
+    // Abort if there are no requests
+    if (!info->pkcs10) return TokenError_Unknown;
+    
     // Create certificate requests
     bool ok = true;
     CertReq *reqs = NULL;
