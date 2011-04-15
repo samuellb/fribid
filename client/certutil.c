@@ -28,6 +28,7 @@
 #include <openssl/asn1t.h>
 
 #include "misc.h"
+#include "platform.h"
 #include "certutil.h"
 
 typedef struct {
@@ -272,6 +273,21 @@ PKCS7 *certutil_parseP7SignedData(const char *p7data, size_t length) {
     }
     
     return p7;
+}
+
+/**
+ * Makes a filename for a certificate.
+ */
+char *certutil_makeFilename(X509_NAME *xname) {
+    if (!xname) return NULL;
+    
+    char *nameAttr = certutil_getNamePropertyByNID(xname, NID_name);
+    if (!nameAttr) return NULL;
+    
+    char *filename = platform_getFilenameForKey(nameAttr);
+    free(nameAttr);
+    
+    return filename;
 }
 
 

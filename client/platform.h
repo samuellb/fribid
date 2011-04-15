@@ -56,6 +56,8 @@ void platform_closeDir(PlatformDirIter *iter);
 
 void platform_keyDirs(char*** path, size_t* len);
 PlatformDirIter *platform_openKeysDir();
+char *platform_filterFilename(const char *filename);
+char *platform_getFilenameForKey(const char *nameAttr);
 
 /* Configuration */
 char *platform_getConfigPath(const char *appname);

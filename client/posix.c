@@ -44,6 +44,7 @@
 #include <netinet/in.h>
 
 #include "../common/defines.h"
+#include "misc.h"
 #include "platform.h"
 
 void platform_seedRandom() {
@@ -163,6 +164,67 @@ void platform_keyDirs(char*** path, size_t* len) {
 PlatformDirIter *platform_openKeysDir(char *path) {
     PlatformDirIter *iter = platform_openDir(path);
     return iter;
+}
+
+/**
+ * Removes illegal characters from a filename.
+ *
+ * Returns NULL if the file name contains no legal characters.
+ */
+char *platform_filterFilename(const char *filename) {
+    // TODO remove invalid UTF-8 characters somewhere?
+    //      (maybe after decoding the base64 encoded input?)
+    
+    // Hidden files are not allowed
+    while (*filename == '.') filename++;
+    
+    // Strip out illegal characters
+    char *result = malloc(strlen(filename)+1);
+    char *p = result;
+    char c;
+    bool lastWasSpace = true;
+    while ((c = *(filename++)) != '\0') {
+        // Control chars
+        if (c >= '\0' && c < ' ') c = ' ';
+        
+        // File system and shell characters
+        if (strchr("/\\:\"'$*?~&|#!;`", c)) c = '_';
+        if (c == '{' || c == '[') c = '(';
+        if (c == '}' || c == '}') c = ')';
+        
+        // Remove repeated spaces and leading space
+        bool isSpace = (c == ' ');
+        if (lastWasSpace && isSpace) continue;
+        lastWasSpace = isSpace;
+        
+        *(p++) = c;
+    }
+    
+    *p = '\0';
+    return result;
+}
+
+/**
+ * Makes a filename for a new certificate with a given name. This function
+ * is removes all dangerous special characters from nameAttr.
+ *
+ * The key store directory is created if needed.
+ */
+char *platform_getFilenameForKey(const char *nameAttr) {
+    char *basename = platform_filterFilename(nameAttr);
+    
+    // Get key store path
+    size_t numPaths;
+    char **paths;
+    platform_keyDirs(&paths, &numPaths);
+    
+    // Create directories
+    // TODO
+    
+    // Merge
+    char *filename = rasprintf("%s/%s.p12", paths[0], basename);
+    free(basename);
+    return filename;
 }
 
 void platform_asyncCall(AsyncCallFunction *function, void *param) {

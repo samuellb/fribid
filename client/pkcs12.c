@@ -555,22 +555,26 @@ TokenError _backend_createRequest(const RegutilInfo *info,
     TokenError error = TokenError_Unknown;
     
     if (ok) {
+        // Determine filename from certificate name
+        char *filename = certutil_makeFilename(X509_REQ_get_subject_name(reqs->x509));
+        fprintf(stderr, "filename=>%s<\n", filename);
+        
         // Build the certificate request
         request_wrap(x509reqs, request, reqlen);
         
-        if (request) {
+        if (request && filename) {
             // Create the key file in ~/.cbt/name.p12
-            // TODO get path
-            FILE *keyfile = platform_openLocked(
-                "/home/samuellb/test_output.p12", Platform_OpenCreate);
+            FILE *keyfile = platform_openLocked(filename, Platform_OpenCreate);
             if (keyfile) {
                 error = saveKeys(reqs, password, keyfile);
                 if (!platform_closeLocked(keyfile) && !error)
                     error = TokenError_Unknown;
             }
             
-            if (error) free(*request);
         }
+        
+        if (filename) free(filename);
+        if (error && *request) free(*request);
     }
     
     // Free reqs
@@ -737,8 +741,38 @@ TokenError _backend_storeCertificates(const char *p7data, size_t length) {
     PKCS7 *p7 = certutil_parseP7SignedData(p7data, length);
     if (!p7) return TokenError_Unknown;
     
-    // TODO
-    TokenError error = storeCertificates(p7->d.sign->cert, "/home/samuellb/test_output.p12");
+    // Find the own cert
+    TokenError error = TokenError_Unknown;
+    STACK_OF(X509) *certs = p7->d.sign->cert;
+    X509 *self = NULL;
+    int numc = sk_X509_num(certs);
+    for (int i = 0; i < numc; i++) {
+        X509 *cert = sk_X509_value(certs, i);
+        // TODO maybe we should look at the certificate chain instead?
+        ASN1_BIT_STRING *usage = X509_get_ext_d2i(cert, NID_key_usage,
+                                                  NULL, NULL);
+        fprintf(stderr, "find own cert... usage=%p  usagelen=%d value=%d\n", (void*)usage, (usage ? usage->length : -1), (usage->length >= 1 ? (int)usage->data[0] : -1));
+        if (usage && usage->length > 0 &&
+            (usage->data[0] & (X509v3_KU_DIGITAL_SIGNATURE | X509v3_KU_NON_REPUDIATION)) != 0) {
+            // CA certs generally can be used for signatures,
+            // so assume this is should be our own cert
+            self = cert;
+            fprintf(stderr, "found our own cert!\n");
+            break;
+        }
+    }
+    
+    if (self) {
+        // Get file name
+        char *filename = certutil_makeFilename(X509_get_subject_name(self));
+        fprintf(stderr, "store in file: %s\n", filename);
+        
+        // Add the certs to this file
+        if (filename) {
+            error = storeCertificates(certs, filename);
+            free(filename);
+        }
+    }
     
     PKCS7_free(p7);
     return error;

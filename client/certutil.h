@@ -46,6 +46,7 @@ X509 *certutil_findCert(const STACK_OF(X509) *certList,
                         const KeyUsage keyUsage,
                         bool orderMightDiffer);
 PKCS7 *certutil_parseP7SignedData(const char *p7data, size_t length);
+char *certutil_makeFilename(X509_NAME *xname);
 
 #endif
 
