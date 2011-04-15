@@ -396,7 +396,7 @@ static TokenError saveKeys(const CertReq *reqs, const char *password,
     uint32_t localKeyId = 0;
     size_t error_count = 0;
     while (reqs) {
-        STACK_OF(SAFEBAG) *bags = NULL;
+        STACK_OF(PKCS12_SAFEBAG) *bags = NULL;
         X509 *cert = NULL;
         uint32_t keyid = htonl(localKeyId++);
         error_count++; // Decremented on success
