@@ -468,6 +468,7 @@ TokenError _backend_createRequest(const RegutilInfo *info,
     // OpenSSL seeds the PRNG automatically, see the manual page for RAND_add.
     
     // Abort if there are no requests
+    *request = NULL;
     if (!info->pkcs10) return TokenError_Unknown;
     
     // Create certificate requests
@@ -562,8 +563,8 @@ TokenError _backend_createRequest(const RegutilInfo *info,
         // Build the certificate request
         request_wrap(x509reqs, request, reqlen);
         
-        if (request && filename) {
-            // Create the key file in ~/.cbt/name.p12
+        if (*request && filename) {
+            // Create the key file in ~/cbt/name.p12
             FILE *keyfile = platform_openLocked(filename, Platform_OpenCreate);
             if (keyfile) {
                 error = saveKeys(reqs, password, keyfile);

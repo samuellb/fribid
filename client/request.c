@@ -158,6 +158,7 @@ void request_wrap(STACK *reqs, char **der, size_t *derLength) {
     PKCS7 *pkiP7 = NULL;
     PKCS7 *signdata = NULL;
     
+    *der = NULL;
     if (!pkidata) goto end;
     
     // Add PKCS10 requests
@@ -204,7 +205,6 @@ void request_wrap(STACK *reqs, char **der, size_t *derLength) {
     
     // Encode data
     fprintf(stderr, "enc der\n");
-    *der = NULL;
     *derLength = i2d_PKCS7(signdata, (unsigned char**)der);
     
   end:
