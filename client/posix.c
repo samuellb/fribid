@@ -180,6 +180,7 @@ char *platform_filterFilename(const char *filename) {
     
     // Strip out illegal characters
     char *result = malloc(strlen(filename)+1);
+    if (!result) return NULL;
     char *p = result;
     char c;
     bool lastWasSpace = true;
@@ -212,6 +213,9 @@ char *platform_filterFilename(const char *filename) {
  */
 char *platform_getFilenameForKey(const char *nameAttr) {
     char *basename = platform_filterFilename(nameAttr);
+    char *filename = NULL;
+    
+    if (!basename || !*basename) goto end;
     
     // Get key store path
     size_t numPaths;
@@ -222,8 +226,10 @@ char *platform_getFilenameForKey(const char *nameAttr) {
     // TODO
     
     // Merge
-    char *filename = rasprintf("%s/%s.p12", paths[0], basename);
-    free(basename);
+    filename = rasprintf("%s/%s.p12", paths[0], basename);
+    
+  end:
+    if (basename) free(basename);
     return filename;
 }
 
