@@ -32,6 +32,7 @@
 #include <inttypes.h>
 #include <assert.h>
 #include "../common/biderror.h"
+#include <glib.h> // for g_ascii_strcasecmp
 
 #include "plugin.h"
 
@@ -108,25 +109,25 @@ void plugin_free(Plugin *plugin) {
 }
 
 static char **getCommonParamPointer(Plugin *plugin, const char *name) {
-    if (!strcmp(name, "Policys")) return &plugin->info.auth.policys;
-    if (!strcmp(name, "Signature")) return &plugin->info.auth.signature;
-    if (!strcmp(name, "Subjects")) return &plugin->info.sign.subjectFilter;
+    if (!g_ascii_strcasecmp(name, "Policys")) return &plugin->info.auth.policys;
+    if (!g_ascii_strcasecmp(name, "Signature")) return &plugin->info.auth.signature;
+    if (!g_ascii_strcasecmp(name, "Subjects")) return &plugin->info.sign.subjectFilter;
     return NULL;
 }
 
 static char **getParamPointer(Plugin *plugin, const char *name) {
     switch (plugin->type) {
         case PT_Authentication:
-            if (!strcmp(name, "Challenge")) return &plugin->info.auth.challenge;
+            if (!g_ascii_strcasecmp(name, "Challenge")) return &plugin->info.auth.challenge;
             return getCommonParamPointer(plugin, name);
         case PT_Signer:
-            if (!strcmp(name, "Nonce")) return &plugin->info.sign.challenge;
-            if (!strcmp(name, "TextToBeSigned")) return &plugin->info.sign.message;
-            if (!strcmp(name, "NonVisibleData")) return &plugin->info.sign.invisibleMessage;
+            if (!g_ascii_strcasecmp(name, "Nonce")) return &plugin->info.sign.challenge;
+            if (!g_ascii_strcasecmp(name, "TextToBeSigned")) return &plugin->info.sign.message;
+            if (!g_ascii_strcasecmp(name, "NonVisibleData")) return &plugin->info.sign.invisibleMessage;
             return getCommonParamPointer(plugin, name);
         case PT_Regutil:
-            if (!strcmp(name, "SubjectDN")) return &plugin->info.regutil.currentPKCS10.subjectDN;
-            if (!strcmp(name, "OneTimePassword")) return &plugin->info.regutil.currentCMC.oneTimePassword;
+            if (!g_ascii_strcasecmp(name, "SubjectDN")) return &plugin->info.regutil.currentPKCS10.subjectDN;
+            if (!g_ascii_strcasecmp(name, "OneTimePassword")) return &plugin->info.regutil.currentCMC.oneTimePassword;
             return NULL;
         default:
             return NULL;
@@ -136,7 +137,7 @@ static char **getParamPointer(Plugin *plugin, const char *name) {
 static int *getIntParamPointer(Plugin *plugin, const char *name) {
     switch (plugin->type) {
         case PT_Regutil:
-            if (!strcmp(name, "KeySize")) return &plugin->info.regutil.currentPKCS10.keySize;
+            if (!g_ascii_strcasecmp(name, "KeySize")) return &plugin->info.regutil.currentPKCS10.keySize;
             return NULL;
         default:
             return NULL;
@@ -149,7 +150,7 @@ char *sign_getParam(Plugin *plugin, const char *name) {
                        plugin->type == PT_Signer);
     
     // Server time
-    if (authOrSign && !strcmp(name, "ServerTime")) {
+    if (authOrSign && !g_ascii_strcasecmp(name, "ServerTime")) {
         int32_t value = plugin->info.auth.serverTime;
         if (value <= 0) return strdup("");
         
@@ -171,7 +172,7 @@ bool sign_setParam(Plugin *plugin, const char *name, const char *value) {
                        plugin->type == PT_Signer);
     
     // Server time: This value is a 10-digit integer
-    if (authOrSign && !strcmp(name, "ServerTime")) {
+    if (authOrSign && !g_ascii_strcasecmp(name, "ServerTime")) {
         plugin->lastError = BIDERR_OK;
         
         size_t length = strlen(value);
@@ -224,11 +225,11 @@ static bool hasSignParams(const Plugin *plugin) {
 int sign_performAction(Plugin *plugin, const char *action) {
     int ret = BIDERR_InvalidAction;
     
-    if ((plugin->type == PT_Authentication) && !strcmp(action, "Authenticate")) {
+    if ((plugin->type == PT_Authentication) && !g_ascii_strcasecmp(action, "Authenticate")) {
         ret = (hasSignParams(plugin) ?
             sign_performAction_Authenticate(plugin) : BIDERR_MissingParameter);
         
-    } else if ((plugin->type == PT_Signer) && !strcmp(action, "Sign")) {
+    } else if ((plugin->type == PT_Signer) && !g_ascii_strcasecmp(action, "Sign")) {
         if (!hasSignParams(plugin) || !plugin->info.sign.message) {
             return BIDERR_MissingParameter;
         }
@@ -245,7 +246,7 @@ void regutil_setParam(Plugin *plugin, const char *name, const char *value) {
     int *intPtr;
     
     // Special parameters
-    if (!strcmp(name, "KeyUsage")) {
+    if (!g_ascii_strcasecmp(name, "KeyUsage")) {
         if (!strcmp(value, "digitalSignature")) {
             plugin->info.regutil.currentPKCS10.keyUsage = KeyUsage_Authentication;
         } else if (!strcmp(value, "nonRepudiation")) {
@@ -265,7 +266,7 @@ void regutil_setParam(Plugin *plugin, const char *name, const char *value) {
         *strPtr = strdup(value);
         plugin->lastError = (*strPtr ? BIDERR_OK : BIDERR_InternalError);
         
-        if (!strcmp(name, "SubjectDN")) {
+        if (!g_ascii_strcasecmp(name, "SubjectDN")) {
             plugin->info.regutil.currentPKCS10.includeFullDN = true;
         }
         
@@ -283,7 +284,7 @@ static char *safestrdup(const char *s) {
  * Stores the current parameters so they get included with the request.
  */
 void regutil_initRequest(Plugin *plugin, const char *type) {
-    if (!strcmp(type, "pkcs10")) {
+    if (!g_ascii_strcasecmp(type, "pkcs10")) {
         // Limit number of objects
         RegutilPKCS10 *other = plugin->info.regutil.input.pkcs10;
         size_t count = 0;
@@ -304,7 +305,7 @@ void regutil_initRequest(Plugin *plugin, const char *type) {
         
         plugin->info.regutil.currentPKCS10.includeFullDN = false;
         plugin->lastError = BIDERR_OK;
-    } else if (!strcmp(type, "cmc")) {
+    } else if (!g_ascii_strcasecmp(type, "cmc")) {
         // CMC
         RegutilCMC *cmc = &plugin->info.regutil.input.cmc;
         
