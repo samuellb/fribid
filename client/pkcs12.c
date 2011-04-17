@@ -261,10 +261,7 @@ static TokenError _backend_addFile(Backend *backend,
 
 /**
  * Returns a list of DER-BASE64 encoded certificates, from the subject
- * to the root CA. This is actually wrong, since the root CA that's
- * returned could be untrusted. However, at least my P12 has only one
- * possible chain and the validation is done server-side, so this shouldn't
- * be a problem.
+ * to the root CA.
  */
 static TokenError _backend_getBase64Chain(const PKCS12Token *token,
                                           char ***certs, size_t *count) {
@@ -289,6 +286,7 @@ static TokenError _backend_getBase64Chain(const PKCS12Token *token,
         cert = certutil_findCert(certList, issuer, KeyUsage_Issuing, false);
         if (!cert) break;
         
+        // TODO use serial number also?
         issuer = X509_get_issuer_name(cert);
         (*count)++;
         *certs = realloc(*certs, *count * sizeof(char*));
