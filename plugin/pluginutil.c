@@ -169,9 +169,9 @@ bool copyIdentifierName(NPIdentifier ident, char *name, size_t maxLength) {
     char *heapStr = NPN_UTF8FromIdentifier(ident);
     if (!heapStr) return false;
     size_t len = strlen(heapStr);
-    if (len >= maxLength-1) return false;
-    memcpy(name, heapStr, len+1);
+    bool ok = (len < maxLength-1);
+    if (ok) memcpy(name, heapStr, len+1);
     NPN_MemFree(heapStr);
-    return true;
+    return ok;
 }
 
