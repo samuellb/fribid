@@ -236,7 +236,11 @@ void pipeData() {
                 platform_versionExpiredError();
             }
             
-            while (platform_choosePassword(password, password_maxsize)) {
+            for (;;) {
+                error = BIDERR_UserCancel;
+                if (!platform_choosePassword(password, password_maxsize))
+                    break;
+                
                 // Try to authenticate/sign
                 // Generate key pair and construct the request
                 TokenError tokenError;
@@ -248,7 +252,6 @@ void pipeData() {
                 if (error == BIDERR_OK) break;
                 
                 platform_showError(tokenError);
-                error = BIDERR_UserCancel;
             }
 
             secmem_free_page(password);
