@@ -35,6 +35,8 @@
 #include "pluginutil.h"
 #include "npobject.h"
 
+// Prevent concurrent/recursive calls (and multiple windows appearing)
+static bool pluginActive = false;
 
 /* Object methods */
 static NPObject *objAllocate(NPP npp, NPClass *aClass) {
@@ -71,14 +73,9 @@ static bool objHasMethod(NPObject *npobj, NPIdentifier ident) {
 }
 
 
-static bool objInvoke(NPObject *npobj, NPIdentifier ident,
-                      const NPVariant *args, uint32_t argCount,
-                      NPVariant *result) {
-    PluginObject *this = (PluginObject*)npobj;
-    char name[64];
-    if (!copyIdentifierName(ident, name, sizeof(name)))
-        return false;
-    
+static bool objInvokeSafe(PluginObject *this, const char *name,
+                          const NPVariant *args, uint32_t argCount,
+                          NPVariant *result) {
     switch (this->plugin->type) {
         case PT_Version:
             if (IS_CALL_0("GetVersion")) {
@@ -203,6 +200,27 @@ static bool objInvoke(NPObject *npobj, NPIdentifier ident,
         default:
             return false;
     }
+}
+
+
+static bool objInvoke(NPObject *npobj, NPIdentifier ident,
+                      const NPVariant *args, uint32_t argCount,
+                      NPVariant *result) {
+    PluginObject *this = (PluginObject*)npobj;
+    char name[64];
+    if (!copyIdentifierName(ident, name, sizeof(name)))
+        return false;
+    
+    // Prevent recursive calls
+    // TODO filter events in the main loop so the browser do anything
+    //      except redraw it's window while a call is in progress.
+    if (pluginActive) return false;
+    pluginActive = true;
+    
+    bool ok = objInvokeSafe(this, name, args, argCount, result);
+    
+    pluginActive = false;
+    return ok;
 }
 
 static bool objInvokeDefault(NPObject *npobj, const NPVariant *args,
