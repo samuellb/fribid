@@ -320,7 +320,17 @@ static char *safestrdup(const char *s) {
  */
 void regutil_initRequest(Plugin *plugin, const char *type) {
     if (!strcmp(type, "pkcs10")) {
-        // PKCS10
+        // Limit number of objects
+        RegutilPKCS10 *other = plugin->info.regutil.input.pkcs10;
+        size_t count = 0;
+        for (; other; other = other->next) {
+            if (++count > 10) {
+                plugin->lastError = BIDERR_InternalError;
+                return;
+            }
+        }
+        
+        // Add PKCS10
         RegutilPKCS10 *copy = malloc(sizeof(RegutilPKCS10));
         memcpy(copy, &plugin->info.regutil.currentPKCS10, sizeof(RegutilPKCS10));
         copy->subjectDN = safestrdup(plugin->info.regutil.currentPKCS10.subjectDN);
