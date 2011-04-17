@@ -197,6 +197,10 @@ void pipeData() {
             break;
         }
         case PC_CreateRequest: {
+            char *request = NULL;
+            BankIDError error = BIDERR_InternalError;
+            long password_maxsize = 0;
+            
             // Read input
             RegutilInfo input;
             memset(&input, 0, sizeof(input));
@@ -218,25 +222,44 @@ void pipeData() {
             input.cmc.rfc2729cmcoid = pipe_readString(stdin);
             
             // Check for broken pipe
-            if (feof(stdin)) goto createReq_error;
+            if (feof(stdin)) goto createReq_end;
+            
+            // Allocate a secure page for the password
+            char *password = secmem_get_page(&password_maxsize);
+            if (!password || !password_maxsize) goto createReq_end;
             
             // Ask for a new password
-            // TODO
-            char *password = "123456qwerty";
+            // TODO name
+            platform_startChoosePassword("name...", browserWindowId);
             
-            // Generate key pair and construct the request
-            char *request;
-            BankIDError error = bankid_createRequest(&input, password,
-                                                     &request);
+            if (bankid_versionHasExpired()) {
+                platform_versionExpiredError();
+            }
+            
+            while (platform_choosePassword(password, password_maxsize)) {
+                // Try to authenticate/sign
+                // Generate key pair and construct the request
+                error = bankid_createRequest(&input, password, &request);
+                
+                guaranteed_memset(password, 0, password_maxsize);
+                
+                if (error == BIDERR_OK) break;
+                
+                platform_showError(error);
+                error = BIDERR_UserCancel;
+            }
+
+            secmem_free_page(password);
+            platform_endChoosePassword();
             
             // Send result
-            if (error) {
-              createReq_error:
-                pipe_sendInt(stdout, BIDERR_InternalError);
-                pipe_sendString(stdout, "");
-            } else {
-                pipe_sendInt(stdout, BIDERR_OK);
+          createReq_end:
+            pipe_sendInt(stdout, error);
+            
+            if (!request) pipe_sendString(stdout, "");
+            else {
                 pipe_sendString(stdout, request);
+                free(request);
             }
             
             pipe_flush(stdout);

@@ -94,6 +94,7 @@ uint32_t platform_lookupTypeARecord(const char *hostname);
 void platform_mainloop();
 void platform_leaveMainloop();
 
+/* Signature dialog */
 void platform_startSign(const char *url, const char *hostname, const char *ip,
                         unsigned long parentWindowId);
 void platform_endSign();
@@ -104,6 +105,12 @@ void platform_addToken(Token *token);
 void platform_removeToken(Token *token);
 bool platform_sign(Token **token, char *password, int password_maxlen);
 
+/* Password selection (and key generation) dialog */
+void platform_startChoosePassword(const char *name, unsigned long parentWindowId);
+void platform_endChoosePassword();
+bool platform_choosePassword(char *password, long password_maxlen);
+
+/* Errors */
 void platform_showError(TokenError error);
 void platform_versionExpiredError();
 
