@@ -50,7 +50,8 @@ BankIDError bankid_sign(Token *token,
 
 BankIDError bankid_createRequest(const RegutilInfo *info,
                                  const char *password,
-                                 char **request);
+                                 char **request,
+                                 TokenError *error);
 
 BankIDError bankid_storeCertificates(const char *certs);
 

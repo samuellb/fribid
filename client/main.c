@@ -239,13 +239,15 @@ void pipeData() {
             while (platform_choosePassword(password, password_maxsize)) {
                 // Try to authenticate/sign
                 // Generate key pair and construct the request
-                error = bankid_createRequest(&input, password, &request);
+                TokenError tokenError;
+                error = bankid_createRequest(&input, password, &request,
+                                             &tokenError);
                 
                 guaranteed_memset(password, 0, password_maxsize);
                 
                 if (error == BIDERR_OK) break;
                 
-                platform_showError(error);
+                platform_showError(tokenError);
                 error = BIDERR_UserCancel;
             }
 

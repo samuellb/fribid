@@ -58,6 +58,7 @@ typedef enum  {
     TokenError_NotImplemented,
     // File errors
     TokenError_FileNotReadable,
+    TokenError_CantCreateFile,
     TokenError_BadFile,
     TokenError_BadPassword,
     // Smart card errors

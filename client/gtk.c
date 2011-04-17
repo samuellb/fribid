@@ -29,6 +29,7 @@
 #include <gtk/gtk.h>
 #include <glib.h>
 #include <assert.h>
+#include <errno.h>
 
 #include <locale.h>
 #include <libintl.h>
@@ -55,6 +56,8 @@ static const char *const errorStrings[] = {
     // File errors
     // TokenError_FileNotReadable
     translatable("The file could not be read"),
+    // TokenError_CantCreateFile
+    translatable("Can't save file"),
     // TokenError_BadFile
     translatable("Invalid file format"),
     // TokenError_BadPassword,
@@ -465,7 +468,7 @@ static void selectExternalFile() {
             GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
             GTK_STOCK_OPEN, GTK_RESPONSE_ACCEPT,
             (char *)NULL));
-    if (gtk_dialog_run(GTK_DIALOG(chooser)) == GTK_RESPONSE_ACCEPT) {
+    while (gtk_dialog_run(GTK_DIALOG(chooser)) == GTK_RESPONSE_ACCEPT) {
         gchar *filename = gtk_file_chooser_get_filename(chooser);
         
         removeTokenFile(filename);
@@ -474,12 +477,10 @@ static void selectExternalFile() {
         error = addTokenFile(filename);
         
         g_free(filename);
+        if (error) platform_showError(error);
+        else break;
     }
     gtk_widget_destroy(GTK_WIDGET(chooser));
-    
-    if (error) {
-        platform_showError(error);
-    }
 }
 
 #define RESPONSE_OK       10
@@ -603,7 +604,22 @@ bool platform_choosePassword(char *password, long password_maxlen) {
 
 void platform_showError(TokenError error) {
     assert(error != TokenError_Success);
-    showMessage(GTK_MESSAGE_ERROR, gettext(errorStrings[error]));
+    
+    int lastErrno = errno;
+    const char *text = gettext(errorStrings[error]);
+    char *longText;
+    
+    switch (error) {
+        case TokenError_FileNotReadable:
+        case TokenError_CantCreateFile:
+            longText = rasprintf("%s\n\n%s", text, g_strerror(lastErrno));
+            showMessage(GTK_MESSAGE_ERROR, longText);
+            g_free(longText);
+            break;
+        default:
+            showMessage(GTK_MESSAGE_ERROR, text);
+            break;
+    }
 }
 
 void platform_versionExpiredError() {

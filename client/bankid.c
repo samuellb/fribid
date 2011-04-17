@@ -345,22 +345,29 @@ BankIDError bankid_sign(Token *token,
  * @param params     Parameters (from SetParam/InitRequest calls).
  * @param password   A password or PIN entered on the keyboard.
  * @param request    The certificate request, Base64 encoded.
+ * @param error      A more detailed error code is stored here
  */
 BankIDError bankid_createRequest(const RegutilInfo *params,
                                  const char *password,
-                                 char **request) {
+                                 char **request,
+                                 TokenError *error) {
     *request = NULL;
     
     char *binaryRequest;
     size_t brlen;
-    TokenError error = backend_createRequest(params, password,
-                                             &binaryRequest, &brlen);
-    if (error) return BIDERR_InternalError;
+    *error = backend_createRequest(params, password,
+                                   &binaryRequest, &brlen);
+    if (*error) return BIDERR_InternalError;
     
     // Encode with Base64
     *request = base64_encode(binaryRequest, brlen);
     free(binaryRequest);
-    return (*request ? BIDERR_OK : BIDERR_InternalError);
+    if (!*request) {
+        *error = TokenError_Unknown;
+        return BIDERR_InternalError;
+    } else {
+        return BIDERR_OK;
+    }
 }
 
 /**

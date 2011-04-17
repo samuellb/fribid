@@ -564,10 +564,12 @@ TokenError _backend_createRequest(const RegutilInfo *info,
         if (*request && filename) {
             // Create the key file in ~/cbt/name.p12
             FILE *keyfile = platform_openLocked(filename, Platform_OpenCreate);
-            if (keyfile) {
+            if (!keyfile) {
+                error = TokenError_CantCreateFile;
+            } else {
                 error = saveKeys(reqs, password, keyfile);
                 if (!platform_closeLocked(keyfile) && !error)
-                    error = TokenError_Unknown;
+                    error = TokenError_CantCreateFile;
             }
             
         }
