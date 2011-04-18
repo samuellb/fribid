@@ -268,7 +268,7 @@ PKCS7 *certutil_parseP7SignedData(const char *p7data, size_t length) {
     // Check that it's valid and contains certificates
     if (!p7 || !PKCS7_type_is_signed(p7) || !p7->d.sign || !p7->d.sign->cert ||
         sk_X509_num(p7->d.sign->cert) == 0) {
-        if (p7) PKCS7_free(p7);
+        PKCS7_free(p7);
         return NULL;
     }
     

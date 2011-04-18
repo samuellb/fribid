@@ -434,8 +434,8 @@ static TokenError saveKeys(const CertReq *reqs, const char *password,
         error_count--;
         
       loop_end:
-        if (cert) X509_free(cert);
-        if (bags) sk_PKCS12_SAFEBAG_pop_free(bags, PKCS12_SAFEBAG_free);
+        X509_free(cert);
+        sk_PKCS12_SAFEBAG_pop_free(bags, PKCS12_SAFEBAG_free);
         reqs = reqs->next;
     }
     fprintf(stderr, "safes: %p:  %s\n", (void*)authsafes, errstr);
@@ -455,8 +455,8 @@ static TokenError saveKeys(const CertReq *reqs, const char *password,
     }
     
   end:
-    if (authsafes) sk_PKCS7_pop_free(authsafes, PKCS7_free);
-    if (p12) PKCS12_free(p12);
+    sk_PKCS7_pop_free(authsafes, PKCS7_free);
+    PKCS12_free(p12);
     return error;
 }
 
@@ -544,9 +544,9 @@ TokenError _backend_createRequest(const RegutilInfo *info,
         if (privkey) EVP_PKEY_free(privkey);
         else if (rsa) RSA_free(rsa);
         
-        if (subject) X509_NAME_free(subject);
-        if (exts) sk_X509_EXTENSION_pop_free(exts, X509_EXTENSION_free);
-        if (x509req) X509_REQ_free(x509req);
+        X509_NAME_free(subject);
+        sk_X509_EXTENSION_pop_free(exts, X509_EXTENSION_free);
+        X509_REQ_free(x509req);
         
         ok = false;
     }
@@ -676,8 +676,10 @@ static TokenError storeCertificates(STACK_OF(X509) *certs,
                 }
             }
             
-            if (cert && name) X509_NAME_free(name);
-            if (cert && usage) ASN1_BIT_STRING_free(usage);
+            if (cert) {
+                X509_NAME_free(name);
+                ASN1_BIT_STRING_free(usage);
+            }
         }
         
         if (match) {
@@ -733,8 +735,8 @@ static TokenError storeCertificates(STACK_OF(X509) *certs,
     
   end:
     if (newFile) platform_deleteLocked(newFile, tempname);
-    if (tempname) free(tempname);
-    if (p12) PKCS12_free(p12);
+    free(tempname);
+    PKCS12_free(p12);
     return error;
 }
 

@@ -212,7 +212,7 @@ void request_wrap(STACK *reqs, char **der, size_t *derLength) {
     if (signdata) PKCS7_free(signdata);
     else if (pkiP7) PKCS7_free(pkiP7);
     else if (pkitype) ASN1_TYPE_free(pkitype);
-    if (pkidata) PKIDATA_free(pkidata);
+    PKIDATA_free(pkidata);
     fprintf(stderr, "done\n");
 }
 

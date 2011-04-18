@@ -309,10 +309,9 @@ void regutil_initRequest(Plugin *plugin, const char *type) {
         // CMC
         RegutilCMC *cmc = &plugin->info.regutil.input.cmc;
         
-        if (cmc->oneTimePassword) free(cmc->oneTimePassword);
+        free(cmc->oneTimePassword);
+        free(cmc->rfc2729cmcoid);
         cmc->oneTimePassword = safestrdup(plugin->info.regutil.currentCMC.oneTimePassword);
-        
-        if (cmc->rfc2729cmcoid) free(cmc->rfc2729cmcoid);
         cmc->rfc2729cmcoid = safestrdup(plugin->info.regutil.currentCMC.rfc2729cmcoid);
         
         plugin->lastError = BIDERR_OK;
