@@ -222,8 +222,8 @@ char *platform_getFilenameForKey(const char *nameAttr) {
     char **paths;
     platform_keyDirs(&paths, &numPaths);
     
-    // Create directories
-    // TODO
+    // Create directory
+    if (mkdir(paths[0], 0700) != 0 && errno != EEXIST) goto end;
     
     // Merge
     filename = rasprintf("%s/%s.p12", paths[0], basename);
