@@ -669,17 +669,12 @@ static TokenError storeCertificates(STACK_OF(X509) *certs,
                         X509_keyid_set1(issuedCert, lkid, lkidLength);
                     }
                     
-                    X509_free(cert);
-                    cert = NULL;
                     match = true;
-                    
                 }
             }
             
-            if (cert) {
-                X509_NAME_free(name);
-                ASN1_BIT_STRING_free(usage);
-            }
+            X509_free(cert);
+            ASN1_BIT_STRING_free(usage);
         }
         
         if (match) {
