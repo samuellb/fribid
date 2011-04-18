@@ -49,6 +49,22 @@ static int context_specific_i2d(ASN1_VALUE **val, unsigned char **out,
     return length;
 }
 
+#if OPENSSL_VERSION_NUMBER >= 0x01000000
+// OpenSSL 1.0.0
+#define IMPLEMENT_CONT_SPEC_HACK(name) \
+    static int name##_ex_i2d(ASN1_VALUE **val, unsigned char **out, \
+                                  const ASN1_ITEM *it, int tag, int aclass) { \
+        return context_specific_i2d(val, out, ASN1_ITEM_rptr(name)); \
+    } \
+    \
+    const ASN1_EXTERN_FUNCS name##_ff = { \
+        NULL, NULL, NULL, NULL, NULL, name##_ex_i2d, NULL \
+    }; \
+    \
+    IMPLEMENT_EXTERN_ASN1(name##_cont, V_ASN1_SEQUENCE, name##_ff)
+
+#else
+// OpenSSL 0.9.8
 #define IMPLEMENT_CONT_SPEC_HACK(name) \
     static int name##_ex_i2d(ASN1_VALUE **val, unsigned char **out, \
                                   const ASN1_ITEM *it, int tag, int aclass) { \
@@ -60,7 +76,7 @@ static int context_specific_i2d(ASN1_VALUE **val, unsigned char **out,
     }; \
     \
     IMPLEMENT_EXTERN_ASN1(name##_cont, V_ASN1_SEQUENCE, name##_ff)
-
+#endif
 
 // Request body part
 typedef struct {

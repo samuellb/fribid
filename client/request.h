@@ -28,6 +28,12 @@
 #include <stdbool.h>
 #include <openssl/ssl.h>
 
+// We would like to use STACK_OF but we use custom data types and defining
+// custom STACK_OF types outside of OpenSSL appears to be quite hard.
+#ifndef STACK
+#define STACK _STACK
+#endif
+
 void request_wrap(STACK *reqs, char **der, size_t *derLength);
 
 #endif
