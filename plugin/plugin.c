@@ -99,7 +99,7 @@ void plugin_free(Plugin *plugin) {
             freePKCS10s(&plugin->info.regutil.currentPKCS10, false);
             freePKCS10s(plugin->info.regutil.input.pkcs10, true);
             freeCMCs(&plugin->info.regutil.currentCMC, false);
-            freeCMCs(&plugin->info.regutil.input.cmc, true);
+            freeCMCs(&plugin->info.regutil.input.cmc, false);
             break;
     }
     free(plugin->url);
