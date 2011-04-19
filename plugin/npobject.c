@@ -67,6 +67,8 @@ static bool objHasMethod(NPObject *npobj, NPIdentifier ident) {
             return !strcmp(name, "GetParam") || !strcmp(name, "SetParam") ||
                    !strcmp(name, "InitRequest") || !strcmp(name, "CreateRequest") ||
                    !strcmp(name, "StoreCertificates") || !strcmp(name, "GetLastError");
+        case PT_Webadmin:
+            return !strcmp(name, "PerformAction") || !strcmp(name, "GetLastError");
         default:
             return false;
     }
@@ -197,6 +199,23 @@ static bool objInvokeSafe(PluginObject *this, const char *name,
                 return true;
             }
             return false;
+        case PT_Webadmin:
+            if (IS_CALL_1("PerformAction", STRING)) {
+                // Perform action
+                
+                // RenewPollDates isn't implemented, but is probably not
+                // needed either. The purpose of that call is to download
+                // version/expiry information through the browser, in case
+                // such requests must be proxied
+                this->plugin->lastError = BIDERR_InvalidAction;
+                INT32_TO_NPVARIANT((int32_t)this->plugin->lastError, *result);
+                return true;
+            } else if (IS_CALL_0("GetLastError")) {
+                // Get last error
+                INT32_TO_NPVARIANT((int32_t)this->plugin->lastError, *result);
+                return true;
+            }
+            return false;
         default:
             return false;
     }
@@ -306,6 +325,8 @@ NPObject *npobject_fromMIME(NPP instance, NPMIMEType mimeType) {
         return npobject_new(instance, PT_Signer);
     } else if (!strcmp(mimeType, MIME_REGUTIL)) {
         return npobject_new(instance, PT_Regutil);
+    } else if (!strcmp(mimeType, MIME_WEBADMIN)) {
+        return npobject_new(instance, PT_Webadmin);
     } else {
         return NULL;
     }

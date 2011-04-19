@@ -80,6 +80,7 @@ static void freeCMCs(RegutilCMC *cmc, bool freeSelf) {
 void plugin_free(Plugin *plugin) {
     switch (plugin->type) {
         case PT_Version:
+        case PT_Webadmin:
             break;
         case PT_Authentication:
             free(plugin->info.auth.challenge);

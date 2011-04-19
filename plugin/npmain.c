@@ -80,7 +80,8 @@ char *NPP_GetMIMEDescription() {
     return MIME_VERSION ":" NO_FILE_EXTENSIONS ":Version;"
            MIME_AUTHENTICATION ":" NO_FILE_EXTENSIONS ":Authentication;"
            MIME_SIGNER ":" NO_FILE_EXTENSIONS ":Signer2;"
-           MIME_REGUTIL ":" NO_FILE_EXTENSIONS ":Regutil";
+           MIME_REGUTIL ":" NO_FILE_EXTENSIONS ":Regutil;"
+           MIME_WEBADMIN ":" NO_FILE_EXTENSIONS ":Webadmin";
 }
 
 NPError NPP_Initialize() {
