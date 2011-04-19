@@ -30,7 +30,7 @@
 
 // We would like to use STACK_OF but we use custom data types and defining
 // custom STACK_OF types outside of OpenSSL appears to be quite hard.
-#ifndef STACK
+#if OPENSSL_VERSION_NUMBER >= 0x01000000
 #define STACK _STACK
 #endif
 
