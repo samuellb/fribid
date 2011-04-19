@@ -309,7 +309,7 @@ void platform_startSign(const char *url, const char *hostname, const char *ip,
 
     signDialog = GTK_DIALOG(gtk_builder_get_object(builder, "dialog_sign"));
     
-    makeDialogTransient(keygenDialog, parentWindowId);
+    makeDialogTransient(signDialog, parentWindowId);
     
     platform_setMessage(NULL);
     validateDialog(NULL, NULL);
