@@ -22,74 +22,83 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: FriBID 0.2.2\n"
+"Project-Id-Version: FriBID 0.3.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2011-01-03 18:08+0100\n"
-"PO-Revision-Date: 2011-01-03 18:10+0100\n"
+"POT-Creation-Date: 2011-04-20 13:51+0200\n"
+"PO-Revision-Date: 2011-04-20 14:30+0100\n"
 "Last-Translator: Samuel Lidén Borell <samuel@slbdata.se>\n"
 "Language-Team: Swedish\n"
+"Language: sv\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
-#: ../client/gtk.c:51
+#: ../client/gtk.c:52
 msgid "An unknown error occurred"
 msgstr "Ett okänt fel inträffade"
 
-#: ../client/gtk.c:53
+#: ../client/gtk.c:54
 msgid "Not implemented yet"
 msgstr "Ej implementerat än"
 
-#: ../client/gtk.c:55
+#: ../client/gtk.c:58
 msgid "The file could not be read"
 msgstr "Det gick inte att öppna filen"
 
-#: ../client/gtk.c:57a
+#: ../client/gtk.c:60
+msgid "The file could not be saved"
+msgstr "Det gick inte att spara filen"
+
+#: ../client/gtk.c:62
 msgid "Invalid file format"
 msgstr "Felaktigt filformat"
 
-#: ../client/gtk.c:59
+#: ../client/gtk.c:64
 msgid "Incorrect password"
 msgstr "Felaktigt lösenord"
 
-#: ../client/gtk.c:63
+#: ../client/gtk.c:68
 msgid "Incorrect PIN"
 msgstr "Felaktig PIN"
 
-#: ../client/gtk.c:154
+#: ../client/gtk.c:194
 msgid "Please enter PIN on pinpad"
 msgstr "PIN anges på kortläsaren"
 
-#: ../client/gtk.c:291
+#: ../client/gtk.c:350
 msgid "Identification"
 msgstr "Legitimering"
 
-#: ../client/gtk.c:292
+#: ../client/gtk.c:351
 msgid "<big><b>Prove identity to: </b></big>"
 msgstr "<big><b>Legitimera mot: </b></big>"
 
-#: ../client/gtk.c:293 ../client/gtk/sign.glade:235
+#: ../client/gtk.c:352 ../client/gtk/sign.glade:241
 msgid "_Prove identity"
 msgstr "_Legitimera"
 
-#: ../client/gtk.c:301
+#: ../client/gtk.c:360
 msgid "Signing"
 msgstr "Underskrift"
 
-#: ../client/gtk.c:302
-msgid "<big><b>Signing on: </b></big>"
+#: ../client/gtk.c:361
+msgid "<big><b>Create signature on: </b></big>"
 msgstr "<big><b>Signering på: </b></big>"
 
-#: ../client/gtk.c:303
+#: ../client/gtk.c:362
 msgid "_Sign"
 msgstr "_Signera"
 
-#: ../client/gtk.c:403
+#: ../client/gtk.c:466
 msgid "Select external identity file"
 msgstr "Välj en extern legitimationsfil"
 
-#: ../client/gtk.c:479
+#: ../client/gtk.c:588
+msgid "The passwords don't match!"
+msgstr "Lösenorden stämmer inte överens"
+
+#: ../client/gtk.c:626
 msgid ""
 "This software version has expired, and will probably not be accepted on all "
 "web sites.\n"
@@ -103,18 +112,34 @@ msgstr ""
 "Du behöver ladda ner en nyare version (om det finns någon) eller, "
 "alternativt, använda den officiella programvaran (Nexus Personal) istället."
 
-#: ../client/gtk/sign.glade:88
+#: ../client/gtk/sign.glade:89
 msgid "Text to sign:"
 msgstr "Text att skriva under:"
 
-#: ../client/gtk/sign.glade:127
+#: ../client/gtk/sign.glade:128
 msgid "Identity:"
 msgstr "Legitimation:"
 
-#: ../client/gtk/sign.glade:140
+#: ../client/gtk/sign.glade:141 ../client/gtk/sign.glade:333
 msgid "Password:"
 msgstr "Lösenord:"
 
-#: ../client/gtk/sign.glade:257
+#: ../client/gtk/sign.glade:261
 msgid "External file..."
 msgstr "Extern fil..."
+
+#: ../client/gtk/sign.glade:286
+msgid "Password for new e-ID"
+msgstr "Lösenord för ny e-legitimation"
+
+#: ../client/gtk/sign.glade:303
+msgid "<big><b>Choose password</b></big>"
+msgstr "<big><b>Välj lösenord</b></big>"
+
+#: ../client/gtk/sign.glade:322
+msgid "Name:"
+msgstr "Namn:"
+
+#: ../client/gtk/sign.glade:374
+msgid "Repeat password:"
+msgstr "Upprepa lösenordet:"
