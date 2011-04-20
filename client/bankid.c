@@ -371,6 +371,16 @@ BankIDError bankid_createRequest(const RegutilInfo *params,
 }
 
 /**
+ * Gets the first subject display name in a request.
+ */
+char *bankid_getRequestDisplayName(const RegutilInfo *params) {
+    // params->pkcs10 is the first request
+    if (!params->pkcs10 || !params->pkcs10->subjectDN) return NULL;
+    
+    return backend_getSubjectDisplayName(params->pkcs10->subjectDN);
+}
+
+/**
  * Stores a certificate chain for a newly created key.
  */
 BankIDError bankid_storeCertificates(const char *certs) {

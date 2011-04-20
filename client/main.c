@@ -200,6 +200,8 @@ void pipeData() {
             char *request = NULL;
             BankIDError error = BIDERR_InternalError;
             long password_maxsize = 0;
+            char *name = NULL;
+            char *password = NULL;
             
             // Read input
             RegutilInfo input;
@@ -224,13 +226,18 @@ void pipeData() {
             // Check for broken pipe
             if (feof(stdin)) goto createReq_end;
             
+            // Check input
+            if (!input.pkcs10) goto createReq_end;
+            
+            // Get name to display
+            name = bankid_getRequestDisplayName(&input);
+            if (!name) goto createReq_end;
+            
             // Allocate a secure page for the password
-            char *password = secmem_get_page(&password_maxsize);
+            password = secmem_get_page(&password_maxsize);
             if (!password || !password_maxsize) goto createReq_end;
             
-            // Ask for a new password
-            // TODO name
-            platform_startChoosePassword("name...", browserWindowId);
+            platform_startChoosePassword(name, browserWindowId);
             
             if (bankid_versionHasExpired()) {
                 platform_versionExpiredError();
@@ -238,6 +245,7 @@ void pipeData() {
             
             for (;;) {
                 error = BIDERR_UserCancel;
+                // Ask for a password
                 if (!platform_choosePassword(password, password_maxsize))
                     break;
                 
@@ -253,12 +261,12 @@ void pipeData() {
                 
                 platform_showError(tokenError);
             }
-
-            secmem_free_page(password);
+            
             platform_endChoosePassword();
             
             // Send result
           createReq_end:
+            secmem_free_page(password);
             pipe_sendInt(stdout, error);
             
             if (!request) pipe_sendString(stdout, "");

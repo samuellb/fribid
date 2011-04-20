@@ -53,6 +53,8 @@ BankIDError bankid_createRequest(const RegutilInfo *info,
                                  char **request,
                                  TokenError *error);
 
+char *bankid_getRequestDisplayName(const RegutilInfo *params);
+
 BankIDError bankid_storeCertificates(const char *certs);
 
 #endif

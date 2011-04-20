@@ -31,6 +31,7 @@
 
 #include "../common/defines.h"
 #include "backend_private.h"
+#include "certutil.h"
 
 
 // Available backends
@@ -132,6 +133,19 @@ TokenError backend_createRequest(const RegutilInfo *info,
     
     backend->free(backend);
     return error;
+}
+
+/**
+ * Returns the display name of the given distinguished name
+ */
+char *backend_getSubjectDisplayName(const char *dn) {
+    X509_NAME *xname = certutil_parse_dn(dn, true);
+    if (!xname) return NULL;
+    
+    char *displayName = certutil_getNamePropertyByNID(xname, NID_name);
+    
+    X509_NAME_free(xname);
+    return displayName;
 }
 
 /**
