@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
 
-  Copyright (c) 2009 Samuel Lidén Borell <samuel@slbdata.se>
+  Copyright (c) 2009-2011 Samuel Lidén Borell <samuel@slbdata.se>
  
   Permission is hereby granted, free of charge, to any person obtaining a copy
   of this software and associated documentation files (the "Software"), to deal
@@ -283,7 +283,7 @@
   </widget>
   <widget class="GtkDialog" id="dialog_keygen">
     <property name="border_width">6</property>
-    <property name="title" translatable="yes">Password for new ID</property>
+    <property name="title" translatable="yes">Password for new e-ID</property>
     <property name="modal">True</property>
     <property name="window_position">center-on-parent</property>
     <property name="type_hint">dialog</property>

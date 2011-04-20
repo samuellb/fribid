@@ -57,7 +57,7 @@ static const char *const errorStrings[] = {
     // TokenError_FileNotReadable
     translatable("The file could not be read"),
     // TokenError_CantCreateFile
-    translatable("Can't save file"),
+    translatable("The file could not be saved"),
     // TokenError_BadFile
     translatable("Invalid file format"),
     // TokenError_BadPassword,
@@ -358,7 +358,7 @@ void platform_setMessage(const char *message) {
         gtk_widget_show(signScroller);
         
         gtk_window_set_title(GTK_WINDOW(signDialog), _("Signing"));
-        gtk_label_set_label(GTK_LABEL(operationLabel), _("<big><b>Signing on: </b></big>"));
+        gtk_label_set_label(GTK_LABEL(operationLabel), _("<big><b>Create signature on: </b></big>"));
         gtk_label_set_label(GTK_LABEL(signButtonLabel), _("_Sign"));
     }
 }
