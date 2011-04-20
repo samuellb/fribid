@@ -28,7 +28,7 @@ LANGUAGES=sv
 all:
 clean:
 
-install:
+install: all
 	install -d $(DESTDIR)$(MANDIR)/man7
 	gzip -c9 fribid.7 > $(DESTDIR)$(MANDIR)/man7/fribid.7.gz
 	for lang in $(LANGUAGES); do \

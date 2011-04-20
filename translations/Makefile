@@ -46,7 +46,7 @@ template.pot: $(POTFILES) $(DEFINES)
 clean:
 	rm -f template.pot $(MOFILES)
 
-install:
+install: all
 	for lang in $(LANGUAGES); do \
 	    install -d $(DESTDIR)$(LOCALEDIR)/$$lang/LC_MESSAGES && \
 	    install -m 644 $$lang.mo $(DESTDIR)$(LOCALEDIR)/$$lang/LC_MESSAGES/$(DOMAIN).mo || exit 1; \

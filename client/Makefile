@@ -38,7 +38,7 @@ ENABLE_PKCS11=$(shell ../configure --internal--get-define=ENABLE_PKCS11|grep 1)
 
 OBJECTS=backend.o bankid.o certutil.o $(if $(ENABLE_PKCS11),pkcs11.o) pkcs12.o request.o main.o misc.o pipe.o posix.o glibconfig.o gtk.o xmldsig.o secmem.o
 
-all: sign
+all: sign gtk/sign.xml
 
 backend.o: ../common/biderror.h ../common/bidtypes.h backend.h backend_private.h
 bankid.o: ../common/biderror.h ../common/bidtypes.h bankid.h backend.h misc.h platform.h xmldsig.h
@@ -65,7 +65,7 @@ sign: $(OBJECTS)
 clean:
 	rm -f $(OBJECTS) sign
 
-install: sign gtk/sign.xml
+install: all
 	install -d $(DESTDIR)$(LIB_PATH)
 	install -d $(DESTDIR)$(UI_PATH)
 	install sign $(DESTDIR)$(LIB_PATH)

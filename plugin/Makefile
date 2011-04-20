@@ -54,7 +54,7 @@ libfribidplugin.so: $(OBJECTS)
 clean:
 	rm -f $(OBJECTS) libfribidplugin.so
 
-install:
+install: all
 	install -d $(DESTDIR)$(LIB_PATH)
 	install -m 644 libfribidplugin.so $(DESTDIR)$(LIB_PATH)
 	for path in $(NPAPI_PLUGIN_PATHS); do \
