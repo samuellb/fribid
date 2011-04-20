@@ -181,6 +181,10 @@ char *regutil_createRequest(Plugin *plugin) {
     pipe_sendCommand(pipeinfo.out, PC_CreateRequest);
     // TODO should send URL here, maybe it should be a common parameter?
     
+    pipe_sendInt(pipeinfo.out, plugin->info.regutil.input.minPasswordLength);
+    pipe_sendInt(pipeinfo.out, plugin->info.regutil.input.minPasswordNonDigits);
+    pipe_sendInt(pipeinfo.out, plugin->info.regutil.input.minPasswordDigits);
+    
     // Send PKCS10 info
     RegutilPKCS10 *pkcs10 = plugin->info.regutil.input.pkcs10;
     while (pkcs10) {

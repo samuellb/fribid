@@ -29,8 +29,8 @@ sendstring ''     # hidden data (optional)
 echo 'hack'
 
 
-#} | valgrind --leak-check=no -q ./sign --internal--ipc=7 | tr ';' '\n' | {
-} | ./sign --internal--ipc=7 | tr ';' '\n' | {
+#} | valgrind --leak-check=no -q ./sign --internal--ipc=8 | tr ';' '\n' | {
+} | ./sign --internal--ipc=8 | tr ';' '\n' | {
 
 #### Parse response ####
 read error

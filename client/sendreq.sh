@@ -14,6 +14,11 @@ EndOfData() { sendint 0; }
 #### Send request ####
 CreateRequest
 
+# Password policy
+sendint  12  # Minimum length
+sendint   4  # Minimum number of non-digits
+sendint   1  # Minimum number of digits
+
 # PKCS10
 MoreData
     sendint 1                # KeyUsage
@@ -35,8 +40,8 @@ sendstring true
 echo 'hack'
 
 
-} | valgrind --leak-check=no -q ./sign --internal--ipc=7 | tr ';' '\n' | {
-#} | ./sign --internal--ipc=7 | tr ';' '\n' | {
+} | valgrind --leak-check=no -q ./sign --internal--ipc=8 | tr ';' '\n' | {
+#} | ./sign --internal--ipc=8 | tr ';' '\n' | {
 
 #### Parse response ####
 read error

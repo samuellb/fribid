@@ -207,6 +207,10 @@ void pipeData() {
             RegutilInfo input;
             memset(&input, 0, sizeof(input));
             
+            input.minPasswordLength = pipe_readInt(stdin);
+            input.minPasswordNonDigits = pipe_readInt(stdin);
+            input.minPasswordDigits = pipe_readInt(stdin);
+            
             while (pipe_readInt(stdin) == PLS_MoreData) {
                 // PKCS10
                 RegutilPKCS10 *pkcs10 = malloc(sizeof(RegutilPKCS10));
@@ -238,6 +242,9 @@ void pipeData() {
             if (!password || !password_maxsize) goto createReq_end;
             
             platform_startChoosePassword(name, browserWindowId);
+            platform_setPasswordPolicy(input.minPasswordLength,
+                                       input.minPasswordNonDigits,
+                                       input.minPasswordDigits);
             
             if (bankid_versionHasExpired()) {
                 platform_versionExpiredError();

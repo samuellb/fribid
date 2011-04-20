@@ -24,8 +24,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: FriBID 0.3.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2011-04-20 13:51+0200\n"
-"PO-Revision-Date: 2011-04-20 14:30+0100\n"
+"POT-Creation-Date: 2011-04-20 22:35+0200\n"
+"PO-Revision-Date: 2011-04-20 22:45+0100\n"
 "Last-Translator: Samuel Lidén Borell <samuel@slbdata.se>\n"
 "Language-Team: Swedish\n"
 "Language: sv\n"
@@ -62,43 +62,65 @@ msgstr "Felaktigt lösenord"
 msgid "Incorrect PIN"
 msgstr "Felaktig PIN"
 
-#: ../client/gtk.c:194
+#: ../client/gtk.c:197
 msgid "Please enter PIN on pinpad"
 msgstr "PIN anges på kortläsaren"
 
-#: ../client/gtk.c:350
+#: ../client/gtk.c:353
 msgid "Identification"
 msgstr "Legitimering"
 
-#: ../client/gtk.c:351
+#: ../client/gtk.c:354
 msgid "<big><b>Prove identity to: </b></big>"
 msgstr "<big><b>Legitimera mot: </b></big>"
 
-#: ../client/gtk.c:352 ../client/gtk/sign.glade:241
+#: ../client/gtk.c:355 ../client/gtk/sign.glade:241
 msgid "_Prove identity"
 msgstr "_Legitimera"
 
-#: ../client/gtk.c:360
+#: ../client/gtk.c:363
 msgid "Signing"
 msgstr "Underskrift"
 
-#: ../client/gtk.c:361
+#: ../client/gtk.c:364
 msgid "<big><b>Create signature on: </b></big>"
 msgstr "<big><b>Signering på: </b></big>"
 
-#: ../client/gtk.c:362
+#: ../client/gtk.c:365
 msgid "_Sign"
 msgstr "_Signera"
 
-#: ../client/gtk.c:466
+#: ../client/gtk.c:469
 msgid "Select external identity file"
 msgstr "Välj en extern legitimationsfil"
 
-#: ../client/gtk.c:588
+#: ../client/gtk.c:607
 msgid "The passwords don't match!"
 msgstr "Lösenorden stämmer inte överens"
 
-#: ../client/gtk.c:626
+#: ../client/gtk.c:627
+#, c-format
+msgid "The password must be at least one character"
+msgid_plural "The password must be at least %d characters"
+msgstr[0] "Lösenordet måste vara minst ett tecken långt"
+msgstr[1] "Lösenordet måste vara minst %d tecken långt"
+
+#: ../client/gtk.c:631
+#, c-format
+msgid "The password must have at least one character that is not a digit"
+msgid_plural ""
+"The password must have at least %d characters that are not digits"
+msgstr[0] "Lösenordet måste ha minst ett tecken som inte är en siffra"
+msgstr[1] "Lösenordet måste ha minst %d tecken som inte är siffror"
+
+#: ../client/gtk.c:635
+#, c-format
+msgid "The password must have at least one digit"
+msgid_plural "The password must have at least %d digits"
+msgstr[0] "Lösenordet måste ha minst en siffra"
+msgstr[1] "Lösenordet måste ha minst %d siffror"
+
+#: ../client/gtk.c:676
 msgid ""
 "This software version has expired, and will probably not be accepted on all "
 "web sites.\n"

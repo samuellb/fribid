@@ -139,6 +139,9 @@ static int *getIntParamPointer(Plugin *plugin, const char *name) {
     switch (plugin->type) {
         case PT_Regutil:
             if (!g_ascii_strcasecmp(name, "KeySize")) return &plugin->info.regutil.currentPKCS10.keySize;
+            if (!g_ascii_strcasecmp(name, "MinLen")) return &plugin->info.regutil.input.minPasswordLength;
+            if (!g_ascii_strcasecmp(name, "MinChars")) return &plugin->info.regutil.input.minPasswordNonDigits;
+            if (!g_ascii_strcasecmp(name, "MinDigits")) return &plugin->info.regutil.input.minPasswordDigits;
             return NULL;
         default:
             return NULL;

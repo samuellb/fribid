@@ -32,7 +32,7 @@
 
 #define BINNAME             "fribid"
 #define RELEASE_TIME        1292676673
-#define IPCVERSION          "7"
+#define IPCVERSION          "8"
 
 #define EMULATED_VERSION    "4.15.0.14"
 #define DNSVERSION          "2"

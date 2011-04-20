@@ -1,6 +1,6 @@
 /*
 
-  Copyright (c) 2009-2010 Samuel Lidén Borell <samuel@slbdata.se>
+  Copyright (c) 2009-2011 Samuel Lidén Borell <samuel@slbdata.se>
  
   Permission is hereby granted, free of charge, to any person obtaining a copy
   of this software and associated documentation files (the "Software"), to deal
@@ -107,6 +107,7 @@ bool platform_sign(Token **token, char *password, int password_maxlen);
 
 /* Password selection (and key generation) dialog */
 void platform_startChoosePassword(const char *name, unsigned long parentWindowId);
+void platform_setPasswordPolicy(int minLength, int minNonDigits, int minDigits);
 void platform_endChoosePassword();
 bool platform_choosePassword(char *password, long password_maxlen);
 

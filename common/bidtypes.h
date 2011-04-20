@@ -51,7 +51,9 @@ typedef struct CMCRequest {
 } RegutilCMC;
 
 typedef struct {
-    // TODO password restrictions (MinLen, etc)
+    int minPasswordLength;
+    int minPasswordNonDigits;
+    int minPasswordDigits;
     
     RegutilPKCS10 *pkcs10;
     RegutilCMC cmc;

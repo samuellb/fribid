@@ -126,6 +126,9 @@ static bool signDialogShown;
 static GtkDialog *keygenDialog;
 static GtkEntry *keygenPasswordEntry;
 static GtkEntry *keygenRepeatPasswordEntry;
+static int keygenPasswordMinLen;
+static int keygenPasswordMinDigits;
+static int keygenPasswordMinNonDigits;
 static bool keygenDialogShown;
 
 /**
@@ -557,9 +560,25 @@ void platform_startChoosePassword(const char *name, unsigned long parentWindowId
     keygenDialogShown = false;
 }
 
+void platform_setPasswordPolicy(int minLength, int minNonDigits, int minDigits) {
+    keygenPasswordMinLen = minLength;
+    keygenPasswordMinNonDigits = minNonDigits;
+    keygenPasswordMinDigits = minDigits;
+}
+
 void platform_endChoosePassword() {
     gtk_widget_destroy(GTK_WIDGET(keygenDialog));
     
+}
+
+static bool weakPassword(int length, int minimum, const char *format) {
+    if (length < minimum) {
+        char *error = rasprintf(format, minimum);
+        showMessage(GTK_MESSAGE_ERROR, error);
+        g_free(error);
+        return TRUE;
+    }
+    return FALSE;
 }
 
 bool platform_choosePassword(char *password, long password_maxlen) {
@@ -589,8 +608,37 @@ bool platform_choosePassword(char *password, long password_maxlen) {
                 continue;
             }
             
+            // Check password policy
+            const char *pwtext = gtk_entry_get_text(keygenPasswordEntry);
+            int pwlen = g_utf8_strlen(pwtext, -1);
+            
+            int numDigits = 0;
+            int numNonDigits = 0;
+            const char *c = pwtext;
+            while (*c) {
+                if (*c >= '0' && *c <= '9') numDigits++;
+                else numNonDigits++;
+                c = g_utf8_find_next_char(c, NULL);
+            }
+            
+            if (weakPassword(pwlen, keygenPasswordMinLen,
+                    ngettext("The password must be at least one character",
+                             "The password must be at least %d characters",
+                             keygenPasswordMinLen)) ||
+                weakPassword(numNonDigits, keygenPasswordMinNonDigits,
+                    ngettext("The password must have at least one character that is not a digit",
+                             "The password must have at least %d characters that are not digits",
+                             keygenPasswordMinNonDigits)) ||
+                weakPassword(numDigits, keygenPasswordMinDigits,
+                    ngettext("The password must have at least one digit",
+                             "The password must have at least %d digits",
+                             keygenPasswordMinDigits))) {
+                // Not OK
+                continue;
+            }
+            
             // Copy the password to the secure buffer
-            strncpy(password, gtk_entry_get_text(keygenPasswordEntry), password_maxlen-1);
+            strncpy(password, pwtext, password_maxlen-1);
             // Be sure to terminate this under all circumstances
             password[password_maxlen-1] = '\0';
             return true;
