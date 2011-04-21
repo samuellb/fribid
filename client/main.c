@@ -251,7 +251,7 @@ void pipeData() {
             }
             
             for (;;) {
-                error = BIDERR_UserCancel;
+                error = RUERR_UserCancel;
                 // Ask for a password
                 if (!platform_choosePassword(password, password_maxsize))
                     break;
