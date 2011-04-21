@@ -98,11 +98,6 @@ static bool objInvokeSafe(PluginObject *this, const char *name,
                 return convertStringZToVariant(value, result);
             } else if (IS_CALL_2("SetParam", STRING, STRING)) {
                 // Set parameter
-                if (NPVARIANT_TO_STRING(args[1]).utf8length >= 10*1024*1024) {
-                    // Value is larger than 10 MiB
-                    return false;
-                }
-                
                 char *param = variantToStringZ(&args[0]);
                 char *value = variantToStringZ(&args[1]);
                 bool ok = (param && value);
@@ -140,12 +135,6 @@ static bool objInvokeSafe(PluginObject *this, const char *name,
                 return true;
             } else if (IS_CALL_2("SetParam", STRING, STRING)) {
                 // Set parameter
-                // TODO fix code duplication!
-                if (NPVARIANT_TO_STRING(args[1]).utf8length >= 10*1024*1024) {
-                    // Value is larger than 10 MiB
-                    return false;
-                }
-                
                 char *param = variantToStringZ(&args[0]);
                 char *value = variantToStringZ(&args[1]);
                 bool ok = (param && value);
@@ -229,6 +218,15 @@ static bool objInvoke(NPObject *npobj, NPIdentifier ident,
     char name[64];
     if (!copyIdentifierName(ident, name, sizeof(name)))
         return false;
+    
+    // Check argument lengths
+    for (uint32_t i = 0; i < argCount; i++) {
+        if (NPVARIANT_IS_STRING(args[i]) &&
+            NPVARIANT_TO_STRING(args[i]).utf8length > 10*1024*1024) {
+            // String is larger than 10 MiB
+            return false;
+        }
+    }
     
     // Prevent recursive calls
     // TODO filter events in the main loop so the browser do anything
