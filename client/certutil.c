@@ -37,7 +37,7 @@ typedef struct {
     const int nid;
 } DNAttrInfo;
 
-#define NUM_DN_ATTRS 7
+#define NUM_DN_ATTRS 15
 
 /**
  * Returns an object identifier NID for a field name. This function uses
@@ -46,14 +46,22 @@ typedef struct {
  */
 static bool get_non_rfc2256(const char *field, int *nid, int *position) {
     static const DNAttrInfo attrdefs[NUM_DN_ATTRS] = {
-        // TODO add all names that are supported by BankID
-        { "S", NID_surname, },
-        { "G", NID_givenName, },
-        { "SN", NID_serialNumber, },
-        { "OID.2.5.4.41", NID_name, },
-        { "CN", NID_commonName, },
+        // These are supported in Nexus Personal 4.10.4.3 and 4.16.1 on Win32
         { "C", NID_countryName, },
+        { "CN", NID_commonName, },
+        { "D", NID_description, },
+        { "EM", NID_pkcs9_emailAddress, },
+        { "G", NID_givenName, },
+        { "L", NID_localityName, },
+        { "N", NID_name, },
         { "O", NID_organizationName, },
+        { "OU", NID_organizationalUnitName, },
+        { "S", NID_surname, },
+        { "SN", NID_serialNumber, },
+        { "ST", NID_stateOrProvinceName, },
+        { "STREET", NID_streetAddress, },
+        { "T", NID_title, },
+        { "OID.2.5.4.41", NID_name, }, // TODO support arbitrary OIDs
     };
     
     for (size_t i = 0; i < NUM_DN_ATTRS; i++) {
