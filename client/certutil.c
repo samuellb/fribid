@@ -27,6 +27,7 @@
 #include <glib.h>
 #include <openssl/asn1t.h>
 
+#include "../common/defines.h"
 #include "misc.h"
 #include "platform.h"
 #include "certutil.h"
@@ -102,7 +103,6 @@ X509_NAME *certutil_parse_dn(const char *s, bool fullDN) {
         
         // Parse attribute name
         char *field = g_strndup(s, nameLength);
-        fprintf(stderr, "field=>%s< value=>%.*s<\n", field, valueLength, value);
         int nid, position;
         bool ok = get_non_rfc2256(field, &nid, &position);
         g_free(field);
@@ -135,6 +135,7 @@ X509_NAME *certutil_parse_dn(const char *s, bool fullDN) {
     return subject;
     
   error:
+    fprintf(stderr, BINNAME ": failed to parse subject name: %s\n", s);
     X509_NAME_free(subject);
     return NULL;
 }

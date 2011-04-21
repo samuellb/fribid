@@ -363,10 +363,6 @@ typedef struct CertReq {
 #define ENC_ITER 8192
 #define ENC_NID NID_pbe_WithSHA1And3_Key_TripleDES_CBC
 
-// Debug stuff
-#define errstr (ERR_error_string(ERR_get_error(), NULL))
-#include <openssl/err.h>
-
 /**
  * Adds a key usage extension to the list of extensions in a request.
  */
@@ -385,9 +381,6 @@ static TokenError saveKeys(const CertReq *reqs, const char *password,
                            FILE *file) {
     TokenError error = TokenError_Unknown;
     PKCS12 *p12 = NULL;
-    
-    ERR_load_crypto_strings();
-    ERR_clear_error();
     
     // Add PKCS7 safes with the keys
     STACK_OF(PKCS7) *authsafes = NULL;
@@ -424,8 +417,6 @@ static TokenError saveKeys(const CertReq *reqs, const char *password,
         if (!PKCS12_add_cert(&bags, cert))
             goto loop_end;
         
-        fprintf(stderr, "bag: %p,  bags: %p:   %s\n", (void*)bag, (void*)bags, errstr);
-        
         if (!PKCS12_add_safe(&authsafes, bags, -1, 0, NULL))
             goto loop_end;
         
@@ -438,7 +429,6 @@ static TokenError saveKeys(const CertReq *reqs, const char *password,
         sk_PKCS12_SAFEBAG_pop_free(bags, PKCS12_SAFEBAG_free);
         reqs = reqs->next;
     }
-    fprintf(stderr, "safes: %p:  %s\n", (void*)authsafes, errstr);
     
     if (error_count != 0)
         goto end;
@@ -446,7 +436,6 @@ static TokenError saveKeys(const CertReq *reqs, const char *password,
     // Create the PKCS12 wrapper
     p12 = PKCS12_add_safes(authsafes, 0);
     if (!p12) goto end;
-    fprintf(stderr, "p12: %p:    %s\n", (void*)p12, errstr);
     PKCS12_set_mac(p12, (char*)password, -1, NULL, 0, MAC_ITER, NULL);
     
     // Save file
@@ -556,7 +545,6 @@ TokenError _backend_createRequest(const RegutilInfo *info,
     if (ok) {
         // Determine filename from certificate name
         char *filename = certutil_makeFilename(X509_REQ_get_subject_name(reqs->x509));
-        fprintf(stderr, "filename=>%s<\n", filename);
         
         // Build the certificate request
         request_wrap(x509reqs, request, reqlen);
@@ -589,7 +577,6 @@ TokenError _backend_createRequest(const RegutilInfo *info,
     }
     sk_free(x509reqs);
     
-    fprintf(stderr, "returning %d\n", error);
     return error;
 }
 
@@ -635,9 +622,6 @@ static TokenError storeCertificates(STACK_OF(X509) *certs,
             PKCS12_SAFEBAG *bag = sk_PKCS12_SAFEBAG_value(safebags, i);
             if (!bag || M_PKCS12_bag_type(bag) != NID_certBag) continue;
             
-            fprintf(stderr, "bag type: %d\n", M_PKCS12_bag_type(bag));
-            fprintf(stderr, "friendlyname: %s\n", PKCS12_get_friendlyname(bag));
-            
             // Extract cert from bag
             X509 *cert = PKCS12_certbag2x509(bag);
             if (!cert) continue;
@@ -647,18 +631,15 @@ static TokenError storeCertificates(STACK_OF(X509) *certs,
             
             ASN1_BIT_STRING *usage = X509_get_ext_d2i(cert, NID_key_usage,
                                                       NULL, NULL);
-            fprintf(stderr, "name=%p  usage=%p  usagelen=%d\n", (void*)name, (void*)usage, (usage ? usage->length : -1));
             if (name && usage && usage->length > 0) {
                 const KeyUsage keyUsage =
                     ((usage->data[0] & X509v3_KU_NON_REPUDIATION) == X509v3_KU_NON_REPUDIATION ?
                         KeyUsage_Signing : KeyUsage_Authentication);
                 
                 // Check if it matches
-                fprintf(stderr, "looking for cert with usage = %d\n", keyUsage);
                 X509 *issuedCert = certutil_findCert(certs, name,
                                                      keyUsage, true);
                 if (issuedCert) {
-                    fprintf(stderr, "found one!\n");
                     // Remove temporary cert
                     (void)sk_PKCS12_SAFEBAG_delete(safebags, i);
                     int lkidLength;
@@ -678,14 +659,10 @@ static TokenError storeCertificates(STACK_OF(X509) *certs,
         }
         
         if (match) {
-            fprintf(stderr, "match!\n");
-            
             // Add certs
             int num_certs = sk_X509_num(certs);
-            fprintf(stderr, "num certs: %d\n", num_certs);
             for (int ci = 0; ci < num_certs; ci++) {
                 X509 *cert = sk_X509_value(certs, ci);
-                fprintf(stderr, "add cert %p\n", (void*)cert);
                 PKCS12_add_cert(&safebags, cert);
             }
             
@@ -732,6 +709,19 @@ static TokenError storeCertificates(STACK_OF(X509) *certs,
     if (newFile) platform_deleteLocked(newFile, tempname);
     free(tempname);
     PKCS12_free(p12);
+    
+    // Write error (if any) to stderr
+    if (!p12) {
+        fprintf(stderr, BINNAME ": failed to open or parse file to store "
+                "certs in %s\n", filename);
+    } else if (!modified) {
+        fprintf(stderr, BINNAME ": no certs matched the key file %s\n",
+                filename);
+    } else if (error) {
+        fprintf(stderr, BINNAME ": failed to store certificates in %s\n",
+                filename);
+    }
+    
     return error;
 }
 
@@ -749,13 +739,11 @@ TokenError _backend_storeCertificates(const char *p7data, size_t length) {
         // TODO maybe we should look at the certificate chain instead?
         ASN1_BIT_STRING *usage = X509_get_ext_d2i(cert, NID_key_usage,
                                                   NULL, NULL);
-        fprintf(stderr, "find own cert... usage=%p  usagelen=%d value=%d\n", (void*)usage, (usage ? usage->length : -1), (usage->length >= 1 ? (int)usage->data[0] : -1));
         if (usage && usage->length > 0 &&
             (usage->data[0] & (X509v3_KU_DIGITAL_SIGNATURE | X509v3_KU_NON_REPUDIATION)) != 0) {
             // CA certs generally can be used for signatures,
             // so assume this is should be our own cert
             self = cert;
-            fprintf(stderr, "found our own cert!\n");
             break;
         }
     }
@@ -763,7 +751,6 @@ TokenError _backend_storeCertificates(const char *p7data, size_t length) {
     if (self) {
         // Get file name
         char *filename = certutil_makeFilename(X509_get_subject_name(self));
-        fprintf(stderr, "store in file: %s\n", filename);
         
         // Add the certs to this file
         if (filename) {

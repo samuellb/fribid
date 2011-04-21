@@ -178,13 +178,11 @@ void request_wrap(STACK *reqs, char **der, size_t *derLength) {
     if (!pkidata) goto end;
     
     // Add PKCS10 requests
-    fprintf(stderr, "add reqs\n");
     STACK *reqParts = pkidata->reqSequence;
     int num = sk_num(reqs);
     for (int i = 0; i < num; i++) {
         X509_REQ *req = (X509_REQ*)sk_value(reqs, i);
         
-        fprintf(stderr, "push wrapBodyReq\n");
         REQ_BODY_PART *reqPart = wrapBodyPartReq(req, 0x01000002+i);
         
         if (!reqPart ||
@@ -202,7 +200,6 @@ void request_wrap(STACK *reqs, char **der, size_t *derLength) {
     pkitype = ASN1_TYPE_new();
     if (!pkitype) goto end;
     pkitype->type = V_ASN1_SEQUENCE;
-    fprintf(stderr, "wrap in CMC PKIDATA\n");
     if (!ASN1_pack_string(pkidata, (i2d_of_void*)i2d_PKIDATA,
                             &pkitype->value.sequence)) goto end;
     
@@ -220,16 +217,13 @@ void request_wrap(STACK *reqs, char **der, size_t *derLength) {
         !PKCS7_set_content(signdata, pkiP7)) goto end;
     
     // Encode data
-    fprintf(stderr, "enc der\n");
     *derLength = i2d_PKCS7(signdata, (unsigned char**)der);
     
   end:
-    fprintf(stderr, "free\n");
     if (signdata) PKCS7_free(signdata);
     else if (pkiP7) PKCS7_free(pkiP7);
     else if (pkitype) ASN1_TYPE_free(pkitype);
     PKIDATA_free(pkidata);
-    fprintf(stderr, "done\n");
 }
 
 

@@ -221,7 +221,7 @@ static bool _backend_init(Backend *backend) {
     if (PKCS11_CTX_load(backend->private->ctx, DEFAULT_PKCS11_ENGINE) != 0) {
         unsigned long error = ERR_get_error();
         if (!expected_error(error)) {
-            fprintf(stderr, "loading pkcs11 engine failed: %s\n",
+            fprintf(stderr, BINNAME ": loading pkcs11 engine failed: %s\n",
                 ERR_reason_error_string(error));
         }
         PKCS11_CTX_free(backend->private->ctx);
@@ -230,7 +230,7 @@ static bool _backend_init(Backend *backend) {
 
     /* get information on all slots */
     if (PKCS11_enumerate_slots(backend->private->ctx, &backend->private->slots, &backend->private->nslots) < 0) {
-        fprintf(stderr, "no slots available\n");
+        fprintf(stderr, BINNAME ": no slots (card readers) available\n");
         PKCS11_CTX_free(backend->private->ctx);
         return false;
     }
