@@ -93,11 +93,7 @@ static int determine_string_type(const char *s, int length) {
  */
 X509_NAME *certutil_parse_dn(const char *s, bool fullDN) {
     X509_NAME *subject = X509_NAME_new();
-    
-    // First all attributes are parsed and are stored here, then they are
-    // put in the correct order in the final subject name.
-    X509_NAME_ENTRY *entries[NUM_DN_ATTRS];
-    memset(entries, 0, sizeof(entries));
+    STACK_OF(X509_NAME_ENTRY) *entries = sk_X509_NAME_ENTRY_new_null();
     
     while (*s != '\0') {
         // Parse attribute
@@ -118,13 +114,11 @@ X509_NAME *certutil_parse_dn(const char *s, bool fullDN) {
         
         if (fullDN || nid == NID_name) {
             // Add attribute
-            if (entries[position]) {
-                X509_NAME_ENTRY_free(entries[position]);
-            } else {
-                entries[position] = X509_NAME_ENTRY_create_by_NID(NULL, nid,
-                    determine_string_type(value, valueLength),
-                    (unsigned char*)value, valueLength);
-            }
+            X509_NAME_ENTRY *entry = X509_NAME_ENTRY_create_by_NID(NULL, nid,
+                determine_string_type(value, valueLength),
+                (unsigned char*)value, valueLength);
+            if (!entry) goto error;
+            sk_X509_NAME_ENTRY_push(entries, entry);
         }
         
         // Go to next attribute
@@ -132,19 +126,21 @@ X509_NAME *certutil_parse_dn(const char *s, bool fullDN) {
         if (*s == ',') s++;
     }
     
-    // Add the attributes to the subject name in the correct order
-    for (size_t i = 0; i < NUM_DN_ATTRS; i++) {
-        if (entries[i] != NULL) {
-            X509_NAME_add_entry(subject, entries[i], -1, 0);
-            X509_NAME_ENTRY_free(entries[i]);
-        }
+    // Add the attributes to the subject name in reverse order
+    int num = sk_X509_NAME_ENTRY_num(entries);
+    for (int i = num; i >= 0; i--) {
+        X509_NAME_ENTRY *entry = sk_X509_NAME_ENTRY_value(entries, i);
+        X509_NAME_add_entry(subject, entry, -1, 0);
+        X509_NAME_ENTRY_free(entry);
     }
+    sk_X509_NAME_ENTRY_free(entries);
     
     return subject;
     
   error:
     fprintf(stderr, BINNAME ": failed to parse subject name: %s\n", s);
     X509_NAME_free(subject);
+    sk_X509_NAME_ENTRY_pop_free(entries, X509_NAME_ENTRY_free);
     return NULL;
 }
 
