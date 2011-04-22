@@ -131,6 +131,8 @@ static int keygenPasswordMinDigits;
 static int keygenPasswordMinNonDigits;
 static bool keygenDialogShown;
 
+static GtkDialog *activeDialog;
+
 /**
  * Makes a dialog window stay above it's parent window.
  */
@@ -162,7 +164,7 @@ static void makeDialogTransient(GtkDialog *dialog, unsigned long parentWindowId)
 
 static void showMessage(GtkMessageType type, const char *text) {
     GtkWidget *dialog = gtk_message_dialog_new(
-        GTK_WINDOW(signDialog), GTK_DIALOG_DESTROY_WITH_PARENT,
+        GTK_WINDOW(activeDialog), GTK_DIALOG_DESTROY_WITH_PARENT,
         type, GTK_BUTTONS_CLOSE, "%s", text);
     gtk_dialog_run(GTK_DIALOG(dialog));
     gtk_widget_destroy(dialog);
@@ -310,7 +312,7 @@ void platform_startSign(const char *url, const char *hostname, const char *ip,
     vbox = GTK_VBOX(gtk_builder_get_object(builder, "vbox1"));
     gtk_box_pack_end(GTK_BOX(vbox), GTK_WIDGET (info_bar), TRUE, FALSE, 2);
 
-    signDialog = GTK_DIALOG(gtk_builder_get_object(builder, "dialog_sign"));
+    activeDialog = signDialog = GTK_DIALOG(gtk_builder_get_object(builder, "dialog_sign"));
     
     makeDialogTransient(signDialog, parentWindowId);
     
@@ -471,6 +473,8 @@ static void selectExternalFile() {
             GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
             GTK_STOCK_OPEN, GTK_RESPONSE_ACCEPT,
             (char *)NULL));
+    activeDialog = GTK_DIALOG(chooser);
+    
     while (gtk_dialog_run(GTK_DIALOG(chooser)) == GTK_RESPONSE_ACCEPT) {
         gchar *filename = gtk_file_chooser_get_filename(chooser);
         
@@ -483,6 +487,8 @@ static void selectExternalFile() {
         if (error) platform_showError(error);
         else break;
     }
+    
+    activeDialog = signDialog;
     gtk_widget_destroy(GTK_WIDGET(chooser));
 }
 
@@ -552,7 +558,7 @@ void platform_startChoosePassword(const char *name, unsigned long parentWindowId
     keygenPasswordEntry = GTK_ENTRY(gtk_builder_get_object(builder, "entry_keygen_password"));
     keygenRepeatPasswordEntry = GTK_ENTRY(gtk_builder_get_object(builder, "entry_keygen_repeat"));
     
-    keygenDialog = GTK_DIALOG(gtk_builder_get_object(builder, "dialog_keygen"));
+    activeDialog = keygenDialog = GTK_DIALOG(gtk_builder_get_object(builder, "dialog_keygen"));
     
     makeDialogTransient(keygenDialog, parentWindowId);
     
