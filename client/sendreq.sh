@@ -3,7 +3,7 @@
 sendint() { echo "$*;"; }
 sendstring() { echo "${#1};$1"; }
 
-CreateRequest() { sendint 3; }
+CreateRequest() { sendint 4; }
 
 MoreData() { sendint 1; }
 EndOfData() { sendint 0; }
@@ -11,8 +11,11 @@ EndOfData() { sendint 0; }
 
 {
 
-#### Send request ####
+# Send command header
 CreateRequest
+sendstring 'https://example.com/'  # URL
+sendstring 'example.com'           # Hostname
+sendstring '198.51.100.200'        # IP of example.com
 
 # Password policy
 sendint  12  # Minimum length
@@ -40,8 +43,8 @@ sendstring true
 echo 'hack'
 
 
-} | valgrind --leak-check=no -q ./sign --internal--ipc=8 | tr ';' '\n' | {
-#} | ./sign --internal--ipc=8 | tr ';' '\n' | {
+} | valgrind --leak-check=no -q ./sign --internal--ipc=9 | tr ';' '\n' | {
+#} | ./sign --internal--ipc=9 | tr ';' '\n' | {
 
 #### Parse response ####
 read error

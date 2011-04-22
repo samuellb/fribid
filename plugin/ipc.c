@@ -37,7 +37,6 @@
 #include "plugin.h"
 
 static const char mainBinary[] = SIGNING_EXECUTABLE;
-static const char versionOption[] = "--internal--bankid-version-string";
 static const char ipcOption[] = "--internal--ipc=" IPCVERSION;
 static const char windowIdOption[] = "--internal--window-id";
 
@@ -51,7 +50,7 @@ typedef struct {
     pid_t child;
 } PipeInfo;
 
-static void openPipes(PipeInfo *pipeinfo, const char *argv[]) {
+static void openPipesWithArgs(PipeInfo *pipeinfo, const char *argv[]) {
     int pipeIn[2];
     int pipeOut[2];
     
@@ -87,21 +86,22 @@ static void openPipes(PipeInfo *pipeinfo, const char *argv[]) {
     }
 }
 
-static void openVersionPipes(PipeInfo *pipeinfo) {
-    const char *argv[] = {
-        mainBinary, versionOption, (char *)NULL,
-    };
-    openPipes(pipeinfo, argv);
-}
-
-static void openInteractivePipes(PipeInfo *pipeinfo, Plugin *plugin) {
+static void openPipes(PipeInfo *pipeinfo, const Plugin *plugin) {
     char windowId[21]; // This holds a native window id (such as an XID)
     const char *argv[] = {
         mainBinary, ipcOption, windowIdOption, windowId, (char *)NULL,
     };
     
     snprintf(windowId, 21, "%ld", plugin->windowId);
-    openPipes(pipeinfo, argv);
+    openPipesWithArgs(pipeinfo, argv);
+}
+
+static void sendHeader(PipeInfo *pipeinfo, const Plugin *plugin,
+                       PipeCommand command) {
+    pipe_sendCommand(pipeinfo->out, command);
+    pipe_sendString(pipeinfo->out, plugin->url);
+    pipe_sendString(pipeinfo->out, plugin->hostname);
+    pipe_sendString(pipeinfo->out, plugin->ip);
 }
 
 static BankIDError waitReply(PipeInfo *pipeinfo) {
@@ -121,36 +121,31 @@ static void closePipes(PipeInfo *pipeinfo) {
 
 
 char *version_getVersion(Plugin *plugin) {
-    char buff[1000];
     PipeInfo pipeinfo;
     
-    openVersionPipes(&pipeinfo);
-    if (fgets(buff, sizeof(buff), pipeinfo.in) == NULL) {
-        buff[0] = '\0';
-    }
-    closePipes(&pipeinfo);
+    openPipes(&pipeinfo, plugin);
+    sendHeader(&pipeinfo, plugin, PC_GetVersion);
+    pipe_finishCommand(pipeinfo.out);
     
-    return strdup(buff);
+    char *version = pipe_readString(pipeinfo.in);
+    closePipes(&pipeinfo);
+    return version;
 }
 
 
-static void sendSignCommon(PipeInfo pipeinfo, Plugin *plugin) {
-    pipe_sendString(pipeinfo.out, plugin->info.auth.challenge);
-    pipe_sendInt(pipeinfo.out, plugin->info.auth.serverTime);
-    pipe_sendOptionalString(pipeinfo.out, plugin->info.auth.policys);
-    pipe_sendOptionalString(pipeinfo.out, plugin->info.auth.subjectFilter);
-    pipe_sendString(pipeinfo.out, plugin->url);
-    pipe_sendString(pipeinfo.out, plugin->hostname);
-    pipe_sendString(pipeinfo.out, plugin->ip);
+static void sendSignCommon(PipeInfo *pipeinfo, const Plugin *plugin) {
+    pipe_sendString(pipeinfo->out, plugin->info.auth.challenge);
+    pipe_sendInt(pipeinfo->out, plugin->info.auth.serverTime);
+    pipe_sendOptionalString(pipeinfo->out, plugin->info.auth.policys);
+    pipe_sendOptionalString(pipeinfo->out, plugin->info.auth.subjectFilter);
 }
 
 int sign_performAction_Authenticate(Plugin *plugin) {
     PipeInfo pipeinfo;
     
-    openInteractivePipes(&pipeinfo, plugin);
-    pipe_sendCommand(pipeinfo.out, PC_Authenticate);
-    
-    sendSignCommon(pipeinfo, plugin);
+    openPipes(&pipeinfo, plugin);
+    sendHeader(&pipeinfo, plugin, PC_Authenticate);
+    sendSignCommon(&pipeinfo, plugin);
     
     plugin->lastError = waitReply(&pipeinfo);
     plugin->info.auth.signature = pipe_readString(pipeinfo.in);
@@ -161,10 +156,10 @@ int sign_performAction_Authenticate(Plugin *plugin) {
 int sign_performAction_Sign(Plugin *plugin) {
     PipeInfo pipeinfo;
     
-    openInteractivePipes(&pipeinfo, plugin);
-    pipe_sendCommand(pipeinfo.out, PC_Sign);
+    openPipes(&pipeinfo, plugin);
+    sendHeader(&pipeinfo, plugin, PC_Sign);
+    sendSignCommon(&pipeinfo, plugin);
     
-    sendSignCommon(pipeinfo, plugin);
     pipe_sendString(pipeinfo.out, plugin->info.sign.message);
     pipe_sendOptionalString(pipeinfo.out, plugin->info.sign.invisibleMessage);
     
@@ -177,10 +172,10 @@ int sign_performAction_Sign(Plugin *plugin) {
 char *regutil_createRequest(Plugin *plugin) {
     PipeInfo pipeinfo;
     
-    openInteractivePipes(&pipeinfo, plugin);
-    pipe_sendCommand(pipeinfo.out, PC_CreateRequest);
-    // TODO should send URL here, maybe it should be a common parameter?
+    openPipes(&pipeinfo, plugin);
+    sendHeader(&pipeinfo, plugin, PC_CreateRequest);
     
+    // Send password policy
     pipe_sendInt(pipeinfo.out, plugin->info.regutil.input.minPasswordLength);
     pipe_sendInt(pipeinfo.out, plugin->info.regutil.input.minPasswordNonDigits);
     pipe_sendInt(pipeinfo.out, plugin->info.regutil.input.minPasswordDigits);
@@ -218,8 +213,8 @@ char *regutil_createRequest(Plugin *plugin) {
 void regutil_storeCertificates(Plugin *plugin, const char *certs) {
     PipeInfo pipeinfo;
     
-    openInteractivePipes(&pipeinfo, plugin);
-    pipe_sendCommand(pipeinfo.out, PC_StoreCertificates);
+    openPipes(&pipeinfo, plugin);
+    sendHeader(&pipeinfo, plugin, PC_StoreCertificates);
     
     pipe_sendOptionalString(pipeinfo.out, certs);
     

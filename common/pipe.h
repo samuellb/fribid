@@ -29,7 +29,8 @@
 
 // Commands to the main program
 typedef enum {
-    PC_Authenticate = 1,
+    PC_GetVersion = 1,
+    PC_Authenticate,
     PC_Sign,
     PC_CreateRequest,
     PC_StoreCertificates,

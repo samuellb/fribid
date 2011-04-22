@@ -57,22 +57,27 @@ static void notifyCallback(Token *token, TokenChange change) {
 }
 
 /**
- * pipeData is called when the plugin has sent some data.
- * This happens when one of the Javascript methods of an
- * plugin object is called.
+ * Called when a command is being sent from the plugin.
  */
-void pipeData() {
-    PipeCommand command = pipe_readCommand(stdin);
+void pipeCommand(PipeCommand command, const char *url, const char *hostname,
+                 const char *ip) {
     switch (command) {
+        case PC_GetVersion: {
+            char *versionString = bankid_getVersion();
+            
+            pipe_sendString(stdout, versionString);
+            free(versionString);
+            pipe_flush(stdout);
+            
+            platform_leaveMainloop();
+            break;
+        }
         case PC_Authenticate:
         case PC_Sign: {
             char *challenge = pipe_readString(stdin);
             int32_t serverTime = pipe_readInt(stdin);
             free(pipe_readOptionalString(stdin)); // Just ignore the policies list for now
             char *subjectFilter = pipe_readOptionalString(stdin);
-            char *url = pipe_readString(stdin);
-            char *hostname = pipe_readString(stdin);
-            char *ip = pipe_readString(stdin);
             char *message = NULL, *invisibleMessage = NULL;
             if (command == PC_Sign) {
                 message = pipe_readString(stdin);
@@ -184,9 +189,6 @@ void pipeData() {
             free(message);
             free(invisibleMessage);
             free(challenge);
-            free(url);
-            free(hostname);
-            free(ip);
             
             pipe_sendInt(stdout, error);
             pipe_sendString(stdout, (signature ? signature : ""));
@@ -304,19 +306,21 @@ void pipeData() {
 }
 
 /**
- * Processes some command line options that neither require a GUI or the NSS
- * libraries.
+ * pipeData is called when the plugin has sent some data.
+ * This happens when one of the Javascript methods of an
+ * plugin object is called.
  */
-int process_non_ui_args(int argc, char **argv) {
-    for (int i = 1; i < argc; i++) {
-        if (!strcmp(argv[i], "--internal--bankid-version-string")) {
-            char *versionString = bankid_getVersion();
-            printf("%s", versionString);
-            free(versionString);
-            return 1;
-        }
-    }
-    return 0;
+void pipeData() {
+    PipeCommand command = pipe_readCommand(stdin);
+    char *url = pipe_readString(stdin);
+    char *hostname = pipe_readString(stdin);
+    char *ip = pipe_readString(stdin);
+    
+    pipeCommand(command, url, hostname, ip);
+    
+    free(ip);
+    free(hostname);
+    free(url);
 }
 
 int main(int argc, char **argv) {
@@ -326,11 +330,6 @@ int main(int argc, char **argv) {
     platform_seedRandom();
     bankid_checkVersionValidity();
     
-    /* Parse command line and set up the UI component */
-    if (process_non_ui_args(argc, argv)) {
-        return 0;
-    }
-
     error = secmem_init_pool();
     if (error) {
         fprintf(stderr, BINNAME ": could not initialize secure memory");
