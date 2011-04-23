@@ -49,13 +49,14 @@ BankIDError bankid_sign(Token *token,
                         char **signature);
 
 BankIDError bankid_createRequest(const RegutilInfo *info,
+                                 const char *hostname,
                                  const char *password,
                                  char **request,
                                  TokenError *error);
 
 char *bankid_getRequestDisplayName(const RegutilInfo *params);
 
-BankIDError bankid_storeCertificates(const char *certs);
+BankIDError bankid_storeCertificates(const char *certs, const char *hostname);
 
 #endif
 

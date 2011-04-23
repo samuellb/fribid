@@ -79,10 +79,12 @@ TokenError backend_addFile(BackendNotifier *notifier,
 
 /* Enrollment */
 TokenError backend_createRequest(const RegutilInfo *info,
+                                 const char *hostname,
                                  const char *password,
                                  char **request, size_t *reqlen);
 char *backend_getSubjectDisplayName(const char *dn);
-TokenError backend_storeCertificates(const char *p7data, size_t length);
+TokenError backend_storeCertificates(const char *p7data, size_t length,
+                                     const char *hostname);
 
 /* Token methods */
 TokenStatus token_getStatus(const Token *token);

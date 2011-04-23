@@ -363,6 +363,9 @@ typedef struct CertReq {
 #define ENC_ITER 8192
 #define ENC_NID NID_pbe_WithSHA1And3_Key_TripleDES_CBC
 
+// Used to implement same-origin checks in CreateRequest/StoreCertificates
+#define OID_OWNING_HOST "2.25.30775131415393438240374622843663926555"
+
 /**
  * Adds a key usage extension to the list of extensions in a request.
  */
@@ -377,8 +380,8 @@ static X509_EXTENSION *makeKeyUsageExt(KeyUsage keyUsage) {
         NID_key_usage, (char*)keyUsages[keyUsage]);
 }
 
-static TokenError saveKeys(const CertReq *reqs, const char *password,
-                           FILE *file) {
+static TokenError saveKeys(const CertReq *reqs, const char *hostname,
+                           const char *password, FILE *file) {
     TokenError error = TokenError_Unknown;
     PKCS12 *p12 = NULL;
     
@@ -389,6 +392,7 @@ static TokenError saveKeys(const CertReq *reqs, const char *password,
     while (reqs) {
         STACK_OF(PKCS12_SAFEBAG) *bags = NULL;
         X509 *cert = NULL;
+        ASN1_OBJECT *objOwningHost = NULL;
         uint32_t keyid = htonl(localKeyId++);
         error_count++; // Decremented on success
         
@@ -417,6 +421,18 @@ static TokenError saveKeys(const CertReq *reqs, const char *password,
         if (!PKCS12_add_cert(&bags, cert))
             goto loop_end;
         
+        // Add hostname (FriBID extension) so we can do same-origin checks
+        // TODO maybe we should use document.domain instead of document.location.hostname?
+        objOwningHost = OBJ_txt2obj(OID_OWNING_HOST, 1);
+        if (!objOwningHost) goto loop_end;
+        
+        bag = sk_PKCS12_SAFEBAG_value(bags, sk_PKCS12_SAFEBAG_num(bags)-1);
+        if (!X509at_add1_attr_by_OBJ(&bag->attrib, objOwningHost, MBSTRING_UTF8,
+                                     (unsigned char*)hostname, strlen(hostname)))
+            goto loop_end;
+        
+        
+        // Add a new authsafe
         if (!PKCS12_add_safe(&authsafes, bags, -1, 0, NULL))
             goto loop_end;
         
@@ -425,6 +441,7 @@ static TokenError saveKeys(const CertReq *reqs, const char *password,
         error_count--;
         
       loop_end:
+        ASN1_OBJECT_free(objOwningHost);
         X509_free(cert);
         sk_PKCS12_SAFEBAG_pop_free(bags, PKCS12_SAFEBAG_free);
         reqs = reqs->next;
@@ -450,6 +467,7 @@ static TokenError saveKeys(const CertReq *reqs, const char *password,
 }
 
 TokenError _backend_createRequest(const RegutilInfo *info,
+                                  const char *hostname,
                                   const char *password,
                                   char **request, size_t *reqlen) {
     // OpenSSL seeds the PRNG automatically, see the manual page for RAND_add.
@@ -555,7 +573,7 @@ TokenError _backend_createRequest(const RegutilInfo *info,
             if (!keyfile) {
                 error = TokenError_CantCreateFile;
             } else {
-                error = saveKeys(reqs, password, keyfile);
+                error = saveKeys(reqs, hostname, password, keyfile);
                 if (!platform_closeLocked(keyfile) && !error)
                     error = TokenError_CantCreateFile;
             }
@@ -581,6 +599,7 @@ TokenError _backend_createRequest(const RegutilInfo *info,
 }
 
 static TokenError storeCertificates(STACK_OF(X509) *certs,
+                                    const char *hostname,
                                     const char *filename) {
     TokenError error = TokenError_Unknown;
     PKCS12 *p12 = NULL;
@@ -621,6 +640,16 @@ static TokenError storeCertificates(STACK_OF(X509) *certs,
         for (int i = 0; i < numsb; i++) {
             PKCS12_SAFEBAG *bag = sk_PKCS12_SAFEBAG_value(safebags, i);
             if (!bag || M_PKCS12_bag_type(bag) != NID_certBag) continue;
+            
+            // Perform same-origin check
+            ASN1_OBJECT *objOwningHost = OBJ_txt2obj(OID_OWNING_HOST, 1);
+            if (!objOwningHost) continue;
+            
+            char *origin = certutil_getBagAttr(bag, objOwningHost);
+            bool equal = (origin && strcmp(origin, hostname) == 0);
+            free(origin);
+            ASN1_OBJECT_free(objOwningHost);
+            if (!equal) continue;
             
             // Extract cert from bag
             X509 *cert = PKCS12_certbag2x509(bag);
@@ -725,7 +754,9 @@ static TokenError storeCertificates(STACK_OF(X509) *certs,
     return error;
 }
 
-TokenError _backend_storeCertificates(const char *p7data, size_t length) {
+TokenError _backend_storeCertificates(const char *p7data, size_t length,
+                                      const char *hostname) {
+    
     PKCS7 *p7 = certutil_parseP7SignedData(p7data, length);
     if (!p7) return TokenError_Unknown;
     
@@ -754,7 +785,7 @@ TokenError _backend_storeCertificates(const char *p7data, size_t length) {
         
         // Add the certs to this file
         if (filename) {
-            error = storeCertificates(certs, filename);
+            error = storeCertificates(certs, hostname, filename);
             free(filename);
         }
     }

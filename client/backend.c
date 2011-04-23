@@ -122,6 +122,7 @@ void backend_scanTokens(BackendNotifier *notifier)
  * Generates a key pair and creates a certificate request for it.
  */
 TokenError backend_createRequest(const RegutilInfo *info,
+                                 const char *hostname,
                                  const char *password,
                                  char **request, size_t *reqlen) {
     // TODO support smartcards too (if this is used anywhere)
@@ -129,7 +130,8 @@ TokenError backend_createRequest(const RegutilInfo *info,
     
     Backend *backend = pkcs12_getBackend();
     if (backend->init(backend) && backend->createRequest)
-        error = backend->createRequest(info, password, request, reqlen);
+        error = backend->createRequest(info, hostname, password,
+                                       request, reqlen);
     
     backend->free(backend);
     return error;
@@ -151,13 +153,14 @@ char *backend_getSubjectDisplayName(const char *dn) {
 /**
  * Stores a certificate chain for a request.
  */
-TokenError backend_storeCertificates(const char *p7data, size_t length) {
+TokenError backend_storeCertificates(const char *p7data, size_t length,
+                                     const char *hostname) {
     // TODO support smartcards too (if this is used anywhere)
     TokenError error = TokenError_NotImplemented;
     
     Backend *backend = pkcs12_getBackend();
     if (backend->init(backend) && backend->storeCertificates)
-        error = backend->storeCertificates(p7data, length);
+        error = backend->storeCertificates(p7data, length, hostname);
     
     backend->free(backend);
     return error;

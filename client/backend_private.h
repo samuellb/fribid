@@ -68,10 +68,12 @@ struct _Backend {
      * TODO change the backend interface to support pinpads too
      */
     TokenError (*createRequest)(const RegutilInfo *info,
+                                const char *hostname,
                                 const char *password,
                                 char **request, size_t *reqlen);
     
-    TokenError (*storeCertificates)(const char *p7data, size_t length);
+    TokenError (*storeCertificates)(const char *p7data, size_t length,
+                                    const char *hostname);
     
     
     TokenError (*getBase64Chain)(const TokenType *token,

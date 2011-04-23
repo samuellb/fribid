@@ -261,8 +261,8 @@ void pipeCommand(PipeCommand command, const char *url, const char *hostname,
                 // Try to authenticate/sign
                 // Generate key pair and construct the request
                 TokenError tokenError;
-                error = bankid_createRequest(&input, password, &request,
-                                             &tokenError);
+                error = bankid_createRequest(&input, hostname, password,
+                                             &request, &tokenError);
                 
                 guaranteed_memset(password, 0, password_maxsize);
                 
@@ -294,7 +294,7 @@ void pipeCommand(PipeCommand command, const char *url, const char *hostname,
             
             char *certs = pipe_readString(stdin);
             
-            BankIDError error = bankid_storeCertificates(certs);
+            BankIDError error = bankid_storeCertificates(certs, hostname);
             
             pipe_sendInt(stdout, error);
             pipe_flush(stdout);

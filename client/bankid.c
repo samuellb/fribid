@@ -348,6 +348,7 @@ BankIDError bankid_sign(Token *token,
  * @param error      A more detailed error code is stored here
  */
 BankIDError bankid_createRequest(const RegutilInfo *params,
+                                 const char *hostname,
                                  const char *password,
                                  char **request,
                                  TokenError *error) {
@@ -355,7 +356,7 @@ BankIDError bankid_createRequest(const RegutilInfo *params,
     
     char *binaryRequest;
     size_t brlen;
-    *error = backend_createRequest(params, password,
+    *error = backend_createRequest(params, hostname, password,
                                    &binaryRequest, &brlen);
     if (*error) return BIDERR_InternalError;
     
@@ -383,14 +384,14 @@ char *bankid_getRequestDisplayName(const RegutilInfo *params) {
 /**
  * Stores a certificate chain for a newly created key.
  */
-BankIDError bankid_storeCertificates(const char *certs) {
+BankIDError bankid_storeCertificates(const char *certs, const char *hostname) {
     
     size_t length;
     char *p7data = base64_decode_binary(certs, &length);
     
     if (!p7data) return BIDERR_InternalError;
     
-    BankIDError error = backend_storeCertificates(p7data, length);
+    BankIDError error = backend_storeCertificates(p7data, length, hostname);
     
     free(p7data);
     return error;

@@ -29,6 +29,7 @@
 
 #include <stdbool.h>
 #include <openssl/ssl.h>
+#include <openssl/pkcs12.h>
 
 #include "../common/bidtypes.h"
 
@@ -47,6 +48,7 @@ X509 *certutil_findCert(const STACK_OF(X509) *certList,
                         bool orderMightDiffer);
 PKCS7 *certutil_parseP7SignedData(const char *p7data, size_t length);
 char *certutil_makeFilename(X509_NAME *xname);
+char *certutil_getBagAttr(PKCS12_SAFEBAG *bag, ASN1_OBJECT *oid);
 
 #endif
 

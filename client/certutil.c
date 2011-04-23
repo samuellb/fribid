@@ -295,4 +295,33 @@ char *certutil_makeFilename(X509_NAME *xname) {
     return filename;
 }
 
+/**
+ * Gets an attribute of the type PRINTABLESTRING from a PKCS12 bag.
+ */
+char *certutil_getBagAttr(PKCS12_SAFEBAG *bag, ASN1_OBJECT *oid) {
+    // Find the attribute
+    ASN1_TYPE *at = NULL;
+    
+    if (!bag->attrib) return NULL;
+    
+    int numattr = sk_X509_ATTRIBUTE_num(bag->attrib);
+    for (int i = 0; i < numattr; i++) {
+        X509_ATTRIBUTE *xattr = sk_X509_ATTRIBUTE_value(bag->attrib, i);
+        if (xattr->object && !OBJ_cmp(xattr->object, oid)) {
+            // Match
+            at = sk_ASN1_TYPE_value(xattr->value.set, 0);
+            break;
+        }
+    }
+    
+    if (!at || at->type != V_ASN1_PRINTABLESTRING) return NULL;
+    
+    // Copy the value to a string
+    int len = at->value.printablestring->length;
+    char *str = malloc(len+1);
+    if (str) memcpy(str, at->value.printablestring->data, len);
+    str[len] = '\0';
+    return str;
+}
+
 
