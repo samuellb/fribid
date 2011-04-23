@@ -96,6 +96,36 @@ static void removeNewlines(char *s) {
     *writep = '\0';
 }
 
+/**
+ * Checks if a string is in UTF-8 format. If not it tries to convert it from
+ * ISO-88591-1, and free's the UTF-8 string.
+ *
+ * @returns  An UTF-8 string, or NULL on error.
+ */
+static char *utf8_or_latin1(char *input, size_t length) {
+    // Check for NULL
+    if (length != strlen(input)) {
+        free(input);
+        return NULL;
+    }
+    
+    // Check for invalid unicode
+    if (g_utf8_validate(input, length, NULL)) return input;
+    
+    // Try to convert from ISO-8859-1
+    GError *error = NULL;
+    gchar *utf8 = g_convert(input, length, "UTF-8", "ISO-8859-1",
+                            NULL, NULL, &error);
+    free(input);
+    
+    if (!error) return (char*)utf8;
+    
+    // Neither valid UTF-8 or ISO-8859-1
+    g_error_free(error);
+    g_free(utf8);
+    return NULL;
+}
+
 char *base64_encode(const char *data, const int length) {
     if (length == 0) return strdup("");
     
@@ -114,10 +144,7 @@ char *base64_decode(const char *encoded) {
     result[length] = '\0';
     free(temp);
     
-    if (length != strlen(result)) {
-        return NULL;
-    }
-    return result;
+    return utf8_or_latin1(result, length);
 }
 
 char *base64_decode_binary(const char *encoded, size_t *decodedLength) {

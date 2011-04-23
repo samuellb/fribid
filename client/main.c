@@ -149,7 +149,8 @@ void pipeCommand(PipeCommand command, const char *url, const char *hostname,
             backend_scanTokens(notifier);
             free(decodedSubjectFilter);
             
-            if (message != NULL) {
+            if (command == PC_Sign) {
+                if (!message) abort();
                 char *decodedMessage = base64_decode(message);
                 platform_setMessage(decodedMessage);
                 free(decodedMessage);
