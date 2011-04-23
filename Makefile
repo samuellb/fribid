@@ -31,13 +31,11 @@ distclean: clean
 	rm -f common/config.h
 
 # Package creation
-dist-all: distsig distdebsig
-
 dist:
 	git archive --format=tar --prefix=$(DISTNAME)/ HEAD | bzip2 > $(DISTDESTDIR)$(DISTNAME).tar.bz2
 
 distsig: dist
-	gpg --detach-sign -a $(GPGFLAGS) $(DISTDESTDIR)$(DISTNAME).tar.bz2
+	gpg --detach-sign -a -u B21DF30E $(GPGFLAGS) $(DISTDESTDIR)$(DISTNAME).tar.bz2
 
 
 # Release management
