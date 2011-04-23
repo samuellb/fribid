@@ -1,3 +1,19 @@
+0.3.0 - 2011-04-24
+  * [security update] Fix display of ISO-8859-1 strings and strings with
+    invalid UTF-8. Previously the "text to sign" box was just empty in
+    these two cases, so the user could not see what he or she was signing.
+  * Implemented support for obtaining file-based e-IDs. Thanks to Erik
+    Andersson, Örjan and "krypto" for testing this!
+  * All Javascript function arguments have been limited to 10 MiB.
+  * Fix compilation with OpenSSL 1.0.0.
+  * Made the plugin identify itself as "Nexus Personal" instead of "FriBID".
+    This fixes compatibility with some sites, such as Skandiabanken.
+  * Add a "stub" of the Webadmin object, which is needed for
+    test.bankid.com
+  * Made all parameter names case insensitive.
+  * Code refactoring.
+
+
 0.2.2 - 2010-12-18
   * Fixed a 64-bit type error. (Henrik Nordström)
   * Implemented the ServerTime parameter which is used on at least
