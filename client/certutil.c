@@ -214,7 +214,7 @@ bool certutil_matchSubjectFilter(const char *subjectFilter, X509_NAME *name) {
     
     char *actualSerial = certutil_getNamePropertyByNID(name, NID_serialNumber);
     
-    bool ok = !strcmp(actualSerial, wantedSerial);
+    bool ok = actualSerial && !strcmp(actualSerial, wantedSerial);
     free(actualSerial);
     return ok;
 }
