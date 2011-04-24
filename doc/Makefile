@@ -30,10 +30,10 @@ clean:
 
 install: all
 	install -d $(DESTDIR)$(MANDIR)/man7
-	gzip -c9 fribid.7 > $(DESTDIR)$(MANDIR)/man7/fribid.7.gz
+	gzip -n -c9 fribid.7 > $(DESTDIR)$(MANDIR)/man7/fribid.7.gz
 	for lang in $(LANGUAGES); do \
 	    install -d $(DESTDIR)$(MANDIR)/$$lang/man7 && \
-	    gzip -c9 fribid.$$lang.7 > $(DESTDIR)$(MANDIR)/$$lang/man7/fribid.7.gz || exit 1; \
+	    gzip -n -c9 fribid.$$lang.7 > $(DESTDIR)$(MANDIR)/$$lang/man7/fribid.7.gz || exit 1; \
 	done
 
 uninstall:
