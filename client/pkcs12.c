@@ -606,6 +606,7 @@ static TokenError storeCertificates(STACK_OF(X509) *certs,
     STACK_OF(PKCS7) *authsafes = NULL;
     FILE *newFile = NULL;
     char *tempname = NULL;
+    bool modified = false;
     
     // Attempt to create new file first
     // (to avoid race conditions)
@@ -620,8 +621,6 @@ static TokenError storeCertificates(STACK_OF(X509) *certs,
     d2i_PKCS12_fp(orig, &p12);
     platform_closeLocked(orig);
     if (!p12) goto end;
-    
-    bool modified = false;
     
     // For each PKCS7 safe
     authsafes = PKCS12_unpack_authsafes(p12);
