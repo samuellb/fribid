@@ -130,7 +130,7 @@ Options:
         ;;
     --internal--get-define=*)
         name=${flag#--internal--get-define=}
-        printf '#include "%s"\n%s\n' "$basedir/common/defines.h" "$name" | cpp - | sed 's/#[^\n]*//g' | tr -d '\n' | sed 's/" "//g' | tr -d '\"'
+        printf '#include "%s"\n%s\n' "$basedir/common/defines.h" "$name" | cpp - | sed 's/#.*$//g' | tr -d '\n' | sed 's/" "//g' | tr -d '\"'
         exit 0
         ;;
     --internal--remove-link)
