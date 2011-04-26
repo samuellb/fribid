@@ -45,6 +45,14 @@ static long pagesize = 0;
 static char *pool = NULL;
 static long poolsize = 0;
 
+/*
+ * At least FreeBSD and MacOSX uses MAP_ANON instead of
+ * MAP_ANONYMOUS.
+ */
+#ifndef MAP_ANONYMOUS
+#define MAP_ANONYMOUS MAP_ANON
+#endif
+
 /**
  * Initialize the secure memory pool, map and lock
  * it down
