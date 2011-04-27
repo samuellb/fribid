@@ -24,6 +24,7 @@
 
 #define _BSD_SOURCE 1
 #define _POSIX_C_SOURCE 200112
+#define _XOPEN_SOURCE 600
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -38,7 +39,7 @@
 #include <sys/socket.h>
 #include <netdb.h>
 #include <sys/ioctl.h>
-#include <sys/file.h>
+#include <fcntl.h>
 #include <assert.h>
 #include <arpa/inet.h>
 #include <netinet/in.h>
@@ -46,6 +47,8 @@
 #include "../common/defines.h"
 #include "misc.h"
 #include "platform.h"
+
+struct flock file_lock(short ltype);
 
 void platform_seedRandom() {
     struct timeval tv;
@@ -70,12 +73,12 @@ struct PlatformDirIter {
 FILE *platform_openLocked(const char *filename, PlatformOpenMode mode) {
     static const char *const stdio_modes[] = { "rb", "wb" };
     static const int open_flags[] = { O_RDONLY, O_WRONLY|O_CREAT|O_EXCL };
-    static const int lock_flags[] = { LOCK_SH, LOCK_EX };
-    
+    static const int lock_flags[] = { F_RDLCK, F_WRLCK };
+
     int fd = open(filename, open_flags[mode], 0600);
     if (fd == -1) return NULL;
     
-    if (flock(fd, lock_flags[mode]) != 0) {
+    if (fcntl(fd, F_SETLKW, file_lock(lock_flags[mode])) != 0) {
         close(fd);
         return NULL;
     }
@@ -84,7 +87,7 @@ FILE *platform_openLocked(const char *filename, PlatformOpenMode mode) {
 }
 
 bool platform_closeLocked(FILE *file) {
-    flock(fileno(file), LOCK_UN);
+    fcntl(fileno(file), F_SETLK, file_lock(F_UNLCK));
     return (fclose(file) == 0);
 }
 
@@ -276,5 +279,20 @@ uint32_t platform_lookupTypeARecord(const char *hostname) {
     freeaddrinfo(ai);
     return arecord;
 }
+
+/**
+ * Returns a flock struct used as an argument to fcntl to
+ * lock a file.
+ */
+struct flock file_lock(short ltype) {
+    struct flock retval;
+    retval.l_type = ltype;
+    retval.l_start = 0;
+    retval.l_whence = SEEK_SET;
+    retval.l_len = 0;
+    retval.l_pid = getpid();
+    return retval;
+}
+
 
 
