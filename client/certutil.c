@@ -44,7 +44,7 @@ typedef struct {
  * the names used in old versions of OpenSSL, BankID and probably other
  * software. These are different from RFC 2256.
  */
-static bool get_non_rfc2256(const char *field, int *nid, int *position) {
+static bool get_non_rfc2256(const char *field, int *nid) {
     static const DNAttrInfo attrdefs[NUM_DN_ATTRS] = {
         // These are supported in Nexus Personal 4.10.4.3 and 4.16.1 on Win32
         { "C", NID_countryName, },
@@ -67,7 +67,6 @@ static bool get_non_rfc2256(const char *field, int *nid, int *position) {
     for (size_t i = 0; i < NUM_DN_ATTRS; i++) {
         if (!g_ascii_strcasecmp(field, attrdefs[i].name)) {
             *nid = attrdefs[i].nid;
-            *position = i;
             return true;
         }
     }
@@ -107,8 +106,8 @@ X509_NAME *certutil_parse_dn(const char *s, bool fullDN) {
         
         // Parse attribute name
         char *field = g_strndup(s, nameLength);
-        int nid, position;
-        bool ok = get_non_rfc2256(field, &nid, &position);
+        int nid;
+        bool ok = get_non_rfc2256(field, &nid);
         g_free(field);
         if (!ok) goto error; // Unsupported attribute
         
