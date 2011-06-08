@@ -44,7 +44,7 @@ typedef struct {
  * the names used in old versions of OpenSSL, BankID and probably other
  * software. These are different from RFC 2256.
  */
-static bool get_non_rfc2256(const char *field, int *nid) {
+static bool get_non_rfc2256(const char *field, int *nid, ASN1_OBJECT **obj) {
     static const DNAttrInfo attrdefs[NUM_DN_ATTRS] = {
         // These are supported in Nexus Personal 4.10.4.3 and 4.16.1 on Win32
         { "C", NID_countryName, },
@@ -61,15 +61,26 @@ static bool get_non_rfc2256(const char *field, int *nid) {
         { "ST", NID_stateOrProvinceName, },
         { "STREET", NID_streetAddress, },
         { "T", NID_title, },
-        { "OID.2.5.4.41", NID_name, }, // TODO support arbitrary OIDs
     };
+            
+    // Check for OID.x.x.x
+    if (!g_ascii_strncasecmp(field, "OID.", 4)) {
+        *obj = OBJ_txt2obj(field+4, 1);
+        if (!*obj) return false;
+        
+        *nid = OBJ_obj2nid(*obj);
+        return true;
+    }
     
     for (size_t i = 0; i < NUM_DN_ATTRS; i++) {
+        // Check for aliases
         if (!g_ascii_strcasecmp(field, attrdefs[i].name)) {
             *nid = attrdefs[i].nid;
-            return true;
+            *obj = OBJ_nid2obj(*nid);
+            return (*obj != NULL);
         }
     }
+    
     return false;
 }
 
@@ -93,6 +104,7 @@ static int determine_string_type(const char *s, int length) {
 X509_NAME *certutil_parse_dn(const char *s, bool fullDN) {
     X509_NAME *subject = X509_NAME_new();
     STACK_OF(X509_NAME_ENTRY) *entries = sk_X509_NAME_ENTRY_new_null();
+    ASN1_OBJECT *obj = NULL;
     
     while (*s != '\0') {
         // Parse attribute
@@ -107,18 +119,21 @@ X509_NAME *certutil_parse_dn(const char *s, bool fullDN) {
         // Parse attribute name
         char *field = g_strndup(s, nameLength);
         int nid;
-        bool ok = get_non_rfc2256(field, &nid);
+        bool ok = get_non_rfc2256(field, &nid, &obj);
         g_free(field);
         if (!ok) goto error; // Unsupported attribute
         
         if (fullDN || nid == NID_name) {
             // Add attribute
-            X509_NAME_ENTRY *entry = X509_NAME_ENTRY_create_by_NID(NULL, nid,
+            X509_NAME_ENTRY *entry = X509_NAME_ENTRY_create_by_OBJ(NULL, obj,
                 determine_string_type(value, valueLength),
                 (unsigned char*)value, valueLength);
             if (!entry) goto error;
             sk_X509_NAME_ENTRY_push(entries, entry);
         }
+        
+        ASN1_OBJECT_free(obj);
+        obj = NULL;
         
         // Go to next attribute
         s += nameLength+1+valueLength;
@@ -138,6 +153,7 @@ X509_NAME *certutil_parse_dn(const char *s, bool fullDN) {
     
   error:
     fprintf(stderr, BINNAME ": failed to parse subject name: %s\n", s);
+    ASN1_OBJECT_free(obj);
     X509_NAME_free(subject);
     sk_X509_NAME_ENTRY_pop_free(entries, X509_NAME_ENTRY_free);
     return NULL;
