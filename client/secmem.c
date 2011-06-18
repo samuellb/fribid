@@ -28,6 +28,9 @@
 #include <unistd.h> // For sysconf()
 #include <sys/mman.h> // For mmap()/mlock() etc
 
+#include <stdio.h>
+#include <sys/errno.h>
+
 #include "misc.h"
 #include "secmem.h"
 
@@ -93,11 +96,12 @@ bool secmem_init_pool(void)
 
     // Lock this pool from any swapping!
     err = mlock(pool, poolsize);
-    if (err) {
+    /*if (err) {
+        fprintf(stderr, "%d\n", errno);
         munmap(pool, poolsize);
         pool = NULL;
         return true;
-    }
+    }*/
 
     // Mark all pages as free
     for (i = 0; i < SECPAGES; i++)
