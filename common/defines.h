@@ -27,6 +27,10 @@
 
 #include "config.h"
 
+#if (!defined(CONFIGVERSION) || CONFIGVERSION < 2) && !defined(CALLED_FROM_CONFIGURE)
+#error config.h is outdated or non-existent. Please run ./configure
+#endif
+
 #define PACKAGENAME         "FriBID"
 #define PACKAGEVERSION      "0.3.0"
 
@@ -41,8 +45,6 @@
 #define LIB_PATH            LIBDIR "/" BINNAME
 #define SHARE_PATH          DATADIR "/" BINNAME
 #define DOC_PATH            DATADIR "/doc/" BINNAME
-#define MANDIR              DATADIR "/man"
-#define LOCALEDIR           DATADIR "/locale"
 
 #define SIGNING_EXECUTABLE  LIB_PATH "/sign"
 #define UI_PATH             SHARE_PATH "/ui"
