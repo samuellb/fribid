@@ -134,6 +134,7 @@ Options:
         ;;
     --internal--get-define=*)
         name=${flag#--internal--get-define=}
+        [ ! -r "$basedir/common/config" ] && exit 1 # Exit if not configured yet
         printf '#define CALLED_FROM_CONFIGURE\n#include "%s"\n%s\n' "$basedir/common/defines.h" "$name" | cpp - | sed 's/#[^\n]*//g' | tr -d '\n' | sed 's/" "//g' | tr -d '\"'
         exit 0
         ;;
