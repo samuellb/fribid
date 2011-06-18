@@ -218,10 +218,10 @@ static bool _backend_init(Backend *backend) {
 
     /* load pkcs #11 module */
     // TODO: Runtime config parameter
-    if (PKCS11_CTX_load(backend->private->ctx, DEFAULT_PKCS11_ENGINE) != 0) {
+    if (PKCS11_CTX_load(backend->private->ctx, DEFAULT_PKCS11_MODULE) != 0) {
         unsigned long error = ERR_get_error();
         if (!expected_error(error)) {
-            fprintf(stderr, BINNAME ": loading pkcs11 engine failed: %s\n",
+            fprintf(stderr, BINNAME ": loading pkcs11 module failed: %s\n",
                 ERR_reason_error_string(error));
         }
         PKCS11_CTX_free(backend->private->ctx);

@@ -71,7 +71,7 @@ Options:
     --plugin-path=PATH    Sets the NPAPI plugin path [$pluginPaths]
                           This option may be repeated if you want to create
                           plugin links in several places.
-    --pkcs11-engine=PATH  Path to PKCS#11 module [$pkcs11Module]
+    --pkcs11-module=PATH  Path to PKCS#11 module [$pkcs11Module]
     --disable-pkcs11      Disable building PKCS#11 smartcard support
     --enable-pkcs11       Force building PKCS#11 smartcard support
     --optional-pkcs11     Detect PKCS#11 module availability at runtime
@@ -104,7 +104,11 @@ Options:
             pluginPaths="$pluginPaths $path"
         fi
         ;;
+    --pkcs11-module=*)
+        pkcs11Module=${flag#--pkcs11-module=}
+        ;;
     --pkcs11-engine=*)
+        # Deprecated alias for --pkcs11-module
         pkcs11Module=${flag#--pkcs11-engine=}
         ;;
     --disable-pkcs11)
@@ -276,7 +280,7 @@ cat <<EOT >"$CONFFILE"
 
 #define NPAPI_PLUGIN_PATHS "$pluginPaths"
 
-#define DEFAULT_PKCS11_ENGINE "$pkcs11Module"
+#define DEFAULT_PKCS11_MODULE "$pkcs11Module"
 
 #define ENABLE_PKCS11 ${enable_pkcs11:-0}
 #define OPTIONAL_PKCS11 ${optional_pkcs11:-0}
