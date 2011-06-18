@@ -56,22 +56,22 @@ while [ "$#" != "0" ]; do
         echo "Usage: $0 [options]
 
 This script creates a build configuration. The default options are to
-install system-wide, into /usr/local, and use /usr/$multilib/mozilla/plugins
+install system-wide, into $prefix, and use $pluginPaths
 as the plugin directory.
 
 Options:
 
     --help                Shows this help.
-    --prefix=PATH         Sets the installation prefix. [/usr/local]
+    --prefix=PATH         Sets the installation prefix. [$prefix]
     --exec-prefix=PATH    Sets the installation prefix for executable files.
                           The default is to use the same prefix for all files.
     --libdir=PATH         Sets the directory for libraries. [EPREFIX/$multilib]
     --datadir=PATH        Sets the directory for architecture-independent
                           data. [PREFIX/share]
-    --plugin-path=PATH    Sets the NPAPI plugin path [/usr/$multilib/mozilla/plugin]
+    --plugin-path=PATH    Sets the NPAPI plugin path [$pluginPaths]
                           This option may be repeated if you want to create
                           plugin links in several places.
-    --pkcs11-engine=PATH  Path to PKCS#11 module [/usr/$multilib/opensc-pkcs11.so]
+    --pkcs11-engine=PATH  Path to PKCS#11 module [$pkcs11Module]
     --disable-pkcs11      Disable building PKCS#11 smartcard support
     --enable-pkcs11       Force building PKCS#11 smartcard support
     --optional-pkcs11     Detect PKCS#11 module availability at runtime
