@@ -27,6 +27,10 @@
 
 #include "config.h"
 
+#if (!defined(CONFIGVERSION) || CONFIGVERSION < 1) && !defined(CALLED_FROM_CONFIGURE)
+#error config.h is outdated or non-existent. Please run ./configure
+#endif
+
 #define PACKAGENAME         "FriBID"
 #define PACKAGEVERSION      "0.3.0"
 
