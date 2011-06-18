@@ -163,7 +163,7 @@ static void pkcs11_found_token(Backend *backend, PKCS11_SLOT *slot) {
 
     // Scan card
     rc = PKCS11_enumerate_certs(slot->token, &token->certs, &token->ncerts);
-    if (token->ncerts == 0)
+    if (rc || token->ncerts == 0)
         goto fail;
 
     // Firts cert in the chain is the user cert. Rest is associated authority certs
