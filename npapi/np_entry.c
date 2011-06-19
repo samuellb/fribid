@@ -198,6 +198,10 @@ NPError NP_LOADDS NPP_SetWindow(NPP instance, NPWindow* window) {
     return NPERR_NO_ERROR;
 }
 
+/* Undocumented function used by Firefox */
+EXPORT const char *NP_GetPluginVersion() {
+  return NPP_GetPluginVersion();
+}
 
 
 

@@ -85,6 +85,10 @@ char *NPP_GetMIMEDescription() {
            MIME_WEBADMIN ":" NO_FILE_EXTENSIONS ":Webadmin";
 }
 
+const char *NPP_GetPluginVersion() {
+    return PACKAGEVERSION;
+}
+
 NPError NPP_Initialize() {
     return NPERR_NO_ERROR;
 }

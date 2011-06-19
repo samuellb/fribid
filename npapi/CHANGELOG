@@ -1,4 +1,10 @@
 
+2011-06-19. Changed by Samuel Lidén Borell:
+
+  * Added support for the function NP_GetPluginVersion, which is an
+    undocumented extension used by Firefox.
+
+
 2009-11-13. Changed by Samuel Lidén Borell:
 
   * Added a dummy function for compatibility with Opera
