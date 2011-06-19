@@ -33,6 +33,7 @@
 
 #define PACKAGENAME         "FriBID"
 #define PACKAGEVERSION      "0.3.0"
+#define PACKAGEURL          "https://www.fribid.se/"
 
 #define BINNAME             "fribid"
 #define RELEASE_TIME        1303596088
