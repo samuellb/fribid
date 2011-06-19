@@ -78,7 +78,8 @@ FILE *platform_openLocked(const char *filename, PlatformOpenMode mode) {
     int fd = open(filename, open_flags[mode], 0600);
     if (fd == -1) return NULL;
     
-    if (fcntl(fd, F_SETLKW, file_lock(lock_flags[mode])) != 0) {
+    struct flock lk = file_lock(lock_flags[mode]);
+    if (fcntl(fd, F_SETLKW, &lk) != 0) {
         close(fd);
         return NULL;
     }
@@ -87,7 +88,8 @@ FILE *platform_openLocked(const char *filename, PlatformOpenMode mode) {
 }
 
 bool platform_closeLocked(FILE *file) {
-    fcntl(fileno(file), F_SETLK, file_lock(F_UNLCK));
+    struct flock lk = file_lock(F_UNLCK);
+    fcntl(fileno(file), F_SETLK, &lk);
     return (fclose(file) == 0);
 }
 
