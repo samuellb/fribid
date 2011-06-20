@@ -78,6 +78,14 @@ static void freeCMCs(RegutilCMC *cmc, bool freeSelf) {
 
 
 void plugin_free(Plugin *plugin) {
+    plugin_reset(plugin);
+    free(plugin->url);
+    free(plugin->hostname);
+    free(plugin->ip);
+    free(plugin);
+}
+
+void plugin_reset(Plugin *plugin) {
     switch (plugin->type) {
         case PT_Version:
         case PT_Webadmin:
@@ -87,6 +95,7 @@ void plugin_free(Plugin *plugin) {
             free(plugin->info.auth.policys);
             free(plugin->info.sign.subjectFilter);
             free(plugin->info.auth.signature);
+            memset(&plugin->info.auth, 0, sizeof(plugin->info.auth));
             break;
         case PT_Signer:
             free(plugin->info.sign.challenge);
@@ -95,18 +104,16 @@ void plugin_free(Plugin *plugin) {
             free(plugin->info.sign.message);
             free(plugin->info.sign.invisibleMessage);
             free(plugin->info.sign.signature);
+            memset(&plugin->info.sign, 0, sizeof(plugin->info.sign));
             break;
         case PT_Regutil:
             freePKCS10s(&plugin->info.regutil.currentPKCS10, false);
             freePKCS10s(plugin->info.regutil.input.pkcs10, true);
             freeCMCs(&plugin->info.regutil.currentCMC, false);
             freeCMCs(&plugin->info.regutil.input.cmc, false);
+            memset(&plugin->info.regutil, 0, sizeof(plugin->info.regutil));
             break;
     }
-    free(plugin->url);
-    free(plugin->hostname);
-    free(plugin->ip);
-    free(plugin);
 }
 
 static char **getCommonParamPointer(Plugin *plugin, const char *name) {

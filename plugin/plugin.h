@@ -84,6 +84,7 @@ Plugin *plugin_new(PluginType pluginType, const char *url,
                    const char *hostname, const char *ip,
                    Window windowId);
 void plugin_free(Plugin *plugin);
+void plugin_reset(Plugin *plugin);
 
 /* Javascript API */
 char *version_getVersion(Plugin *plugin);

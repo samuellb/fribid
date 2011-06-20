@@ -62,6 +62,7 @@ static bool objHasMethod(NPObject *npobj, NPIdentifier ident) {
         case PT_Authentication:
         case PT_Signer:
             return !strcmp(name, "GetParam") || !strcmp(name, "SetParam") ||
+                   !strcmp(name, "Reset") ||
                    !strcmp(name, "PerformAction") || !strcmp(name, "GetLastError");
         case PT_Regutil:
             return !strcmp(name, "GetParam") || !strcmp(name, "SetParam") ||
@@ -111,6 +112,14 @@ static bool objInvokeSafe(PluginObject *this, const char *name,
                 free(value);
                 
                 return ok;
+            } else if (IS_CALL_0("Reset")) {
+                // Clear all parameters
+                plugin_reset(this->plugin);
+                
+                this->plugin->lastError = BIDERR_OK;
+                INT32_TO_NPVARIANT((int32_t)this->plugin->lastError, *result);
+                
+                return true;
             } else if (IS_CALL_1("PerformAction", STRING)) {
                 // Perform action
                 char *action = variantToStringZ(&args[0]);
