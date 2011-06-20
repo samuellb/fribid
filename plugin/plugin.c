@@ -93,7 +93,7 @@ void plugin_reset(Plugin *plugin) {
         case PT_Authentication:
             free(plugin->info.auth.challenge);
             free(plugin->info.auth.policys);
-            free(plugin->info.sign.subjectFilter);
+            free(plugin->info.auth.subjectFilter);
             free(plugin->info.auth.signature);
             memset(&plugin->info.auth, 0, sizeof(plugin->info.auth));
             break;
