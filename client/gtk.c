@@ -27,6 +27,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <gtk/gtk.h>
+#include <gdk/gdkx.h>
 #include <glib.h>
 #include <assert.h>
 #include <errno.h>
@@ -140,7 +141,13 @@ static void makeDialogTransient(GtkDialog *dialog, unsigned long parentWindowId)
     bool transientOk = false;
     
     if (parentWindowId != PLATFORM_NO_WINDOW) {
+#if GTK_CHECK_VERSION(3, 0, 0)
+        GdkDisplay *display = gdk_display_get_default();
+        GdkWindow *parent = gdk_x11_window_foreign_new_for_display(display,
+            (Window)parentWindowId);
+#else
         GdkWindow *parent = gdk_window_foreign_new((GdkNativeWindow)parentWindowId);
+#endif
         if (parent != NULL) {
             gtk_widget_realize(GTK_WIDGET(dialog));
             GdkWindow *ourWindow = gtk_widget_get_window(GTK_WIDGET(dialog));
