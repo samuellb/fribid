@@ -683,6 +683,7 @@ extern "C" {
 
 #ifdef XP_UNIX
 char* NPP_GetMIMEDescription(void);
+const char* NPP_GetPluginVersion(void);
 #endif /* XP_UNIX */
 
 NPError NP_LOADDS NPP_Initialize(void);
