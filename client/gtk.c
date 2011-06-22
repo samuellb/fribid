@@ -143,11 +143,7 @@ static void makeDialogTransient(GtkDialog *dialog, unsigned long parentWindowId)
         GdkWindow *parent = gdk_window_foreign_new((GdkNativeWindow)parentWindowId);
         if (parent != NULL) {
             gtk_widget_realize(GTK_WIDGET(dialog));
-#if GTK_CHECK_VERSION(2, 14, 0)
             GdkWindow *ourWindow = gtk_widget_get_window(GTK_WIDGET(dialog));
-#else
-            GdkWindow *ourWindow = GTK_WIDGET(dialog)->window;
-#endif
             if (ourWindow != NULL) {
                 gdk_window_set_transient_for(ourWindow, parent);
                 transientOk = true;
