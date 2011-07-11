@@ -1,3 +1,15 @@
+0.3.1 - 2011-07-11
+  * Added support for numeric OIDs in distinguished names. This should
+    make enrollment with Handelsbanken work, but is untested so far.
+  * Build fixes for FreeBSD (Robert Andersson).
+  * Support for --localedir and --mandir in the configure script.
+  * Compatibility with GTK 3.0.
+  * Implemented the "Reset" function in the Javascript interface. I haven't
+    seen it used anywhere, but it's implemented in Nexus Personal.
+  * The plugin version is now reported to the browser.
+  * Some small improvements.
+
+
 0.3.0 - 2011-04-24
   * [security update] Fix display of ISO-8859-1 strings and strings with
     invalid UTF-8. Previously the "text to sign" box was just empty in
