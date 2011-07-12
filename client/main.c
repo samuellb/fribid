@@ -78,8 +78,10 @@ void pipeCommand(PipeCommand command, const char *url, const char *hostname,
             int32_t serverTime = pipe_readInt(stdin);
             free(pipe_readOptionalString(stdin)); // Just ignore the policies list for now
             char *subjectFilter = pipe_readOptionalString(stdin);
-            char *message = NULL, *invisibleMessage = NULL;
+            char *messageEncoding = NULL, *message = NULL,
+                 *invisibleMessage = NULL;
             if (command == PC_Sign) {
+                messageEncoding = pipe_readString(stdin);
                 message = pipe_readString(stdin);
                 invisibleMessage = pipe_readOptionalString(stdin);
             }
@@ -170,8 +172,9 @@ void pipeCommand(PipeCommand command, const char *url, const char *hostname,
                                                 hostname, ip, &signature);
                 } else {
                     error = bankid_sign(token, challenge, serverTime,
-                                        hostname, ip, message,
-                                        invisibleMessage, &signature);
+                                        hostname, ip, messageEncoding,
+                                        message, invisibleMessage,
+                                        &signature);
                 }
                 
                 guaranteed_memset(password, 0, password_maxsize);
@@ -187,6 +190,7 @@ void pipeCommand(PipeCommand command, const char *url, const char *hostname,
             platform_endSign();
             
             backend_freeNotifier(notifier);
+            free(messageEncoding);
             free(message);
             free(invisibleMessage);
             free(challenge);

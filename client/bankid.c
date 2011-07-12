@@ -242,7 +242,7 @@ static const char sign_template[] =
     "</bankIdSignedData>";
 
 static const char signedText_template[] =
-    "<usrVisibleData charset=\"UTF-8\" visible=\"wysiwys\">"
+    "<usrVisibleData charset=\"%s\" visible=\"wysiwys\">"
         "%s"
     "</usrVisibleData>";
 
@@ -322,11 +322,12 @@ BankIDError bankid_authenticate(Token *token,
 BankIDError bankid_sign(Token *token,
                         const char *challenge, int32_t serverTime,
                         const char *hostname, const char *ip,
-                        const char *message, const char *invisibleMessage,
+                        const char *messageEncoding, const char *message,
+                        const char *invisibleMessage,
                         char **signature) {
     BankIDError error;
     
-    char *extra = rasprintf(signedText_template, message);
+    char *extra = rasprintf(signedText_template, messageEncoding, message);
     
     if (invisibleMessage) {
         extra = rasprintf_append(extra, signedInvisibleText_template, invisibleMessage);

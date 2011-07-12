@@ -37,6 +37,14 @@
 #include "plugin.h"
 
 
+/**
+ * Sets parameters that have some other value than "" or 0 as
+ * their default value.
+ */
+static void setInitialParamValues(Plugin *plugin) {
+    plugin->info.sign.messageEncoding = strdup("UTF-8");
+}
+
 Plugin *plugin_new(PluginType pluginType, const char *url,
                    const char *hostname, const char *ip,
                    Window windowId) {
@@ -54,6 +62,7 @@ Plugin *plugin_new(PluginType pluginType, const char *url,
         return NULL;
     }
     
+    setInitialParamValues(plugin);
     return plugin;
 }
 
@@ -101,6 +110,7 @@ void plugin_reset(Plugin *plugin) {
             free(plugin->info.sign.challenge);
             free(plugin->info.sign.policys);
             free(plugin->info.sign.subjectFilter);
+            free(plugin->info.sign.messageEncoding);
             free(plugin->info.sign.message);
             free(plugin->info.sign.invisibleMessage);
             free(plugin->info.sign.signature);
@@ -114,6 +124,7 @@ void plugin_reset(Plugin *plugin) {
             memset(&plugin->info.regutil, 0, sizeof(plugin->info.regutil));
             break;
     }
+    setInitialParamValues(plugin);
 }
 
 static char **getCommonParamPointer(Plugin *plugin, const char *name) {
@@ -130,6 +141,7 @@ static char **getParamPointer(Plugin *plugin, const char *name) {
             return getCommonParamPointer(plugin, name);
         case PT_Signer:
             if (!g_ascii_strcasecmp(name, "Nonce")) return &plugin->info.sign.challenge;
+            if (!g_ascii_strcasecmp(name, "TextCharacterEncoding")) return &plugin->info.sign.messageEncoding;
             if (!g_ascii_strcasecmp(name, "TextToBeSigned")) return &plugin->info.sign.message;
             if (!g_ascii_strcasecmp(name, "NonVisibleData")) return &plugin->info.sign.invisibleMessage;
             return getCommonParamPointer(plugin, name);
@@ -208,6 +220,17 @@ bool sign_setParam(Plugin *plugin, const char *name, const char *value) {
         }
         
         return true;
+    }
+    
+    // TextCharacterEncoding: Only the values "UTF-8" and "ISO-88591-1"
+    // are allowed (case-sensitive). This value is NOT escaped in the XML
+    // signature.
+    if (plugin->type == PT_Signer &&
+        !g_ascii_strcasecmp(name, "TextCharacterEncoding") &&
+        strcmp(value, "UTF-8") && strcmp(value, "ISO-8859-1")) {
+        // Not sure about the name of this error code...
+        plugin->lastError = BIDERR_ValueTooLong;
+        return false;
     }
     
     // Handle string parameters

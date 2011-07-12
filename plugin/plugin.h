@@ -64,6 +64,7 @@ typedef struct {
             int32_t serverTime;
             char *policys;
             char *subjectFilter;
+            char *messageEncoding;
             char *message;
             char *invisibleMessage;
             /* Output parameters */

@@ -160,6 +160,7 @@ int sign_performAction_Sign(Plugin *plugin) {
     sendHeader(&pipeinfo, plugin, PC_Sign);
     sendSignCommon(&pipeinfo, plugin);
     
+    pipe_sendString(pipeinfo.out, plugin->info.sign.messageEncoding);
     pipe_sendString(pipeinfo.out, plugin->info.sign.message);
     pipe_sendOptionalString(pipeinfo.out, plugin->info.sign.invisibleMessage);
     

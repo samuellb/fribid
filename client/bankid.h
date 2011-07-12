@@ -45,7 +45,8 @@ BankIDError bankid_authenticate(Token *token,
 BankIDError bankid_sign(Token *token,
                         const char *challenge, int32_t serverTime,
                         const char *hostname, const char *ip,
-                        const char *message, const char *invisibleMessage,
+                        const char *messageEncoding, const char *message,
+                        const char *invisibleMessage,
                         char **signature);
 
 BankIDError bankid_createRequest(const RegutilInfo *info,
