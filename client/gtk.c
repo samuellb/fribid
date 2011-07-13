@@ -299,6 +299,10 @@ void platform_startSign(const char *url, const char *hostname, const char *ip,
     gtk_cell_layout_set_attributes(GTK_CELL_LAYOUT(tokenCombo),
                                    renderer, "text", 0, (char *)NULL);
     
+    // Set displayname as the sort column
+    GtkTreeSortable *sortable = GTK_TREE_SORTABLE(tokens);
+    gtk_tree_sortable_set_sort_column_id(sortable, 0, GTK_SORT_ASCENDING);
+    
     // Used to dim the "Sign" button when no signature has been selected
     g_signal_connect(G_OBJECT(tokenCombo), "changed",
                      G_CALLBACK(validateDialog), NULL);
