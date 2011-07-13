@@ -21,14 +21,15 @@ sendstring ''             # policies (optional)
 sendstring ''             # subject filter (optional)
 
 # Send data to be signed
+sendstring 'UTF-8' # message encoding
 sendstring 'aGkK' # visible message
 sendstring ''     # hidden data (optional)
 
 # Prevent EOF
 echo 'hack'
 
-} | valgrind --leak-check=no -q ./sign --internal--ipc=9 | tr ';' '\n' | {
-#} | ./sign --internal--ipc=9 | tr ';' '\n' | {
+} | valgrind --leak-check=no -q ./sign --internal--ipc=10 | tr ';' '\n' | {
+#} | ./sign --internal--ipc=10 | tr ';' '\n' | {
 
 #### Parse response ####
 read error
