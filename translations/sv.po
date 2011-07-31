@@ -22,10 +22,10 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: FriBID 0.3.0\n"
+"Project-Id-Version: FriBID 0.3.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2011-04-20 22:35+0200\n"
-"PO-Revision-Date: 2011-04-20 22:45+0100\n"
+"POT-Creation-Date: 2011-07-31 19:13+0200\n"
+"PO-Revision-Date: 2011-07-31 19:14+0200\n"
 "Last-Translator: Samuel Lidén Borell <samuel@slbdata.se>\n"
 "Language-Team: Swedish\n"
 "Language: sv\n"
@@ -61,6 +61,10 @@ msgstr "Felaktigt lösenord"
 #: ../client/gtk.c:68
 msgid "Incorrect PIN"
 msgstr "Felaktig PIN"
+
+#: ../client/gtk.c:73
+msgid "No random state available (/dev/(u)random must exist)"
+msgstr "Inget slumptillstånd är tillgängligt (/dev/(u)random måste finnas)"
 
 #: ../client/gtk.c:197
 msgid "Please enter PIN on pinpad"

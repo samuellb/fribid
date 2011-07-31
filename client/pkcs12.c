@@ -36,6 +36,7 @@
 #include <openssl/x509.h>
 #include <openssl/x509v3.h>
 #include <openssl/pkcs12.h>
+#include <openssl/rand.h>
 #include <openssl/safestack.h>
 
 typedef struct _PKCS12Token PKCS12Token;
@@ -471,6 +472,10 @@ TokenError _backend_createRequest(const RegutilInfo *info,
                                   const char *password,
                                   char **request, size_t *reqlen) {
     // OpenSSL seeds the PRNG automatically, see the manual page for RAND_add.
+    if (!RAND_status()) {
+        fprintf(stderr, BINNAME ": no random state!\n");
+        return TokenError_NoRandomState;
+    }
     
     // Abort if there are no requests
     *request = NULL;

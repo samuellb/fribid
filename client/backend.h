@@ -63,6 +63,8 @@ typedef enum  {
     TokenError_BadPassword,
     // Smart card errors
     TokenError_BadPin,
+    // Key generation errors
+    TokenError_NoRandomState,
 } TokenError;
 
 /* Notification methods */

@@ -67,6 +67,10 @@ static const char *const errorStrings[] = {
     // Smart card errors
     // TokenError_BadPin
     translatable("Incorrect PIN"),
+    
+    // Key generation errors
+    //TokenError_NoRandomState,
+    translatable("No random state available (/dev/(u)random must exist)"),
 };
 
 
