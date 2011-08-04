@@ -50,20 +50,30 @@ char *rasprintf(const char *format, ...) {
  * Like rasprintf (above), but appends to an existing string instead of
  * creating a new one. The original string is reallocated as a longer
  * string, which is returned.
+ *
+ * In case of an error, this function returns NULL and frees str.
  */
 char *rasprintf_append(char *str, const char *format, ...) {
     va_list args;
     
-    size_t oldlen = strlen(str);
     va_start(args, format);
     char *tail = (char*)g_strdup_vprintf((gchar*)format, args);
     va_end(args);
+    if (!tail) goto error;
+    
+    size_t oldlen = strlen(str);
     size_t taillen = strlen(tail);
     
     str = realloc(str, oldlen+taillen+1);
+    if (!str) goto error;
     memcpy(&str[oldlen], tail, taillen+1);
     free(tail);
     return str;
+  
+  error:
+    free(tail);
+    free(str);
+    return NULL;
 }
 
 /**
@@ -130,7 +140,9 @@ char *base64_encode(const char *data, const int length) {
     if (length == 0) return strdup("");
     
     char *base64 = (char*)g_base64_encode((const guchar*)data, length);
-    removeNewlines(base64);
+    if (base64) {
+        removeNewlines(base64);
+    }
     return base64;
 }
 
@@ -138,13 +150,20 @@ char *base64_decode(const char *encoded) {
     gsize length;
 
     char *temp = (char*)g_base64_decode(encoded, &length);
-    if (!temp) return NULL;
+    if (!temp) goto error;
+    
     char *result = malloc(length+1);
+    if (!result) goto error;
+    
     memcpy(result, temp, length);
     result[length] = '\0';
     free(temp);
     
     return utf8_or_latin1(result, length);
+  
+  error:
+    free(temp);
+    return NULL;
 }
 
 char *base64_decode_binary(const char *encoded, size_t *decodedLength) {
@@ -170,7 +189,7 @@ bool is_canonical_base64(const char *encoded) {
     
     /* Recode and verify that it's equal to the encoded data */
     char *recoded = base64_encode(decoded, length);
-    bool equal = !strcmp(recoded, encoded);
+    bool equal = recoded && !strcmp(recoded, encoded);
     
     free(recoded);
     free(decoded);
