@@ -122,15 +122,16 @@ bool platform_readFile(const char *filename, char **data, int *length) {
 
 PlatformDirIter *platform_openDir(const char *pathname) {
     PlatformDirIter *iter = malloc(sizeof(PlatformDirIter));
+    if (!iter) return NULL;
     iter->dir = opendir(pathname);
-    if (!iter->dir) {
-        free(iter);
-        return NULL;
-    }
-    
     iter->path = strdup(pathname);
     iter->entry = NULL;
-    return iter;
+    
+    if (iter->dir && iter->path) return iter;
+    
+    // Error
+    platform_closeDir(iter);
+    return NULL;
 }
 
 bool platform_iterateDir(PlatformDirIter *iter) {
