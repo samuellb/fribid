@@ -99,17 +99,24 @@ bool platform_deleteLocked(FILE *file, const char *filename) {
 }
 
 bool platform_readFile(const char *filename, char **data, int *length) {
+    bool ok = false;
     FILE *file = platform_openLocked(filename, Platform_OpenRead);
-    if (!file) return false;
-    if (fseek(file, 0, SEEK_END) == -1) {
-        platform_closeLocked(file);
-        return false;
-    }
+    if (!file) goto end;
+    
+    // Determine length of file
+    if (fseek(file, 0, SEEK_END) == -1) goto end;
     *length = ftell(file);
-    fseek(file, 0, SEEK_SET);
+    if (*length == -1) goto end;
+    
+    // Read contents
+    if (fseek(file, 0, SEEK_SET) == -1) goto end;
     *data = malloc(*length);
-    bool ok = (fread(*data, *length, 1, file) == 1);
-    platform_closeLocked(file);
+    if (*data) {
+        ok = (fread(*data, *length, 1, file) == 1);
+    }
+    
+  end:
+    if (file) platform_closeLocked(file);
     return ok;
 }
 
