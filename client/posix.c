@@ -139,11 +139,7 @@ char *platform_currentName(PlatformDirIter *iter) {
 }
 
 char *platform_currentPath(PlatformDirIter *iter) {
-    char *path = malloc(strlen(iter->path) + strlen(iter->entry->d_name) + 2);
-    strcpy(path, iter->path);
-    strcat(path, "/");
-    strcat(path, iter->entry->d_name);
-    return path;
+    return rasprintf("%s/%s", iter->path, iter->entry->d_name);
 }
 
 void platform_closeDir(PlatformDirIter *iter) {
@@ -159,11 +155,8 @@ void platform_keyDirs(char*** path, size_t* len) {
     static char *paths[NUM_PATHS];
     *len = (NUM_PATHS - 1);
     *path = paths;
-    paths[0] = malloc(strlen(getenv("HOME")) + strlen(suffix) + 2);
-    sprintf(paths[0], "%s/%s", getenv("HOME"), suffix);
-
-    paths[1] = malloc(strlen(getenv("HOME")) + strlen(hidden_suffix) + 2);
-    sprintf(paths[1], "%s/%s", getenv("HOME"), hidden_suffix);
+    paths[0] = rasprintf("%s/%s", getenv("HOME"), suffix);
+    paths[1] = rasprintf("%s/%s", getenv("HOME"), hidden_suffix);
 }
 
 PlatformDirIter *platform_openKeysDir(char *path) {
