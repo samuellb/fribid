@@ -93,9 +93,9 @@ static TokenError _backend_getBase64Chain(const PKCS11Token *token,
         return TokenError_Unknown;
     }
     
-    *count = 1;
-    *certs = malloc(sizeof(char*));
-    (*certs)[0] = certutil_derEncode(cert);
+    *count = 0;
+    *certs = NULL;
+    if (!certutil_addToList(certs, count, cert)) goto error;
     
     X509_NAME *issuer = X509_get_issuer_name(cert);
     while (issuer != NULL) {
@@ -103,12 +103,14 @@ static TokenError _backend_getBase64Chain(const PKCS11Token *token,
         if (!cert) break;
         
         issuer = X509_get_issuer_name(cert);
-        (*count)++;
-        *certs = realloc(*certs, *count * sizeof(char*));
-        (*certs)[*count-1] = certutil_derEncode(cert);
+        if (!certutil_addToList(certs, count, cert)) goto error;
     }
     
     return TokenError_Success;
+    
+  error:
+    certutil_freeList(certs, count);
+    return TokenError_Unknown;
 }
 
 #ifndef SHA1_LENGTH

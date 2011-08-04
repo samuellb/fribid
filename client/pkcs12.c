@@ -278,24 +278,26 @@ static TokenError _backend_getBase64Chain(const PKCS12Token *token,
         return TokenError_Unknown;
     }
     
-    *count = 1;
-    *certs = malloc(sizeof(char*));
-    (*certs)[0] = certutil_derEncode(cert);
+    *count = 0;
+    *certs = NULL;
+    if (!certutil_addToList(certs, count, cert)) goto error;
     
     X509_NAME *issuer = X509_get_issuer_name(cert);
     while (issuer != NULL) {
         cert = certutil_findCert(certList, issuer, KeyUsage_Issuing, false);
         if (!cert) break;
         
-        // TODO use serial number also?
         issuer = X509_get_issuer_name(cert);
-        (*count)++;
-        *certs = realloc(*certs, *count * sizeof(char*));
-        (*certs)[*count-1] = certutil_derEncode(cert);
+        
+        if (!certutil_addToList(certs, count, cert)) goto error;
     }
     
     sk_X509_pop_free(certList, X509_free);
     return TokenError_Success;
+    
+  error:
+    certutil_freeList(certs, count);
+    return TokenError_Unknown;
 }
 
 static TokenError _backend_sign(PKCS12Token *token,

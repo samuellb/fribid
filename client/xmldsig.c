@@ -29,6 +29,7 @@
 #include <stdio.h>
 
 #include "backend.h"
+#include "certutil.h"
 #include "xmldsig.h"
 #include "misc.h"
 
@@ -143,10 +144,7 @@ char *xmldsig_sign(Token *token, const char *dataId, const char *data) {
     // Clean up
     free(signedinfo);
     free(keyinfo);
-    if (certs) {
-        for (size_t i = 0; i < certCount; i++) free(certs[i]);
-        free(certs);
-    }
+    certutil_freeList(&certs, &certCount);
     
     return complete;
 }

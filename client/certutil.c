@@ -279,6 +279,41 @@ X509 *certutil_findCert(const STACK_OF(X509) *certList,
     return NULL;
 }
 
+/**
+ * Adds a certificate to a list. The certificate will be DER-encoded.
+ * For empty lists, list should point to a NULL pointer and count point
+ * to a zero integer.
+ */
+bool certutil_addToList(char ***list, size_t *count, X509 *cert) {
+    
+    char *certDer = certutil_derEncode(cert);
+    if (!certDer) goto error;
+    
+    char **extended = realloc(*list, (*count+1) * sizeof(char*));
+    if (!extended) goto error;
+    
+    extended[*count] = certDer;
+    *list = extended;
+    (*count)++;
+    return true;
+    
+  error:
+    free(certDer);
+    return false;
+}
+
+/**
+ * Frees a list of certificates.
+ */
+void certutil_freeList(char ***list, size_t *count) {
+    if (!*list) return;
+    
+    for (size_t i = *count; i-- > 0; ) {
+        free((*list)[i]);
+    }
+    free(*list);
+}
+
 
 PKCS7 *certutil_parseP7SignedData(const char *p7data, size_t length) {
     // Parse data

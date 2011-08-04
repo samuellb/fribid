@@ -52,7 +52,7 @@ pkcs12.o: ../common/biderror.h ../common/bidtypes.h backend.h backend_private.h 
 pipe.o: ../common/pipe.h ../common/pipe.c
 posix.o: platform.h
 request.o: request.h
-xmldsig.o: xmldsig.h backend.h misc.h
+xmldsig.o: xmldsig.h backend.h certutil.h misc.h
 secmem.o: secmem.h
 
 .c.o:
