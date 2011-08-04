@@ -43,7 +43,7 @@ all: sign gtk/sign.xml
 backend.o: ../common/biderror.h ../common/bidtypes.h backend.h backend_private.h
 bankid.o: ../common/biderror.h ../common/bidtypes.h bankid.h backend.h misc.h platform.h xmldsig.h
 certutil.o: certutil.h
-glibconfig.o: platform.h
+glibconfig.o: platform.h misc.h
 gtk.o: ../common/biderror.h ../common/bidtypes.h backend.h bankid.h platform.h misc.h
 main.o: ../common/biderror.h ../common/bidtypes.h ../common/pipe.h backend.h bankid.h misc.h platform.h secmem.h
 misc.o: misc.h

@@ -27,15 +27,10 @@
 #include <glib.h>
 
 #include "platform.h"
+#include "misc.h"
 
 char *platform_getConfigPath(const char *appname) {
-    
-    const char *configDir = g_get_user_config_dir();
-    char *result = malloc(strlen(configDir) + 1 + strlen(appname) + 1);
-    strcpy(result, configDir);
-    strcat(result, "/");
-    strcat(result, appname);
-    return result;
+    return rasprintf("%s/%s", g_get_user_config_dir(), appname);
 }
 
 
@@ -51,13 +46,7 @@ PlatformConfig *platform_openConfig(const char *appname,
     PlatformConfig *result = malloc(sizeof(PlatformConfig));
     
     result->path = platform_getConfigPath(appname);
-    
-    result->filename = malloc(strlen(result->path) + 1 +
-                              strlen(configname) + 1);
-    strcpy(result->filename, result->path);
-    strcat(result->filename, "/");
-    strcat(result->filename, configname);
-    
+    result->filename = rasprintf("%s/%s", result->path, configname);
     result->keyfile = g_key_file_new();
     result->changed = false;
     
