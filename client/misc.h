@@ -27,6 +27,18 @@
 
 #include <stdbool.h>
 
+#define SIZE_T_MAX ((size_t)-1)
+
+/**
+ * Adds to a size_t and checks for integer overflow
+ *
+ * Based the code here: http://c-faq.com/misc/intovf.html
+ */
+#define ADD_LENGTH(var, length) do { \
+    if (SIZE_T_MAX - (length) < (var)) goto error; \
+    (var) += (length); \
+} while (0)
+
 char *rasprintf(const char *format, ...);
 char *rasprintf_append(char *str, const char *format, ...);
 void *guaranteed_memset(void *v, int c, size_t n);

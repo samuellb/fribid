@@ -1,6 +1,6 @@
 /*
 
-  Copyright (c) 2009 Samuel Lidén Borell <samuel@slbdata.se>
+  Copyright (c) 2009-2011 Samuel Lidén Borell <samuel@slbdata.se>
  
   Permission is hereby granted, free of charge, to any person obtaining a copy
   of this software and associated documentation files (the "Software"), to deal
@@ -77,60 +77,76 @@ static const char cert_template[] =
  */
 char *xmldsig_sign(Token *token, const char *dataId, const char *data) {
     
-    // Keyinfo
-    char **certs;
+    char **certs = NULL;
+    char *keyinfo = NULL, *signedinfo = NULL;
+    char *complete = NULL;
     size_t certCount;
-    if (!token_getBase64Chain(token, &certs, &certCount)) {
-        return NULL;
-    }
     
-    size_t certsLength = (strlen(cert_template)-2) * certCount;
+    // Keyinfo
+    if (!token_getBase64Chain(token, &certs, &certCount)) goto error;
+    
+    size_t templateLength = strlen(cert_template)-2;
+    size_t certsLength = 1; // null terminator
     for (size_t i = 0; i < certCount; i++) {
-        certsLength += strlen(certs[i]);
+        size_t len = strlen(certs[i]);
+        ADD_LENGTH(certsLength, templateLength);
+        ADD_LENGTH(certsLength, len);
     }
     
-    char *keyinfoInner = malloc(certsLength+1);
+    char *keyinfoInner = malloc(certsLength);
+    if (!keyinfoInner) goto error;
     keyinfoInner[0] = '\0';
+    
     char *keyend = keyinfoInner;
     for (size_t i = 0; i < certCount; i++) {
         keyend += sprintf(keyend, cert_template, certs[i]);
         free(certs[i]);
     }
     free(certs);
+    certs = NULL;
     
-    char *keyinfo = rasprintf(keyinfo_template, keyinfoInner);
+    keyinfo = rasprintf(keyinfo_template, keyinfoInner);
     free(keyinfoInner);
+    if (!keyinfo) goto error;
     
     // SignedInfo
     char *data_sha = sha_base64(data);
     char *keyinfo_sha = sha_base64(keyinfo);
     
-    char *signedinfo = rasprintf(signedinfo_template, data_sha, keyinfo_sha);
+    if (data_sha && keyinfo_sha) {
+        signedinfo = rasprintf(signedinfo_template, data_sha, keyinfo_sha);
+    }
+    
     free(keyinfo_sha);
     free(data_sha);
-    
+    if (!signedinfo) goto error;
     
     // Signature
     char *sigData;
     size_t sigLen;
     
     if (!token_sign(token, signedinfo, strlen(signedinfo),
-                    &sigData, &sigLen)) {
-        free(keyinfo);
-        free(signedinfo);
-        return NULL;
-    }
+                    &sigData, &sigLen)) goto error;
     
     char *signature = base64_encode(sigData, sigLen);
+    
     free(sigData);
+    if (!signature) goto error;
     
     // Glue everything together
-    char *complete = rasprintf(xmldsig_template,
-                               signedinfo, signature, keyinfo, data);
+    complete = rasprintf(xmldsig_template,
+                         signedinfo, signature, keyinfo, data);
     
-    free(keyinfo);
-    free(signedinfo);
     free(signature);
+    
+  error:
+    // Clean up
+    free(signedinfo);
+    free(keyinfo);
+    if (certs) {
+        for (size_t i = 0; i < certCount; i++) free(certs[i]);
+        free(certs);
+    }
     
     return complete;
 }
