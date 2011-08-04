@@ -82,7 +82,7 @@ bool secmem_init_pool(void)
     // Allocate a secure memory pool, mmap call explained
     // inline. We map something anonymous, for reading and
     // writing.
-    pool = mmap (0, poolsize,
+    pool = mmap(NULL, poolsize,
              PROT_READ | PROT_WRITE,
              MAP_PRIVATE | MAP_ANONYMOUS,
              -1, 0);
