@@ -37,7 +37,7 @@ typedef struct {
     const int nid;
 } DNAttrInfo;
 
-#define NUM_DN_ATTRS 15
+#define NUM_DN_ATTRS 14
 
 /**
  * Returns an object identifier NID for a field name. This function uses
