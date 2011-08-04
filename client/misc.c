@@ -64,11 +64,11 @@ char *rasprintf_append(char *str, const char *format, ...) {
     size_t oldlen = strlen(str);
     size_t taillen = strlen(tail);
     
-    str = realloc(str, oldlen+taillen+1);
-    if (!str) goto error;
-    memcpy(&str[oldlen], tail, taillen+1);
+    char *merged = realloc(str, oldlen+taillen+1);
+    if (!merged) goto error;
+    memcpy(&merged[oldlen], tail, taillen+1);
     free(tail);
-    return str;
+    return merged;
   
   error:
     free(tail);
