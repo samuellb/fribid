@@ -210,8 +210,10 @@ char *certutil_getNamePropertyByNID(X509_NAME *name, int nid) {
     if (length < 0) return NULL;
     
     text = malloc(length+1);
-    text[0] = '\0'; // if the function would fail
-    X509_NAME_get_text_by_NID(name, nid, text, length+1);
+    if (text) {
+        text[0] = '\0'; // if the function would fail
+        X509_NAME_get_text_by_NID(name, nid, text, length+1);
+    }
     return text;
 }
 
