@@ -334,8 +334,10 @@ char *certutil_getBagAttr(PKCS12_SAFEBAG *bag, ASN1_OBJECT *oid) {
     // Copy the value to a string
     int len = at->value.printablestring->length;
     char *str = malloc(len+1);
-    if (str) memcpy(str, at->value.printablestring->data, len);
-    str[len] = '\0';
+    if (str) {
+        memcpy(str, at->value.printablestring->data, len);
+        str[len] = '\0';
+    }
     return str;
 }
 
