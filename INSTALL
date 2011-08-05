@@ -7,7 +7,7 @@ To build FriBID you need the following software:
   * gettext
   * GTK 2.18 or later
   * GLib 2.8 or later
-  * OpenSSL 0.9.8
+  * OpenSSL 0.9.8 or 1.0.0
   * And development files (headers) for the three
     libraries above.
 
