@@ -145,7 +145,7 @@ static void makeDialogTransient(GtkDialog *dialog, unsigned long parentWindowId)
     bool transientOk = false;
     
     if (parentWindowId != PLATFORM_NO_WINDOW) {
-#if GTK_CHECK_VERSION(3, 0, 0)
+#if GTK_CHECK_VERSION(2, 24, 0)
         GdkDisplay *display = gdk_display_get_default();
         GdkWindow *parent = gdk_x11_window_foreign_new_for_display(display,
             (Window)parentWindowId);
