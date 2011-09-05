@@ -107,6 +107,9 @@ X509_NAME *certutil_parse_dn(const char *s, bool fullDN) {
     ASN1_OBJECT *obj = NULL;
     
     while (*s != '\0') {
+        // Ignore leading whitespace (this includes whitespace after a comma)
+        while (g_ascii_isspace(*s)) s++;
+        
         // Parse attribute
         size_t nameLength = strcspn(s, ",+=");
         if (s[nameLength] != '=') goto error;
@@ -115,6 +118,10 @@ X509_NAME *certutil_parse_dn(const char *s, bool fullDN) {
         // TODO handle escaped data
         size_t valueLength = strcspn(value, "+,");
         if (value[valueLength] == '+') goto error; // Not supported
+        
+        // Ignore trailing whitespace
+        const char *end = &s[nameLength+1+valueLength];
+        while (g_ascii_isspace(value[valueLength-1])) valueLength--;
         
         // Parse attribute name
         char *field = g_strndup(s, nameLength);
@@ -136,7 +143,7 @@ X509_NAME *certutil_parse_dn(const char *s, bool fullDN) {
         obj = NULL;
         
         // Go to next attribute
-        s += nameLength+1+valueLength;
+        s = end;
         if (*s == ',') s++;
     }
     
