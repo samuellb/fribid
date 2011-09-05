@@ -111,12 +111,12 @@ X509_NAME *certutil_parse_dn(const char *s, bool fullDN) {
         while (g_ascii_isspace(*s)) s++;
         
         // Parse attribute
-        size_t nameLength = strcspn(s, ",+=");
+        size_t nameLength = strcspn(s, "=,;+");
         if (s[nameLength] != '=') goto error;
         
         const char *value = &s[nameLength+1];
         // TODO handle escaped data
-        size_t valueLength = strcspn(value, "+,");
+        size_t valueLength = strcspn(value, ",;+");
         if (value[valueLength] == '+') goto error; // Not supported
         
         // Ignore trailing whitespace
@@ -144,7 +144,7 @@ X509_NAME *certutil_parse_dn(const char *s, bool fullDN) {
         
         // Go to next attribute
         s = end;
-        if (*s == ',') s++;
+        if (*s == ',' || *s == ';') s++;
     }
     
     // Add the attributes to the subject name in reverse order
