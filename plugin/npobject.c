@@ -214,6 +214,9 @@ static bool objInvokeSafe(PluginObject *this, const char *name,
                 return true;
             }
             return false;
+        case PT_OldSigner:
+            // Not implemented
+            return false;
         default:
             return false;
     }
@@ -334,6 +337,8 @@ NPObject *npobject_fromMIME(NPP instance, NPMIMEType mimeType) {
         return npobject_new(instance, PT_Regutil);
     } else if (!strcmp(mimeType, MIME_WEBADMIN)) {
         return npobject_new(instance, PT_Webadmin);
+    } else if (!strcmp(mimeType, MIME_OLDSIGNER)) {
+        return npobject_new(instance, PT_OldSigner);
     } else {
         return NULL;
     }

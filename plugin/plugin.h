@@ -36,6 +36,7 @@ typedef enum {
     PT_Signer,
     PT_Regutil,
     PT_Webadmin,
+    PT_OldSigner,
 } PluginType;
 
 typedef struct {

@@ -98,6 +98,7 @@ void plugin_reset(Plugin *plugin) {
     switch (plugin->type) {
         case PT_Version:
         case PT_Webadmin:
+        case PT_OldSigner:
             break;
         case PT_Authentication:
             free(plugin->info.auth.challenge);

@@ -82,7 +82,8 @@ char *NPP_GetMIMEDescription() {
            MIME_AUTHENTICATION ":" NO_FILE_EXTENSIONS ":Authentication;"
            MIME_SIGNER ":" NO_FILE_EXTENSIONS ":Signer2;"
            MIME_REGUTIL ":" NO_FILE_EXTENSIONS ":Regutil;"
-           MIME_WEBADMIN ":" NO_FILE_EXTENSIONS ":Webadmin";
+           MIME_WEBADMIN ":" NO_FILE_EXTENSIONS ":Webadmin;"
+           MIME_OLDSIGNER ":" NO_FILE_EXTENSIONS ":Signer";
 }
 
 const char *NPP_GetPluginVersion() {

@@ -32,6 +32,7 @@
 #define MIME_SIGNER "application/x-personal-signer2"
 #define MIME_REGUTIL "application/x-personal-regutil"
 #define MIME_WEBADMIN "application/x-personal-webadmin"
+#define MIME_OLDSIGNER "application/x-personal-signer" // Not implemented
 
 typedef struct {
     NPObject base;
