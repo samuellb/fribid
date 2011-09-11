@@ -228,25 +228,11 @@ fi
 
 echo
 
-### Check dependencies
-utilities="make pkg-config msgfmt cpp"
-depError=""
-if ! type $utilities > /dev/null 2> /dev/null; then
-    echo "ERROR: Missing commands:" >&2
-    for utility in $utilities; do
-        if ! type "$utility" > /dev/null 2> /dev/null; then
-            echo "  $utility" >&2
-            depError=1
-        fi
-    done
-fi
-
 if [ -z "$enable_pkcs11" ] && pkg-config --exists libp11; then
     enable_pkcs11=1
 fi
 
-oldifs=IFS
-IFS=";"
+# Check that the PKCS#11 module exists
 pkgconfigDeps="gtk+-2.0 >= 2.12;gdk-2.0;glib-2.0;libcrypto;x11"
 if [ "$enable_pkcs11" = 1 ]; then
     if [ "$optional_pkcs11" = 0 ]; then
@@ -271,17 +257,34 @@ else
     echo "    PKCS#11 smartcard support disabled"
 fi
 
+### Check dependencies
+utilities="make pkg-config msgfmt cpp"
+depError=""
+if ! type $utilities > /dev/null 2> /dev/null; then
+    echo
+    echo "ERROR: Missing commands:" >&2
+    for utility in $utilities; do
+        if ! type "$utility" > /dev/null 2> /dev/null; then
+            echo "  $utility" >&2
+            depError=1
+        fi
+    done
+fi
+
+oldifs=IFS
+IFS=";"
 if ! pkg-config --exists $pkgconfigDeps; then
+    echo
     echo "ERROR: Unsatisfied dependencies: " >&2
     for dep in $pkgconfigDeps; do
         pkg-config --exists $dep || echo "  $dep" >&2
     done
     depError=1
 fi
-  
 IFS=oldifs
 
 if [ -n "$depError" ]; then
+    echo
     exit 1
 fi
 
