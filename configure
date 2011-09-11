@@ -229,7 +229,7 @@ fi
 echo
 
 ### Check dependencies
-utilities="make pkg-config msgfmt"
+utilities="make pkg-config msgfmt cpp"
 depError=""
 if ! type $utilities > /dev/null 2> /dev/null; then
     echo "ERROR: Missing commands:" >&2
