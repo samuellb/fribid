@@ -25,7 +25,8 @@ prefixSet=""
 prefix="/usr/local"
 execprefix=""
 
-if [ ! -h /usr/lib64 ] && [ -f /usr/lib64/libc.so ]; then
+if ( [ ! -h /usr/lib64 ] && [ -f /usr/lib64/libc.so ] && [ ! -d /usr/lib32 ] ) ||
+   ( [ ! -h /lib64 ] && [ -f /lib64/libc.so.6 ] && [ ! -d /usr/lib32 ] ); then
     multilib="lib64"
 else
     multilib="lib"
