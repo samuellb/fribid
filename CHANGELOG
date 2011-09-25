@@ -1,3 +1,21 @@
+1.0.0 - 2011-09-25
+  * [security update] Many fixes of potential problems, discovered with
+    tools like Sparse and Clang --analyze, and manual review of the code.
+    None of the problems are known to be remotely exploitable, but all
+    users are encouraged to upgrade.
+  * Fixed problem with enrollment of new certificates on Chrome/Chromium.
+  * Added the TextCharacterEncoding parameter. Needed by minameddelanden.se
+  * Improved parsing of SubjectDN. This fixes a problem with enrollment on
+    Handelsbanken.
+  * The MIME type "application/x-personal-signer" is now claimed to be
+    supported. This makes the log in work on Handelsbanken.
+  * Fixed a problem on 64-bit platforms. Thanks to Edward Tjörnhammar.
+  * Subjects are now sorted by their display name.
+  * An initial size is now specified for the "text to be signed" box. This
+    fixes a problem on Ubuntu 11.10, where it was invisible.
+  * Improved "configure" script with more reliable 64-bit path detection.
+
+
 0.3.1 - 2011-07-11
   * Added support for numeric OIDs in distinguished names. This should
     make enrollment with Handelsbanken work, but is untested so far.
