@@ -271,7 +271,7 @@ void platform_startSign(const char *url, const char *hostname, const char *ip,
     
     GtkBuilder *builder = gtk_builder_new();
     GError *error = NULL;
-    GtkVBox *vbox;
+    GtkBox *box;
     GtkContainer *content_area;
     
     if (!gtk_builder_add_from_file(builder, UI_GTK_XML, &error)) {
@@ -320,8 +320,8 @@ void platform_startSign(const char *url, const char *hostname, const char *ip,
     gtk_container_add(GTK_CONTAINER(content_area), GTK_WIDGET (info_label));
     gtk_widget_show(GTK_WIDGET(info_label));
 
-    vbox = GTK_VBOX(gtk_builder_get_object(builder, "vbox1"));
-    gtk_box_pack_end(GTK_BOX(vbox), GTK_WIDGET (info_bar), TRUE, FALSE, 2);
+    box = GTK_BOX(gtk_builder_get_object(builder, "vbox1"));
+    gtk_box_pack_end(box, GTK_WIDGET (info_bar), TRUE, FALSE, 2);
 
     activeDialog = signDialog = GTK_DIALOG(gtk_builder_get_object(builder, "dialog_sign"));
     
