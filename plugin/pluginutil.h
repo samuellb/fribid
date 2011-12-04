@@ -1,5 +1,5 @@
-#ifndef __PLUGINUTIL_H__
-#define __PLUGINUTIL_H__
+#ifndef PLUGINUTIL_H
+#define PLUGINUTIL_H
 
 #include <stdint.h>
 

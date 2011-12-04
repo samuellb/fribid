@@ -22,8 +22,8 @@
 
 */
 
-#ifndef __PLATFORM_H__
-#define __PLATFORM_H__
+#ifndef PLATFORM_H
+#define PLATFORM_H
 
 #include <stdbool.h>
 #include <stdint.h>

@@ -22,8 +22,8 @@
 
 */
 
-#ifndef __XMLDSIG_H__
-#define __XMLDSIG_H__
+#ifndef XMLDSIG_H
+#define XMLDSIG_H
 
 #include "backend.h"
 

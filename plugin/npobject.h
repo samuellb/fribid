@@ -22,8 +22,8 @@
 
 */
 
-#ifndef __NPOBJECT_H__
-#define __NPOBJECT_H__
+#ifndef NPOBJECT_H
+#define NPOBJECT_H
 
 #include "plugin.h"
 

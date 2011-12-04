@@ -39,7 +39,7 @@
 #include <openssl/rand.h>
 #include <openssl/safestack.h>
 
-typedef struct _PKCS12Token PKCS12Token;
+typedef struct PKCS12Token PKCS12Token;
 #define TokenType PKCS12Token
 
 #include "../common/defines.h"
@@ -54,7 +54,7 @@ typedef struct {
     PKCS12 *data;
 } SharedPKCS12;
 
-struct _PKCS12Token {
+struct PKCS12Token {
     Token base;
     
     SharedPKCS12 *sharedP12;

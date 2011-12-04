@@ -22,8 +22,8 @@
 
 */
 
-#ifndef __MISC_H__
-#define __MISC_H__
+#ifndef MISC_H
+#define MISC_H
 
 #include <stdbool.h>
 

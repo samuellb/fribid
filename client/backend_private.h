@@ -22,8 +22,8 @@
 
 */
 
-#ifndef __BACKEND_PRIVATE_H__
-#define __BACKEND_PRIVATE_H__
+#ifndef BACKEND_PRIVATE_H
+#define BACKEND_PRIVATE_H
 
 #include <stddef.h>
 #include <stdbool.h>
@@ -37,8 +37,8 @@
 #endif
 
 
-typedef struct _Backend Backend;
-struct _Backend {
+typedef struct Backend Backend;
+struct Backend {
     BackendPrivateType *private;
     const BackendNotifier *notifier;
     
@@ -83,7 +83,7 @@ struct _Backend {
                        char **signature, size_t *siglen);
 };
 
-struct _Token {
+struct Token {
     const Backend *backend;
     TokenError lastError;
     TokenStatus status;
@@ -94,7 +94,7 @@ struct _Token {
     const char *password;
 };
 
-struct _BackendNotifier {
+struct BackendNotifier {
     size_t backendCount;
     Backend **backends;
     

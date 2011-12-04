@@ -22,8 +22,8 @@
 
 */
 
-#ifndef __PLUGIN_H__
-#define __PLUGIN_H__
+#ifndef PLUGIN_H
+#define PLUGIN_H
 
 #include <stdint.h>
 #include <X11/X.h>

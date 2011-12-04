@@ -22,8 +22,8 @@
 
 */
 
-#ifndef __SECMEM_H__
-#define __SECMEM_H__
+#ifndef SECMEM_H
+#define SECMEM_H
 
 bool secmem_init_pool(void);
 char *secmem_get_page(long *page_size);

@@ -22,8 +22,8 @@
 
 */
 
-#ifndef __CERTUTIL_H__
-#define __CERTUTIL_H__
+#ifndef CERTUTIL_H
+#define CERTUTIL_H
 
 // Certificate utilities
 

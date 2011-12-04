@@ -22,8 +22,8 @@
 
 */
 
-#ifndef __BANKID_H__
-#define __BANKID_H__
+#ifndef BANKID_H
+#define BANKID_H
 
 #include <stdbool.h>
 #include <stdint.h>

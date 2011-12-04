@@ -22,13 +22,13 @@
 
 */
 
-#ifndef __BACKEND_H__
-#define __BACKEND_H__
+#ifndef BACKEND_H
+#define BACKEND_H
 
 #include <stdbool.h>
 #include "../common/bidtypes.h"
 
-typedef struct _Token Token;
+typedef struct Token Token;
 
 typedef enum {
     TokenChange_Added,
@@ -40,7 +40,7 @@ typedef enum {
  * A backend notifier object monitors all supported backends for tokens that
  * are used to identify a certain person.
  */
-typedef struct _BackendNotifier BackendNotifier;
+typedef struct BackendNotifier BackendNotifier;
 
 typedef void (*BackendNotifyFunction)(Token *token, TokenChange change);
 

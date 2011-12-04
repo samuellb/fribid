@@ -38,8 +38,8 @@
 #include <openssl/safestack.h>
 #include <stdio.h>
 
-typedef struct _PKCS11Token PKCS11Token;
-typedef struct _PKCS11Private PKCS11Private;
+typedef struct PKCS11Token PKCS11Token;
+typedef struct PKCS11Private PKCS11Private;
 #define TokenType PKCS11Token
 #define BackendPrivateType PKCS11Private
 
@@ -48,14 +48,14 @@ typedef struct _PKCS11Private PKCS11Private;
 #include "misc.h"
 #include "backend_private.h"
 
-struct _PKCS11Token {
+struct PKCS11Token {
     Token base;
     PKCS11_SLOT *slot;
     PKCS11_CERT *certs;
     unsigned int ncerts;
 };
 
-struct _PKCS11Private {
+struct PKCS11Private {
     PKCS11_CTX *ctx;
     unsigned int nslots;
     PKCS11_SLOT *slots;
