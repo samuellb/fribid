@@ -76,7 +76,7 @@ static void _backend_free(Backend *backend) {
  * Parses a P12 file and returns a parsed representation of the file, with
  * a reference count so it can be shared by multiple tokens.
  */
-static SharedPKCS12 *pkcs12_parse(const char *p12Data, const int p12Length) {
+static SharedPKCS12 *pkcs12_parse(const char *p12Data, int p12Length) {
     BIO *bio;
     PKCS12 *data;
     
@@ -667,7 +667,7 @@ static TokenError storeCertificates(STACK_OF(X509) *certs,
             ASN1_BIT_STRING *usage = X509_get_ext_d2i(cert, NID_key_usage,
                                                       NULL, NULL);
             if (name && usage && usage->length > 0) {
-                const KeyUsage keyUsage =
+                KeyUsage keyUsage =
                     ((usage->data[0] & X509v3_KU_NON_REPUDIATION) == X509v3_KU_NON_REPUDIATION ?
                         KeyUsage_Signing : KeyUsage_Authentication);
                 

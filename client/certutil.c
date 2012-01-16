@@ -198,7 +198,7 @@ bool certutil_hasKeyUsage(X509 *cert, KeyUsage keyUsage) {
 
     usage = X509_get_ext_d2i(cert, NID_key_usage, NULL, NULL);
     if (usage) {
-        const int opensslKeyUsage = opensslKeyUsages[keyUsage];
+        int opensslKeyUsage = opensslKeyUsages[keyUsage];
         supported = (usage->length > 0) &&
                     ((usage->data[0] & opensslKeyUsage) == opensslKeyUsage);
         ASN1_BIT_STRING_free(usage);
@@ -273,7 +273,7 @@ bool certutil_compareX509Names(const X509_NAME *a, const X509_NAME *b,
 
 X509 *certutil_findCert(const STACK_OF(X509) *certList,
                         const X509_NAME *name,
-                        const KeyUsage keyUsage,
+                        KeyUsage keyUsage,
                         bool orderMightDiffer) {
     int num = sk_X509_num(certList);
     for (int i = 0; i < num; i++) {

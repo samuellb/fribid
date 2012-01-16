@@ -136,7 +136,7 @@ static char *utf8_or_latin1(char *input, size_t length) {
     return NULL;
 }
 
-char *base64_encode(const char *data, const int length) {
+char *base64_encode(const char *data, int length) {
     if (length == 0) return strdup("");
     
     char *base64 = (char*)g_base64_encode((const guchar*)data, length);

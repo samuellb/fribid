@@ -67,7 +67,7 @@ static void _backend_freeToken(PKCS11Token *token) {
 
 static X509 *findCert(const PKCS11Token *token,
                       const X509_NAME *name,
-                      const KeyUsage keyUsage) {
+                      KeyUsage keyUsage) {
     for (unsigned int i = 0; i < token->ncerts; i++) {
         X509 *cert = token->certs[i].x509;
         if (!X509_NAME_cmp(X509_get_subject_name(cert), name) &&

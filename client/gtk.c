@@ -420,7 +420,7 @@ static gboolean addTokenFunc(gpointer ptr) {
     const char *filename = (char *)token_getTag(token);
     
     // Check for errors
-    const TokenError error = token_getLastError(token);
+    TokenError error = token_getLastError(token);
     if (error) {
         platform_showError(error);
         return FALSE;
