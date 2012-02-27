@@ -251,8 +251,12 @@ if [ "$enable_pkcs11" = 1 ]; then
             depError=1
             errorType="ERROR"
         fi
-        echo
+        echo >&2
         echo "$errorType: PKCS#11 module not found" >&2
+        
+        if [ "x${pkcs11Module%opensc-pkcs11.so}" != "x$pkcs11Module" ]; then
+            echo "Make sure that you have installed OpenSC!" >&2
+        fi
     fi
 else
     echo "    PKCS#11 smartcard support disabled"
