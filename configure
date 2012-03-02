@@ -257,9 +257,10 @@ if [ "$enable_pkcs11" = 1 ]; then
         if [ "x${pkcs11Module%opensc-pkcs11.so}" != "x$pkcs11Module" ]; then
             echo "Make sure that you have installed OpenSC!" >&2
         fi
-    elif type readelf grep > /dev/null 2> /dev/null; then
+    elif type readelf grep > /dev/null 2> /dev/null && \
+	 echo 'A_a' | grep -q 'B_b\|A_a'; then
         # Check that it's actually a PKCS#11 module
-        if ! readelf -s "$pkcs11Module" | grep -q C_Initialize; then
+        if ! readelf -s "$pkcs11Module" | grep -q 'C_Initialize\|C_GetFunctionList'; then
             echo >&2
             echo "ERROR: $pkcs11Module is not a PKCS#11 module" >&2
             echo "Normally you should use the file opensc-pkcs11.so from OpenSC." >&2
