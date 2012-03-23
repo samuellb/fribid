@@ -174,7 +174,7 @@ TokenStatus token_getStatus(const Token *token) {
 }
 
 char *token_getDisplayName(const Token *token) {
-    return strdup(token->displayName);
+    return token->displayName ? strdup(token->displayName) : NULL;
 }
 
 void *token_getTag(const Token *token) {
