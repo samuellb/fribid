@@ -34,8 +34,16 @@
 #include "../common/defines.h"
 #include "../common/pipe.h"
 
+#if defined(FRIBID_CLIENT)
+#   define PIPE_ERROR_STRING ": pipe error in client\n"
+#elif defined(FRIBID_PLUGIN)
+#   define PIPE_ERROR_STRING ": pipe error in plugin\n"
+#else
+#   define PIPE_ERROR_STRING ": pipe error (unknown location)\n"
+#endif
+
 static void pipeError() {
-    fprintf(stderr, BINNAME ": pipe error\n");
+    fprintf(stderr, BINNAME PIPE_ERROR_STRING);
 }
 
 static gboolean stopWaiting(GIOChannel *source,
