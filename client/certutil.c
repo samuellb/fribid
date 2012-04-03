@@ -224,6 +224,32 @@ char *certutil_getNamePropertyByNID(X509_NAME *name, int nid) {
     return text;
 }
 
+/**
+ * Returns a string to be displayed for a X509_NAME. First, it tries NID_name,
+ * then it falls backs to concatenate the firstnames and lastnames.
+ */
+char *certutil_getDisplayNameFromDN(X509_NAME *xname) {
+    char *display = certutil_getNamePropertyByNID(xname, NID_name);
+    
+    if (!display) {
+        /* Try with First Last */
+        char *first = certutil_getNamePropertyByNID(xname, NID_givenName);
+        char *last = certutil_getNamePropertyByNID(xname, NID_surname);
+        if (first && last) {
+            display = rasprintf("%s %s", first, last);
+        } else if (first) {
+            display = first;
+            first = NULL;
+        } else if (last) {
+            display = last;
+            last = NULL;
+        }
+        free(first);
+        free(last);
+    }
+    return display;
+}
+
 bool certutil_matchSubjectFilter(const char *subjectFilter, X509_NAME *name) {
     if (!subjectFilter) return true;
     

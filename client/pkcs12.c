@@ -211,7 +211,7 @@ static PKCS12Token *createToken(const Backend *backend, SharedPKCS12 *sharedP12,
     if (!token) return NULL;
     token->base.backend = backend;
     token->base.status = TokenStatus_NeedPassword;
-    token->base.displayName = certutil_getNamePropertyByNID(id, NID_name);
+    token->base.displayName = certutil_getDisplayNameFromDN(id);
     token->base.tag = tag;
     token->sharedP12 = sharedP12;
     token->subjectName = id;

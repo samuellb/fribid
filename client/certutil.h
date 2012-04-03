@@ -39,6 +39,7 @@ X509_NAME *certutil_parse_dn(const char *s, bool fullDN);
 char *certutil_derEncode(X509 *cert);
 bool certutil_hasKeyUsage(X509 *cert, KeyUsage keyUsage);
 char *certutil_getNamePropertyByNID(X509_NAME *name, int nid);
+char *certutil_getDisplayNameFromDN(X509_NAME *xname);
 bool certutil_matchSubjectFilter(const char *subjectFilter, X509_NAME *name);
 bool certutil_compareX509Names(const X509_NAME *a, const X509_NAME *b,
                                bool orderMightDiffer);

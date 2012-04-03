@@ -144,7 +144,7 @@ char *backend_getSubjectDisplayName(const char *dn) {
     X509_NAME *xname = certutil_parse_dn(dn, true);
     if (!xname) return NULL;
     
-    char *displayName = certutil_getNamePropertyByNID(xname, NID_name);
+    char *displayName = certutil_getDisplayNameFromDN(xname);
     
     X509_NAME_free(xname);
     return displayName;

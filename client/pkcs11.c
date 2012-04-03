@@ -184,7 +184,7 @@ static void pkcs11_found_token(Backend *backend, PKCS11_SLOT *slot) {
     } else {
         token->base.status = TokenStatus_NeedPIN;
     }
-    token->base.displayName = certutil_getNamePropertyByNID(id, NID_name);
+    token->base.displayName = certutil_getDisplayNameFromDN(id);
     token->base.tag = slot->token->label;
     backend->notifier->notifyFunction(&token->base, TokenChange_Added);
     return;
