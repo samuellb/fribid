@@ -32,6 +32,7 @@
 #include "backend.h"
 #include "bankid.h"
 #include "platform.h"
+#include "prefs.h"
 #include "misc.h"
 #include "secmem.h"
 
@@ -342,6 +343,7 @@ int main(int argc, char **argv) {
     }
 
     platform_init(&argc, &argv);
+    prefs_load();
     
     for (int i = 1; i < argc; i++) {
         if (!strcmp(argv[i], "--internal--ipc=" IPCVERSION)) {

@@ -1,4 +1,4 @@
-.\"  Copyright (c) 2010 Samuel Lidén Borell <samuel@slbdata.se>
+.\"  Copyright (c) 2010-2012 Samuel Lidén Borell <samuel@slbdata.se>
 .\"
 .\"  Permission is hereby granted, free of charge, to any person obtaining a copy
 .\"  of this software and associated documentation files (the "Software"), to deal
@@ -18,7 +18,7 @@
 .\"  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 .\"  THE SOFTWARE.
 
-.TH fribid 7 "2011-04-20" "" "FriBID"
+.TH fribid 7 "2012-04-05" "" "FriBID"
 
 .SH NAME
 fribid \- a web browser plugin for BankID
@@ -49,6 +49,16 @@ FriBID uses the directories
 and
 .B .cbt
 (a hidden directory) in your home directory to store file-based electronic IDs. To import and export your IDs, just copy them to or from any of these directories. If neither of the directories exist you can simply create a new directory with either of the names. Note that only the P12 file format is supported, the NGE and NGP formats used in the latest versions of the official software are unsupported.
+
+.SH CONFIGURATION
+FriBID loads the configuration file
+.B ~/.config/fribid/config
+if it exists. Currently, there's only a single option, which sets the PKCS#11 module to use for smartcard support (or for other cryptographic tokens). The default is to use OpenSC's PKCS#11 module. Here's an example of how a configuration file might look like:
+
+.IP
+[pkcs11]
+.br
+module=/path/to/pkcs11/module
 
 .SH USING FRIBID
 FriBID will start automatically when you visit a web page that uses BankID for the log in system or to sign information. You can test your BankID software \- whether you use FriBID or BankID Säkerhetsprogram \- at:

@@ -1,4 +1,4 @@
-.\"  Copyright (c) 2010 Samuel Lidén Borell <samuel@slbdata.se>
+.\"  Copyright (c) 2010-2012 Samuel Lidén Borell <samuel@slbdata.se>
 .\"
 .\"  Permission is hereby granted, free of charge, to any person obtaining a copy
 .\"  of this software and associated documentation files (the "Software"), to deal
@@ -18,7 +18,7 @@
 .\"  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 .\"  THE SOFTWARE.
 
-.TH fribid 7 "2011-04-20" "" "FriBID"
+.TH fribid 7 "2012-04-05" "" "FriBID"
 
 .SH NAMN
 fribid \- en webbläsarplugin för BankID
@@ -50,6 +50,16 @@ FriBID använder katalogerna
 och
 .B .cbt
 (en dold katalog) i din hemkatalog för att lagra e-legitimationer på fil. För att importera och exportera legitimationer kopierar du dem till eller från denna någon av dessa kataloger. Om ingen av katalogerna finns kan du skapa någon av dem. Observera att endast P12-formatet stöds, formaten NGE och NGP som används av de senaste versionerna av den officiella programvaran kan ej användas i FriBID.
+
+.SH INSTÄLLNINGAR
+FriBID läser in konfigurationsfilen
+.B ~/.config/fribid/config
+om den finns. Än så länge finns det bara en enda inställning, för att välja vilken PKCS#11-modul som ska användas för smartkortsstöd (eller för andra kryptografiska enheter). Standardvalet är att använda OpenSCs PKCS#11-modul. Här är ett exempel på hur en konfigurationsfil kan se ut:
+
+.IP
+[pkcs11]
+.br
+module=/sökväg/till/pkcs11-modul
 
 .SH ATT ANVÄNDA FRIBID
 FriBID startas automatiskt när du besöker en webbsida som använder BankID för inloggning eller signering. Du kan testa ditt BankID-program \- vare sig du använder FriBID eller BankID Säkerhetsprogram \- på:

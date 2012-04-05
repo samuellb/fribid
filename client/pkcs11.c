@@ -47,6 +47,7 @@ typedef struct PKCS11Private PKCS11Private;
 #include "certutil.h"
 #include "misc.h"
 #include "backend_private.h"
+#include "prefs.h"
 
 struct PKCS11Token {
     Token base;
@@ -219,11 +220,11 @@ static bool _backend_init(Backend *backend) {
     backend->private->ctx = PKCS11_CTX_new();
 
     /* load pkcs #11 module */
-    // TODO: Runtime config parameter
-    if (PKCS11_CTX_load(backend->private->ctx, DEFAULT_PKCS11_MODULE) != 0) {
+    if (PKCS11_CTX_load(backend->private->ctx, prefs_pkcs11_module) != 0) {
         unsigned long error = ERR_get_error();
         if (!expected_error(error)) {
-            fprintf(stderr, BINNAME ": loading pkcs11 module failed: %s\n",
+            fprintf(stderr, BINNAME ": loading pkcs11 module %s failed: %s\n",
+                prefs_pkcs11_module,
                 ERR_reason_error_string(error));
         }
         PKCS11_CTX_free(backend->private->ctx);
