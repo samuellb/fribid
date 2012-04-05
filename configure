@@ -156,6 +156,18 @@ Options:
         [ ! -h "$link" ] || [ "`readlink "$link"`" != "$target" ] || rm -f "$link"
         exit 0
         ;;
+    # Some tools (e.g. Debian package tools) expect "configure" to be a
+    # true autoconf script and implement its options. These options are safely
+    # ignored by this build system.
+    --disable-dependency-tracking)
+        # Dependencies are hard-coded in the Makefile anyway
+        ;;
+    --disable-maintainer-mode|--enable-maintainer-mode)
+        # No files are written to except common/config.h
+        ;;
+    --bindir=*|--includedir=*|--infodir=*|--localstatedir=*|--oldincludedir=*|--sbindir=*|--sharedstatedir=*|--sysconfdir=*|--htmldir=*|--dvidir=*|--pdfdir=*|--psdir=*)
+        # These are standard GNU directory options. They are not used by FriBID
+        ;;
     *)
         echo "Invalid option: $flag"
         error=1
