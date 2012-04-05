@@ -122,7 +122,7 @@ Options:
         # Deprecated alias for --pkcs11-module
         pkcs11Module=${flag#--pkcs11-engine=}
         ;;
-    --disable-pkcs11)
+    --disable-pkcs11|--enable-pkcs11=no)
         enable_pkcs11="0"
         ;;
     --enable-pkcs11)
