@@ -33,6 +33,7 @@ else
 fi
 
 libdir=""
+libexecdir=""
 datadir=""
 localedir=""
 mandir=""
@@ -69,6 +70,7 @@ Options:
     --exec-prefix=PATH    Sets the installation prefix for executable files.
                           The default is to use the same prefix for all files.
     --libdir=PATH         Sets the directory for libraries. [EPREFIX/$multilib]
+    --libexecdir=PATH     Sets the directory for internal executables. [LIBDIR]
     --datadir=PATH        Sets the directory for architecture-independent
                           data. [PREFIX/share]
     --localedir=PATH      Sets the directory for translations [DATADIR/locale]
@@ -95,6 +97,9 @@ Options:
         ;;
     --libdir=*)
         libdir=${flag#--libdir=}
+        ;;
+    --libexecdir=*)
+        libexecdir=${flag#--libexecdir=}
         ;;
     --datadir=*)
         datadir=${flag#--datadir=}
@@ -203,6 +208,10 @@ fi
 ### Specific directories
 if [ -z "$libdir" ]; then
     libdir="$execPath/$multilib"
+fi
+
+if [ -z "$libexecdir" ]; then
+    libexecdir="$libdir"
 fi
 
 if [ -z "$datadir" ]; then
@@ -324,10 +333,11 @@ cat <<EOT >"$CONFFILE"
 #define PREFIX "$prefixPath"
 #define EPREFIX "$execPath"
 
-#define LIBDIR    "$libdir"
-#define DATADIR   "$datadir"
-#define LOCALEDIR "$localedir"
-#define MANDIR    "$mandir"
+#define LIBDIR     "$libdir"
+#define LIBEXECDIR "$libexecdir"
+#define DATADIR    "$datadir"
+#define LOCALEDIR  "$localedir"
+#define MANDIR     "$mandir"
 
 #define NPAPI_PLUGIN_PATHS "$pluginPaths"
 

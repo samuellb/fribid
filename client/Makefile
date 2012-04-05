@@ -29,7 +29,7 @@ LINKFLAGS=$(CFLAGS) $(LDFLAGS) -Wl,--as-needed
 LIBS=`pkg-config --libs $(PKG_DEPS)`
 
 # Files to be installed
-LIB_PATH=`../configure --internal--get-define=LIB_PATH`
+LIBEXEC_PATH=`../configure --internal--get-define=LIBEXEC_PATH`
 SHARE_PATH=`../configure --internal--get-define=SHARE_PATH`
 UI_PATH=`../configure --internal--get-define=UI_PATH`
 SIGNING_EXECUTABLE=`../configure --internal--get-define=SIGNING_EXECUTABLE`
@@ -66,14 +66,14 @@ clean:
 	rm -f $(OBJECTS) sign
 
 install: all
-	install -d $(DESTDIR)$(LIB_PATH)
+	install -d $(DESTDIR)$(LIBEXEC_PATH)
 	install -d $(DESTDIR)$(UI_PATH)
-	install sign $(DESTDIR)$(LIB_PATH)
+	install sign $(DESTDIR)$(LIBEXEC_PATH)
 	install -m 644 gtk/sign.xml $(DESTDIR)$(UI_PATH)
 
 uninstall:
 	rm -f $(DESTDIR)$(SIGNING_EXECUTABLE) $(DESTDIR)$(UI_GTK_XML)
-	[ ! -d $(DESTDIR)$(LIB_PATH) ] || rmdir $(DESTDIR)$(LIB_PATH) 2> /dev/null || true
+	[ ! -d $(DESTDIR)$(LIBEXEC_PATH) ] || rmdir $(DESTDIR)$(LIBEXEC_PATH) 2> /dev/null || true
 	[ ! -d $(DESTDIR)$(UI_PATH) ] || rmdir $(DESTDIR)$(UI_PATH)
 	[ ! -d $(DESTDIR)$(SHARE_PATH) ] || rmdir $(DESTDIR)$(SHARE_PATH)
 

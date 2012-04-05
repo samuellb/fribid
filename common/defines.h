@@ -44,10 +44,11 @@
 #define STATUSDOMAIN        ".status.fribid.se"
 
 #define LIB_PATH            LIBDIR "/" BINNAME
+#define LIBEXEC_PATH        LIBEXECDIR "/" BINNAME
 #define SHARE_PATH          DATADIR "/" BINNAME
 #define DOC_PATH            DATADIR "/doc/" BINNAME
 
-#define SIGNING_EXECUTABLE  LIB_PATH "/sign"
+#define SIGNING_EXECUTABLE  LIBEXEC_PATH "/sign"
 #define UI_PATH             SHARE_PATH "/ui"
 #define UI_GTK_XML          UI_PATH "/sign.xml"
 #define NPAPI_PLUGIN_LIB    LIB_PATH "/libfribidplugin.so"
