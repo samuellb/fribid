@@ -53,6 +53,10 @@ static const char *const errorStrings[] = {
     translatable("An unknown error occurred"),
     // TokenError_NotImplemented
     translatable("Not implemented yet"),
+    // TokenError_MessageTooLong
+    translatable("Message to sign is too long"),
+    // TokenError_SignatureFailure
+    translatable("Failed to create signature"),
     
     // File errors
     // TokenError_FileNotReadable

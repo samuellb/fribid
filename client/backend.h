@@ -56,6 +56,8 @@ typedef enum  {
     TokenError_Success =      0,
     TokenError_Unknown =      1,
     TokenError_NotImplemented,
+    TokenError_MessageTooLong,
+    TokenError_SignatureFailure,
     // File errors
     TokenError_FileNotReadable,
     TokenError_CantCreateFile,

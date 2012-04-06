@@ -125,7 +125,7 @@ static TokenError _backend_sign(PKCS11Token *token,
     assert(signature != NULL);
     assert(siglen != NULL);
     
-    if (messagelen >= UINT_MAX) return TokenError_Unknown;
+    if (messagelen >= UINT_MAX) return TokenError_MessageTooLong;
     
     if (token->slot->token->loginRequired) {
         if (PKCS11_login(token->slot, 0, token->base.password) != 0)
@@ -148,7 +148,7 @@ static TokenError _backend_sign(PKCS11Token *token,
     if (rc != 1) {
         free(*signature);
         *signature = NULL;
-        return TokenError_Unknown;
+        return TokenError_SignatureFailure;
     }
     return TokenError_Success;
 }

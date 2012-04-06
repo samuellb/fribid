@@ -22,10 +22,10 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: FriBID 0.3.1\n"
+"Project-Id-Version: FriBID 1.0.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2011-07-31 19:13+0200\n"
-"PO-Revision-Date: 2011-07-31 19:14+0200\n"
+"POT-Creation-Date: 2012-04-06 10:30+0200\n"
+"PO-Revision-Date: 2012-04-06 10:31+0200\n"
 "Last-Translator: Samuel Lidén Borell <samuel@slbdata.se>\n"
 "Language-Team: Swedish\n"
 "Language: sv\n"
@@ -41,6 +41,14 @@ msgstr "Ett okänt fel inträffade"
 #: ../client/gtk.c:54
 msgid "Not implemented yet"
 msgstr "Ej implementerat än"
+
+#: ../client/gtk.c:57
+msgid "Message to sign is too long"
+msgstr "Meddelandet som skulle signeras var för långt"
+
+#: ../client/gtk.c:59
+msgid "Failed to create signature"
+msgstr "Misslyckades med att skapa signatur"
 
 #: ../client/gtk.c:58
 msgid "The file could not be read"

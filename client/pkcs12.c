@@ -308,7 +308,7 @@ static TokenError _backend_sign(PKCS12Token *token,
     assert(signature != NULL);
     assert(siglen != NULL);
     
-    if (messagelen >= UINT_MAX) return TokenError_Unknown;
+    if (messagelen >= UINT_MAX) return TokenError_MessageTooLong;
     
     // Find the certificate for the token
     STACK_OF(X509) *certList = pkcs12_listCerts(token->sharedP12->data);
@@ -348,7 +348,7 @@ static TokenError _backend_sign(PKCS12Token *token,
         return TokenError_Success;
     } else {
         free(*signature);
-        return TokenError_Unknown;
+        return TokenError_SignatureFailure;
     }
 }
 
