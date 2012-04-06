@@ -808,8 +808,8 @@ TokenError _backend_storeCertificates(const char *p7data, size_t length,
                                                   NULL, NULL);
         if (usage && usage->length > 0 &&
             (usage->data[0] & (X509v3_KU_DIGITAL_SIGNATURE | X509v3_KU_NON_REPUDIATION)) != 0) {
-            // CA certs generally can be used for signatures,
-            // so assume this is should be our own cert
+            // Issuer certs generally can't be used for signatures,
+            // so assume this is our own cert
             self = cert;
             break;
         }
