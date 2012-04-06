@@ -43,7 +43,7 @@ OBJECTS=backend.o bankid.o certutil.o $(if $(ENABLE_PKCS11),pkcs11.o) pkcs12.o r
 all: sign gtk/sign.xml
 
 backend.o: ../common/biderror.h ../common/bidtypes.h backend.h backend_private.h
-bankid.o: ../common/biderror.h ../common/bidtypes.h bankid.h backend.h misc.h platform.h xmldsig.h
+bankid.o: ../common/biderror.h ../common/bidtypes.h bankid.h backend.h misc.h platform.h prefs.h xmldsig.h
 certutil.o: certutil.h misc.h platform.h
 glibconfig.o: platform.h misc.h
 gtk.o: ../common/biderror.h ../common/bidtypes.h backend.h bankid.h certutil.h platform.h misc.h

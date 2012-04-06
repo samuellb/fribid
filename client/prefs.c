@@ -28,6 +28,7 @@
 #ifdef ENABLE_PKCS11
 const char *prefs_pkcs11_module = DEFAULT_PKCS11_MODULE;
 #endif
+const char *prefs_bankid_emulatedversion = NULL;
 
 /**
  * Loads the preferences from ~/.config/fribid/config
@@ -36,11 +37,18 @@ void prefs_load() {
     PlatformConfig *cfg = platform_openConfig("fribid", "config");
     if (cfg) {
         char *s;
+        /* Which PKCS#11 module to use */
 #ifdef ENABLE_PKCS11
         if (platform_getConfigString(cfg, "pkcs11", "module", &s)) {
             prefs_pkcs11_module = s;
         }
 #endif
+        
+        /* Which BankID client software version to report */
+        if (platform_getConfigString(cfg, "expiry", "version-to-emulate", &s)) {
+            prefs_bankid_emulatedversion = s;
+        }
+        
         platform_freeConfig(cfg);
     }
 }

@@ -332,8 +332,10 @@ void pipeData() {
 int main(int argc, char **argv) {
     bool ipc = false, error = false;
     
-    /* Check whether the current version is still valid */
     platform_seedRandom();
+    prefs_load();
+    
+    /* Check whether the current version is still valid */
     bankid_checkVersionValidity();
     
     error = secmem_init_pool();
@@ -343,7 +345,6 @@ int main(int argc, char **argv) {
     }
 
     platform_init(&argc, &argv);
-    prefs_load();
     
     for (int i = 1; i < argc; i++) {
         if (!strcmp(argv[i], "--internal--ipc=" IPCVERSION)) {

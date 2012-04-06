@@ -36,8 +36,7 @@
 #include "misc.h"
 #include "bankid.h"
 #include "platform.h"
-
-static const char defaultEmulatedVersion[] = EMULATED_VERSION;
+#include "prefs.h"
 
 #define EXPIRY_RAND (rand() % 65535)
 #define DEFAULT_EXPIRY (RELEASE_TIME + 30*24*3600)
@@ -70,26 +69,36 @@ static char *getVersionString() {
     
     long lexpiry;
     int64_t expiry;
-    char *versionToEmulate;
+    const char *versionToEmulate;
+    bool allocated = false;
     
-    PlatformConfig *cfg = platform_openConfig(BINNAME, "expiry");
-    
-    if (platform_getConfigInteger(cfg, "expiry", "best-before", &lexpiry)) {
-        expiry = lexpiry;
+    if (prefs_bankid_emulatedversion) {
+        /* Manual override */
+        versionToEmulate = prefs_bankid_emulatedversion;
+        expiry = time(NULL) + 30*24*3600;
     } else {
-        expiry = DEFAULT_EXPIRY;
+        /* Use automatic version from DNS */
+        PlatformConfig *cfg = platform_openConfig(BINNAME, "expiry");
+        
+        if (platform_getConfigInteger(cfg, "expiry", "best-before", &lexpiry)) {
+            expiry = lexpiry;
+        } else {
+            expiry = DEFAULT_EXPIRY;
+        }
+        
+        if (platform_getConfigString(cfg, "expiry", "version-to-emulate", (char**)&versionToEmulate)) {
+            allocated = true;
+        } else {
+            versionToEmulate = EMULATED_VERSION;
+        }
+        
+        platform_freeConfig(cfg);
     }
-    
-    if (!platform_getConfigString(cfg, "expiry", "version-to-emulate", &versionToEmulate)) {
-        versionToEmulate = (char *)defaultEmulatedVersion;
-    }
-    
-    platform_freeConfig(cfg);
     
     char *result = rasprintf(template, versionToEmulate, expiry);
     
-    if (versionToEmulate != defaultEmulatedVersion) {
-        free(versionToEmulate);
+    if (allocated) {
+        free((char*)versionToEmulate);
     }
     return result;
 }
@@ -165,6 +174,9 @@ static void versionCheckFunction(void *ignored) {
  * need checking within 14 days, then the check will be asynchronous.
  */
 void bankid_checkVersionValidity() {
+    if (prefs_bankid_emulatedversion)
+        return;
+    
     PlatformConfig *cfg = platform_openConfig(BINNAME, "expiry");
     
     char *checkedWithVersion = NULL;
@@ -173,7 +185,7 @@ void bankid_checkVersionValidity() {
         // The last check was done with another version, so overwrite the
         // old configuration with the defaults
         storeExpiryParameters(cfg, DEFAULT_EXPIRY, true,
-                              defaultEmulatedVersion);
+                              EMULATED_VERSION);
 
     }
     free(checkedWithVersion);
@@ -207,6 +219,9 @@ void bankid_checkVersionValidity() {
 }
 
 bool bankid_versionHasExpired() {
+    if (prefs_bankid_emulatedversion)
+        return false;
+    
     PlatformConfig *cfg = platform_openConfig(BINNAME, "expiry");
     
     bool valid;

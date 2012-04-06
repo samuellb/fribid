@@ -28,6 +28,7 @@
 #ifdef ENABLE_PKCS11
 extern const char *prefs_pkcs11_module;
 #endif
+extern const char *prefs_bankid_emulatedversion;
 
 void prefs_load();
 
