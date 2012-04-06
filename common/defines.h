@@ -27,7 +27,7 @@
 
 #include "config.h"
 
-#if (!defined(CONFIGVERSION) || CONFIGVERSION < 2) && !defined(CALLED_FROM_CONFIGURE)
+#if (!defined(CONFIGVERSION) || CONFIGVERSION < 3) && !defined(CALLED_FROM_CONFIGURE)
 #error config.h is outdated or non-existent. Please run ./configure
 #endif
 
