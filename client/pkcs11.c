@@ -146,6 +146,7 @@ static TokenError _backend_sign(PKCS11Token *token,
     int rc = PKCS11_sign(NID_sha1, shasum, SHA1_LENGTH, (unsigned char*)*signature, &sigLen, key);
     *siglen = sigLen;
     if (rc != 1) {
+        certutil_updateErrorString();
         free(*signature);
         *signature = NULL;
         return TokenError_SignatureFailure;

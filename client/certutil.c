@@ -26,11 +26,19 @@
 #include <stdlib.h>
 #include <glib.h>
 #include <openssl/asn1t.h>
+#include <openssl/err.h>
 
 #include "../common/defines.h"
+#ifdef ENABLE_PKCS11
+#include <libp11.h>
+#endif
+
 #include "misc.h"
 #include "platform.h"
 #include "certutil.h"
+
+
+static char *error_string = NULL;
 
 typedef struct {
     const char *name;
@@ -409,6 +417,23 @@ char *certutil_getBagAttr(PKCS12_SAFEBAG *bag, ASN1_OBJECT *oid) {
         str[len] = '\0';
     }
     return str;
+}
+
+void certutil_clearErrorString() {
+    error_string = NULL;
+}
+
+void certutil_updateErrorString() {
+    ERR_load_crypto_strings();
+#ifdef ENABLE_PKCS11
+    ERR_load_PKCS11_strings();
+#endif
+    error_string = ERR_error_string(ERR_get_error(), NULL);
+    fprintf(stderr, BINNAME ": error from OpenSSL or libP11: %s\n", error_string);
+}
+
+char *certutil_getErrorString() {
+    return error_string;
 }
 
 

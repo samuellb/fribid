@@ -42,6 +42,7 @@
 #include "bankid.h"
 #include "platform.h"
 #include "misc.h"
+#include "certutil.h"
 
 #define _(string) gettext(string)
 #define translatable(string) (string)
@@ -496,6 +497,7 @@ static void selectExternalFile() {
         removeTokenFile(filename);
         
         // Add an item to the token list and select it
+        certutil_clearErrorString();
         error = addTokenFile(filename);
         
         g_free(filename);
@@ -517,6 +519,7 @@ static void selectExternalFile() {
  */
 bool platform_sign(Token **token, char *password, int password_maxlen) {
     guint response;
+    certutil_clearErrorString();
 
     // Restrict the password to the length of the preallocated
     // password buffer
@@ -686,7 +689,13 @@ void platform_showError(TokenError error) {
             g_free(longText);
             break;
         default:
-            showMessage(GTK_MESSAGE_ERROR, text);
+            if (certutil_getErrorString()) {
+                longText = rasprintf("%s\n\n%s", text, certutil_getErrorString());
+                showMessage(GTK_MESSAGE_ERROR, longText);
+                g_free(longText);
+            } else {
+                showMessage(GTK_MESSAGE_ERROR, text);
+            }
             break;
     }
 }

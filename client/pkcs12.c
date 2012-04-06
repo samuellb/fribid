@@ -114,7 +114,10 @@ static void pkcs12_release(SharedPKCS12 *sharedP12) {
 static EVP_PKEY *getPrivateKey(PKCS12 *p12, X509 *x509, const char* pass) {
     // Extract all PKCS7 safes
     STACK_OF(PKCS7) *pkcs7s = PKCS12_unpack_authsafes(p12);
-    if (!pkcs7s) return NULL;
+    if (!pkcs7s) {
+        certutil_updateErrorString();
+        return NULL;
+    }
     
     // For each PKCS7 safe
     int nump = sk_PKCS7_num(pkcs7s);
@@ -168,6 +171,7 @@ static STACK_OF(X509) *pkcs12_listCerts(PKCS12 *p12) {
     // Extract all PKCS7 safes
     STACK_OF(PKCS7) *pkcs7s = PKCS12_unpack_authsafes(p12);
     if (!pkcs7s) {
+        certutil_updateErrorString();
         sk_X509_free(x509s);
         return NULL;
     }
@@ -178,7 +182,10 @@ static STACK_OF(X509) *pkcs12_listCerts(PKCS12 *p12) {
         PKCS7 *p7 = sk_PKCS7_value(pkcs7s, p);
         if (!p7) continue;
         STACK_OF(PKCS12_SAFEBAG) *safebags = PKCS12_unpack_p7data(p7);
-        if (!safebags) continue;
+        if (!safebags) {
+            certutil_updateErrorString();
+            continue;
+        }
         
         // For each PKCS12 safebag
         int numb = sk_PKCS12_SAFEBAG_num(safebags);
@@ -189,7 +196,9 @@ static STACK_OF(X509) *pkcs12_listCerts(PKCS12 *p12) {
             if (M_PKCS12_bag_type(bag) == NID_certBag) {
                 // Extract x509 cert
                 X509 *x509 = PKCS12_certbag2x509(bag);
-                if (x509 != NULL) {
+                if (x509 == NULL) {
+                    certutil_updateErrorString();
+                } else {
                     sk_X509_push(x509s, x509);
                 }
             }
@@ -347,6 +356,7 @@ static TokenError _backend_sign(PKCS12Token *token,
     if (success) {
         return TokenError_Success;
     } else {
+        certutil_updateErrorString();
         free(*signature);
         return TokenError_SignatureFailure;
     }
@@ -444,6 +454,7 @@ static TokenError saveKeys(const CertReq *reqs, const char *hostname,
         error_count--;
         
       loop_end:
+        certutil_updateErrorString();
         ASN1_OBJECT_free(objOwningHost);
         X509_free(cert);
         sk_PKCS12_SAFEBAG_pop_free(bags, PKCS12_SAFEBAG_free);
@@ -455,7 +466,10 @@ static TokenError saveKeys(const CertReq *reqs, const char *hostname,
     
     // Create the PKCS12 wrapper
     p12 = PKCS12_add_safes(authsafes, 0);
-    if (!p12) goto end;
+    if (!p12) {
+        certutil_updateErrorString();
+        goto end;
+    }
     PKCS12_set_mac(p12, (char*)password, -1, NULL, 0, MAC_ITER, NULL);
     
     // Save file
@@ -521,8 +535,11 @@ TokenError _backend_createRequest(const RegutilInfo *info,
         if (!x509req ||
             !X509_REQ_set_version(x509req, 0) ||
             !X509_REQ_set_subject_name(x509req, subject) ||
-            !X509_REQ_set_pubkey(x509req, privkey)) // yes this is correct(!)
+            !X509_REQ_set_pubkey(x509req, privkey)) { // yes this is correct(!)
+            
+            certutil_updateErrorString();
             goto req_error;
+        }
         
         // Set attributes
         exts = sk_X509_EXTENSION_new_null();
@@ -532,13 +549,17 @@ TokenError _backend_createRequest(const RegutilInfo *info,
         if (!ext || !sk_X509_EXTENSION_push(exts, ext))
             goto req_error;
         
-        if (!X509_REQ_add_extensions(x509req, exts))
+        if (!X509_REQ_add_extensions(x509req, exts)) {
+            certutil_updateErrorString();
             goto req_error;
+        }
         exts = NULL;
         
         // Add signature
-        if (!X509_REQ_sign(x509req, privkey, EVP_sha1()))
+        if (!X509_REQ_sign(x509req, privkey, EVP_sha1())) {
+            certutil_updateErrorString();
             goto req_error;
+        }
         
         // Store in list
         CertReq *req = malloc(sizeof(CertReq));
@@ -627,7 +648,10 @@ static TokenError storeCertificates(STACK_OF(X509) *certs,
     if (!orig) goto end;
     d2i_PKCS12_fp(orig, &p12);
     platform_closeLocked(orig);
-    if (!p12) goto end;
+    if (!p12) {
+        certutil_updateErrorString();
+        goto end;
+    }
     
     // For each PKCS7 safe
     authsafes = PKCS12_unpack_authsafes(p12);
@@ -659,7 +683,10 @@ static TokenError storeCertificates(STACK_OF(X509) *certs,
             
             // Extract cert from bag
             X509 *cert = PKCS12_certbag2x509(bag);
-            if (!cert) continue;
+            if (!cert) {
+                certutil_updateErrorString();
+                continue;
+            }
             
             // Get subject name and key usage
             X509_NAME *name = X509_get_subject_name(cert);
@@ -730,7 +757,10 @@ static TokenError storeCertificates(STACK_OF(X509) *certs,
     if (!modified || !p12) goto end;
     
     // Save
-    if (!i2d_PKCS12_fp(newFile, p12)) goto end;
+    if (!i2d_PKCS12_fp(newFile, p12)) {
+        certutil_updateErrorString();
+        goto end;
+    }
     
     if (platform_closeLocked(newFile)) {
        newFile = NULL;
