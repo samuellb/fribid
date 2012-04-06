@@ -48,6 +48,8 @@ enable_pkcs11=""
 optional_pkcs11="0"
 pkcs11Module="/usr/$multilib/opensc-pkcs11.so"
 
+gtkversion="auto"
+
 error=""
 
 basedir=`dirname "$0"`
@@ -82,6 +84,7 @@ Options:
     --disable-pkcs11      Disable building PKCS#11 smartcard support
     --enable-pkcs11       Force building PKCS#11 smartcard support
     --optional-pkcs11     Detect PKCS#11 module availability at runtime
+    --with-gtk=VERSION    Selects between GTK version 2 and 3.
     --current-user        Selects a per-user installation. Equivalent to:
                               --prefix=$userPrefix
                               --plugin-path=$userPluginPath
@@ -135,6 +138,13 @@ Options:
         ;;
     --optional-pkcs11)
         optional_pkcs11="1"
+        ;;
+    --with-gtk=*)
+        gtkversion=${flag#--with-gtk=}
+        if [ "x$gtkversion" != xauto -a "x$gtkversion" != x2 -a "x$gtkversion" != x3 ]; then
+            echo "Invalid GTK version: $flag. Must be 2, 3 or auto."
+            error=1
+        fi
         ;;
     --current-user)
         if [ -z "$prefixSet" ]; then
@@ -253,9 +263,32 @@ if [ -z "$enable_pkcs11" ] && pkg-config --exists libp11; then
     enable_pkcs11=1
 fi
 
-# Check that the PKCS#11 module exists
+### Detect GTK version
+if [ $gtkversion = auto ]; then
+    if pkg-config --exists "gtk+-3.0"; then
+        gtkversion=3
+    else
+        gtkversion=2
+    fi
+fi
+
+echo "    GTK version:       $gtkversion"
+if [ $gtkversion = 2 ]; then
+    with_gtk2=1
+    with_gtk3=0
+else
+    with_gtk2=0
+    with_gtk3=1
+fi
+echo
+
+### Check that the PKCS#11 module exists
 depError=""
-pkgconfigDeps="gtk+-2.0 >= 2.12;gdk-2.0;glib-2.0;libcrypto;x11"
+if [ $with_gtk3 = 1 ]; then
+    pkgconfigDeps="gtk+-3.0;glib-2.0;libcrypto;x11"
+else
+    pkgconfigDeps="gtk+-2.0 >= 2.12;gdk-2.0;glib-2.0;libcrypto;x11"
+fi
 if [ "$enable_pkcs11" = 1 ]; then
     if [ "$optional_pkcs11" = 0 ]; then
         echo "    PKCS#11 smartcard support enabled"
@@ -345,6 +378,8 @@ cat <<EOT >"$CONFFILE"
 
 #define ENABLE_PKCS11 ${enable_pkcs11:-0}
 #define OPTIONAL_PKCS11 ${optional_pkcs11:-0}
+#define WITH_GTK2 ${with_gtk2}
+#define WITH_GTK3 ${with_gtk3}
 EOT
 
 ### Display success message
