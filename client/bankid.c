@@ -146,7 +146,10 @@ static void storeExpiryParameters(PlatformConfig *cfg,
     platform_setConfigBool(cfg, "expiry", "still-valid", valid);
     platform_setConfigString(cfg, "expiry", "version-to-emulate", emulatedVersion);
     platform_setConfigString(cfg, "expiry", "checked-with-version", DNSVERSION);
-    platform_saveConfig(cfg);
+    
+    if (!platform_saveConfig(cfg)) {
+        fprintf(stderr, BINNAME ": failed to create expiry file.\n");
+    }
 }
 
 /**
