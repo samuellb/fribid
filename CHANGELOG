@@ -1,3 +1,13 @@
+1.0.1 - 2012-04-20
+  * Workaround for security issue in OpenSSL versions older than 1.0.1a,
+    1.0.0i and 0.9.8v.
+  * Improved error messages.
+  * Improved "configure" script, that allows compilation with GTK 3.
+  * Made the PKCS#11 path configurable in ~/.config/fribid/config
+  * Made the emulated version configurable in that file too.
+  * Fix crash with certificates without the "name" property.
+
+
 1.0.0 - 2011-09-25
   * [security update] Many fixes of potential problems, discovered with
     tools like Sparse and Clang --analyze, and manual review of the code.
