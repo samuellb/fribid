@@ -77,14 +77,11 @@ static void _backend_free(Backend *backend) {
  * a reference count so it can be shared by multiple tokens.
  */
 static SharedPKCS12 *pkcs12_parse(const char *p12Data, int p12Length) {
-    BIO *bio;
+    const unsigned char *temp = (const unsigned char*)p12Data;
     PKCS12 *data;
     
     // Parse P12 data
-    bio = BIO_new_mem_buf((void *)p12Data, p12Length);
-    if (!bio) return NULL;
-    data = d2i_PKCS12_bio(bio, NULL);
-    BIO_free(bio);
+    data = d2i_PKCS12(NULL, &temp, p12Length);
     if (!data) return NULL;
     
     // Create a reference counted object

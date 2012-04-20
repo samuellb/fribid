@@ -358,10 +358,8 @@ void certutil_freeList(char ***list, size_t *count) {
 
 PKCS7 *certutil_parseP7SignedData(const char *p7data, size_t length) {
     // Parse data
-    BIO *bio = BIO_new_mem_buf((void *)p7data, length);
-    if (!bio) return NULL;
-    PKCS7 *p7 = d2i_PKCS7_bio(bio, NULL);
-    BIO_free(bio);
+    const unsigned char *temp = (const unsigned char*)p7data;
+    PKCS7 *p7 = d2i_PKCS7(NULL, &temp, length);
     
     // Check that it's valid and contains certificates
     if (!p7 || !PKCS7_type_is_signed(p7) || !p7->d.sign || !p7->d.sign->cert ||
