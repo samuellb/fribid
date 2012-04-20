@@ -404,7 +404,7 @@ static TokenError saveKeys(const CertReq *reqs, const char *hostname,
         X509 *cert = NULL;
         ASN1_OBJECT *objOwningHost = NULL;
         uint32_t keyid = htonl(localKeyId++);
-        error_count++; // Decremented on success
+        bool success = false;
         
         // Add private key
         PKCS12_SAFEBAG *bag = PKCS12_add_key(&bags, reqs->privkey,
@@ -448,10 +448,13 @@ static TokenError saveKeys(const CertReq *reqs, const char *hostname,
         
         
         // Success!
-        error_count--;
+        success = true;
         
       loop_end:
-        certutil_updateErrorString();
+        if (!success) {
+            error_count--;
+            certutil_updateErrorString();
+        }
         ASN1_OBJECT_free(objOwningHost);
         X509_free(cert);
         sk_PKCS12_SAFEBAG_pop_free(bags, PKCS12_SAFEBAG_free);
