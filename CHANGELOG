@@ -1,3 +1,7 @@
+1.0.1a - 2012-04-20
+  * Fix compilation problem with --disable-pkcs11
+
+
 1.0.1 - 2012-04-20
   * Workaround for security issue in OpenSSL versions older than 1.0.1a,
     1.0.0i and 0.9.8v.
