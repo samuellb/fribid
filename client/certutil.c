@@ -423,7 +423,7 @@ void certutil_clearErrorString() {
 
 void certutil_updateErrorString() {
     ERR_load_crypto_strings();
-#ifdef ENABLE_PKCS11
+#if ENABLE_PKCS11
     ERR_load_PKCS11_strings();
 #endif
     error_string = ERR_error_string(ERR_get_error(), NULL);
