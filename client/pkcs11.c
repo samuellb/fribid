@@ -1,6 +1,6 @@
 /*
 
-  Copyright (c) 2009-2010 Samuel Lidén Borell <samuel@slbdata.se>
+  Copyright (c) 2009-2010 Samuel Lidén Borell <samuel@kodafritt.se>
   Copyright (c) 2010 Marcus Carlson <marcus@mejlamej.nu>
   Copyright (c) 2010 Henrik Nordström <henrik@henriknordstrom.net>
  

@@ -20,7 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Copyright (c) 2009 Samuel Lidén Borell <samuel@slbdata.se>
+ *   Copyright (c) 2009 Samuel Lidén Borell <samuel@kodafritt.se>
  *   See the CHANGELOG file for more information.
  *
  * Alternatively, the contents of this file may be used under the terms of
