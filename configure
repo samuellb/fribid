@@ -287,7 +287,7 @@ depError=""
 if [ $with_gtk3 = 1 ]; then
     pkgconfigDeps="gtk+-3.0;glib-2.0;libcrypto;x11"
 else
-    pkgconfigDeps="gtk+-2.0 >= 2.12;gdk-2.0;glib-2.0;libcrypto;x11"
+    pkgconfigDeps="gtk+-2.0 >= 2.18;gdk-2.0;glib-2.0;libcrypto;x11"
 fi
 if [ "$enable_pkcs11" = 1 ]; then
     if [ "$optional_pkcs11" = 0 ]; then
