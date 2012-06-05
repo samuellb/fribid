@@ -5,7 +5,8 @@ Under Debian/Ubuntu, you can install all dependencies with:
 
     apt-get install libgtk2.0-dev libssl-dev gettext libp11-dev opensc
 
-Then compile and install with the following command (assuming you use sudo):
+For GTK 3 use libgtk-3-dev instead. Then compile and install with the
+following command (assuming you use sudo):
 
     ./configure && make && sudo make install
 
