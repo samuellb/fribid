@@ -29,7 +29,7 @@
 #include <openssl/err.h>
 
 #include "../common/defines.h"
-#ifdef ENABLE_PKCS11
+#if ENABLE_PKCS11
 #include <libp11.h>
 #endif
 
