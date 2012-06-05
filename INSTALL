@@ -1,4 +1,20 @@
 
+Debian/Ubuntu
+-------------
+Under Debian/Ubuntu, you can install all dependencies with:
+
+    apt-get install libgtk2.0-dev libssl-dev gettext libp11-dev opensc
+
+Then compile and install with the following command (assuming you use sudo):
+
+    ./configure && make && sudo make install
+
+If you need smartcard support, please follow this guide:
+http://wiki.fribid.se/sidor/SmartCards (in Swedish)
+
+
+Other distributions
+-------------------
 To build FriBID you need the following software:
 
   * A C99 compiler (like gcc)
