@@ -58,6 +58,10 @@ msgstr "Det gick inte att öppna filen"
 msgid "The file could not be saved"
 msgstr "Det gick inte att spara filen"
 
+#: ../client/gtk.c:68
+msgid "The file could not be written to, even though it could be opened"
+msgstr "Det gick inte att skriva till filen, trots att den kunde öppnas"
+
 #: ../client/gtk.c:62
 msgid "Invalid file format"
 msgstr "Felaktigt filformat"

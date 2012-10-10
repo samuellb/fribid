@@ -64,6 +64,8 @@ static const char *const errorStrings[] = {
     translatable("The file could not be read"),
     // TokenError_CantCreateFile
     translatable("The file could not be saved"),
+    // TokenError_CantWriteToFile
+    translatable("The file could not be written to, even though it could be opened"),
     // TokenError_BadFile
     translatable("Invalid file format"),
     // TokenError_BadPassword,
