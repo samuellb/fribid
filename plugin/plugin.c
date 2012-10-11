@@ -1,6 +1,6 @@
 /*
 
-  Copyright (c) 2009-2011 Samuel Lidén Borell <samuel@kodafritt.se>
+  Copyright (c) 2009-2012 Samuel Lidén Borell <samuel@kodafritt.se>
  
   Permission is hereby granted, free of charge, to any person obtaining a copy
   of this software and associated documentation files (the "Software"), to deal
@@ -183,6 +183,11 @@ char *sign_getParam(Plugin *plugin, const char *name) {
         return s;
     }
     
+    // OnlyAcceptMRU (show only last used cert in list)
+    if (authOrSign && !g_ascii_strcasecmp(name, "OnlyAcceptMRU")) {
+        return strdup(plugin->info.auth.onlyAcceptMRU ? "true" : "false");
+    }
+    
     // Handle string parameters
     char **valuePtr = getParamPointer(plugin, name);
     
@@ -221,6 +226,22 @@ bool sign_setParam(Plugin *plugin, const char *name, const char *value) {
         }
         
         return true;
+    }
+    
+    // OnlyAcceptMRU: boolean value
+    if (authOrSign && !g_ascii_strcasecmp(name, "OnlyAcceptMRU")) {
+        plugin->lastError = BIDERR_OK;
+        
+        if (!g_ascii_strcasecmp(value, "true")) {
+            plugin->info.auth.onlyAcceptMRU = true;
+            return true;
+        } else if (!g_ascii_strcasecmp(value, "false")) {
+            plugin->info.auth.onlyAcceptMRU = false;
+            return true;
+        }
+        
+        plugin->lastError = BIDERR_InvalidBoolean;
+        return false;
     }
     
     // TextCharacterEncoding: Only the values "UTF-8" and "ISO-88591-1"

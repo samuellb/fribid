@@ -1,6 +1,6 @@
 /*
 
-  Copyright (c) 2009-2011 Samuel Lidén Borell <samuel@kodafritt.se>
+  Copyright (c) 2009-2012 Samuel Lidén Borell <samuel@kodafritt.se>
  
   Permission is hereby granted, free of charge, to any person obtaining a copy
   of this software and associated documentation files (the "Software"), to deal
@@ -55,6 +55,7 @@ typedef struct {
             int32_t serverTime;
             char *policys;
             char *subjectFilter;
+            bool onlyAcceptMRU;
             void *dummy0, *dummy1; // To be compatible with .sign below
             /* Output parameters */
             char *signature;
@@ -65,6 +66,7 @@ typedef struct {
             int32_t serverTime;
             char *policys;
             char *subjectFilter;
+            bool onlyAcceptMRU;
             char *messageEncoding;
             char *message;
             char *invisibleMessage;

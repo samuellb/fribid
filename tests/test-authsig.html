@@ -56,6 +56,17 @@ function test(sign, visibleText, nonVisibleText) {
     setPar("NonVisibleData", nonVisibleText);
     setPar("ServerTime", "1290536889");
     setPar("Policys", "MS4yLjc1Mi43OC4xLjE7MS4yLjc1Mi43OC4xLjI7MS4yLjMuNC41OzEuMi4zLjQuMTA=");
+    setPar("OnlyAcceptMRU", "true");
+    setPar("OnlyAcceptMRU", "True");
+    setPar("OnlyAcceptMRU", "TRUE");
+/*    setPar("OnlyAcceptMRU", "true ");
+    setPar("OnlyAcceptMRU", " TrUe ");
+    setPar("OnlyAcceptMRU", "1");
+    setPar("OnlyAcceptMRU", "2");
+    setPar("OnlyAcceptMRU", "-1");
+    setPar("OnlyAcceptMRU", " 1 ");
+    setPar("OnlyAcceptMRU", "true");*/
+    setPar("OnlyAcceptMRU", "false");
     
     output.value += "\n";
     var params = [
