@@ -331,7 +331,18 @@ if ! type $utilities > /dev/null 2> /dev/null; then
     echo "ERROR: Missing commands:" >&2
     for utility in $utilities; do
         if ! type "$utility" > /dev/null 2> /dev/null; then
-            echo "  $utility" >&2
+            case "$utility" in
+                msgfmt)
+                    echo "  msgfmt  (a part of gettext)" >&2;;
+                cc)
+                    echo "  cc      (C compiler)" >&2;;
+                cpp)
+                    echo "  cpp     (C preprocessor)" >&2;;
+                install)
+                    echo "  install (under Linux it's included in coreutils)" >&2;;
+                *)
+                    echo "  $utility" >&2
+            esac
             depError=1
         fi
     done
@@ -343,7 +354,16 @@ if ! pkg-config --exists $pkgconfigDeps; then
     echo
     echo "ERROR: Unsatisfied dependencies: " >&2
     for dep in $pkgconfigDeps; do
-        pkg-config --exists $dep || echo "  $dep" >&2
+        pkg-config --exists $dep || {
+            case "$dep" in
+                libcrypto)
+                    echo "  libcrypto (a part of OpenSSL)" >&2;;
+                x11)
+                    echo "  x11 (X11 library)" >&2;;
+                *)
+                    echo "  $dep" >&2;;
+            esac
+        }
     done
     depError=1
 fi
