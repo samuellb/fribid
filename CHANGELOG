@@ -1,3 +1,13 @@
+1.0.2 - 2012-11-14
+  * Added the OnlyAcceptMRU parameter (but didn't implement it), which is
+    required to exist on some web sites.
+  * Fixed a compilation error when building without PKCS#11 (smartcard)
+    support.
+  * Increased the version number in the check for the GLib version, which
+    was wrong.
+  * Improved error messages at runtime and during build.
+
+
 1.0.1a - 2012-04-20
   * Fix compilation problem with --disable-pkcs11
 
