@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-#  Copyright (c) 2009-2010 Samuel Lidén Borell <samuel@kodafritt.se>
+#  Copyright (c) 2009-2012 Samuel Lidén Borell <samuel@kodafritt.se>
 # 
 #  Permission is hereby granted, free of charge, to any person obtaining a copy
 #  of this software and associated documentation files (the "Software"), to deal
@@ -25,10 +25,18 @@ prefixSet=""
 prefix="/usr/local"
 execprefix=""
 
+multiarch="`gcc -print-multiarch 2>/dev/null`"
+otherlibdir=""
 if ( [ ! -h /usr/lib64 ] && [ -f /usr/lib64/libc.so ] && [ ! -d /usr/lib32 ] ) ||
    ( [ ! -h /lib64 ] && [ -f /lib64/libc.so.6 ] && [ ! -d /usr/lib32 ] ); then
+    # RedHat etc.
     multilib="lib64"
+elif [ -n "$multiarch" ]; then
+    # New Debian with multiarch
+    multilib="lib/$multiarch"
+    otherlibdir="lib" # for packages that are not yet multiarch
 else
+    # Old Debian and 32-bit RedHat
     multilib="lib"
 fi
 
@@ -39,7 +47,22 @@ localedir=""
 mandir=""
 
 pluginPathSet=""
-pluginPaths="/usr/$multilib/mozilla/plugins"
+if [ -n "$otherlibdir" ]; then
+    # check non-multiarch path also
+    paths="/usr/$multilib/mozilla/plugins /usr/$otherlibdir/mozilla/plugins"
+    pluginPaths=""
+    for path in $paths; do
+        if [ -d "$path" ]; then
+            pluginPaths="$pluginPaths $path"
+        fi
+    done
+    
+    if [ -z "$pluginPaths" ]; then
+        pluginPaths="/usr/$otherlibdir/mozilla/plugins"
+    fi
+else
+    pluginPaths="/usr/$multilib/mozilla/plugins"
+fi
 
 userPluginPath="$HOME/.mozilla/plugins"
 userPrefix="$HOME/.local"
@@ -47,6 +70,10 @@ userPrefix="$HOME/.local"
 enable_pkcs11=""
 optional_pkcs11="0"
 pkcs11Module="/usr/$multilib/opensc-pkcs11.so"
+# check non-multiarch path also
+if [ ! -e "$pkcs11Module" -a -n "$otherlibdir" -a -e "/usr/$otherlibdir/opensc-pkcs11.so" ]; then
+    pkcs11Module="/usr/$otherlibdir/opensc-pkcs11.so"
+fi
 
 gtkversion="auto"
 
