@@ -121,6 +121,11 @@ char *getDocumentHostname(NPP instance) {
     return getWindowProperty(instance, identifiers);
 }
 
+/**
+ * Finds the IP address of the server hosting the document containing the
+ * plugin. This IP address is placed in the signature as an additional
+ * security measure to detect spoofing.
+ */
 char *getDocumentIP(NPP instance) {
     // FIXME This function performs a DNS lookup independently of the
     //       browser. So it's possible that the browser and the plugin
@@ -135,9 +140,9 @@ char *getDocumentIP(NPP instance) {
     free(hostname);
     if (ret != 0) return NULL;
     
-    // Find first INET address
+    // Find first INET (IPv4) address (BankID supports IPv4 addresses only)
     const struct addrinfo *ai = firstAddrInfo;
-    while (ai && (ai->ai_family != AF_INET) && (ai->ai_family != AF_INET6))
+    while (ai && ai->ai_family != AF_INET)
         ai = ai->ai_next;
     
     if (!ai) return NULL;
