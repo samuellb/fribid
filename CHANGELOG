@@ -1,3 +1,8 @@
+1.0.3 - 2014-01-31
+  * Only use IPv4 addresses in the signatures. Fixes problems with some
+    web sites, e.g. Skatteverket.
+  * Detection of multiarch in the configure script
+
 1.0.2 - 2012-11-14
   * Added the OnlyAcceptMRU parameter (but didn't implement it), which is
     required to exist on some web sites.

@@ -32,11 +32,11 @@
 #endif
 
 #define PACKAGENAME         "FriBID"
-#define PACKAGEVERSION      "1.0.2"
+#define PACKAGEVERSION      "1.0.3"
 #define PACKAGEURL          "https://www.fribid.se/"
 
 #define BINNAME             "fribid"
-#define RELEASE_TIME        1352912534
+#define RELEASE_TIME        1391205036
 #define IPCVERSION          "10"
 
 #define EMULATED_VERSION    "4.15.0.14"
