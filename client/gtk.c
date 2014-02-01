@@ -132,7 +132,7 @@ static GtkLabel *info_label;
 
 static GtkListStore *tokens;
 static BackendNotifier *notifier;
-static bool signDialogShown;
+static bool signDialogShown, signDialogMapped;
 
 /* Password choice and key generation dialog */
 static GtkDialog *keygenDialog;
@@ -261,15 +261,37 @@ static void removeTokenFile(const char *filename) {
     }
 }
 
-static void selectDefaultToken() {
+/**
+ * Selects the newest token. Since the token names usually start with
+ * a date (at least file-based tokens from Swedbank) this function
+ * simply uses strcmp().
+ */
+static void selectDefaultToken(GtkWidget *ignored1, gpointer *ignored2) {
     GtkTreeModel *model = GTK_TREE_MODEL(tokens);
     GtkTreeIter iter = { .stamp = 0 };
     
-    if (gtk_tree_model_get_iter_first(model, &iter) &&
-        !gtk_tree_model_iter_next(model, &iter)) {
-        // There's only one item, select it
-        gtk_tree_model_get_iter_first(model, &iter);
-        gtk_combo_box_set_active_iter(tokenCombo, &iter);
+    if (signDialogMapped) return;
+    signDialogMapped = true;
+    
+    if (gtk_tree_model_get_iter_first(model, &iter)) {
+        char *newest = NULL;
+        gint newest_index = -1;
+        gint current_index = 0;
+        do {
+            char *current;
+            gtk_tree_model_get(model, &iter, 0, &current, -1);
+            
+            if (!newest || strcmp(current, newest) > 0) {
+                newest = current;
+                newest_index = current_index;
+            }
+            current_index++;
+        } while (gtk_tree_model_iter_next(model, &iter));
+        
+        if (newest) {
+            gtk_tree_model_iter_nth_child(model, &iter, NULL, newest_index);
+            gtk_combo_box_set_active_iter(tokenCombo, &iter);
+        }
     }
 }
 
@@ -334,8 +356,12 @@ void platform_startSign(const char *url, const char *hostname, const char *ip,
     platform_setMessage(NULL);
     validateDialog(NULL, NULL);
     
+    g_signal_connect(G_OBJECT(signDialog), "map-event",
+                     G_CALLBACK(selectDefaultToken), NULL);
+    
     gtk_window_set_modal(GTK_WINDOW(signDialog), TRUE);
     signDialogShown = false;
+    signDialogMapped = false;
 }
 
 void platform_endSign() {
@@ -524,7 +550,6 @@ bool platform_sign(Token **token, char *password, int password_maxlen) {
     gtk_entry_set_max_length(passwordEntry, password_maxlen-1);
     
     if (!signDialogShown) {
-        selectDefaultToken();
         gtk_widget_show(GTK_WIDGET(signDialog));
         signDialogShown = true;
     }
