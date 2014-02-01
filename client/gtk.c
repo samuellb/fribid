@@ -300,6 +300,7 @@ void platform_startSign(const char *url, const char *hostname, const char *ip,
     
     // Create a GtkListStore of (displayname, token, filename) tuples
     tokens = gtk_list_store_new(3, G_TYPE_STRING, G_TYPE_POINTER, G_TYPE_STRING);
+    gtk_tree_sortable_set_sort_column_id(GTK_TREE_SORTABLE(tokens), 0, GTK_SORT_ASCENDING);
     
     tokenCombo = GTK_COMBO_BOX(gtk_builder_get_object(builder, "signature_combo"));
     gtk_combo_box_set_model(tokenCombo, GTK_TREE_MODEL(tokens));
@@ -434,11 +435,10 @@ static gboolean addTokenFunc(gpointer ptr) {
     }
     
     // Add token
-    gtk_list_store_append(tokens, &iter);
-    gtk_list_store_set(tokens, &iter,
-                       0, token_getDisplayName(token),
-                       1, token,
-                       2, filename, -1);
+    gtk_list_store_insert_with_values(tokens, &iter, -1,
+                                      0, token_getDisplayName(token),
+                                      1, token,
+                                      2, filename, -1);
     
     if (filename) {
         // The token was manually added. Select it.
