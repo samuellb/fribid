@@ -309,6 +309,8 @@ void platform_startSign(const char *url, const char *hostname, const char *ip,
         return;
     }
     
+    activeDialog = signDialog = GTK_DIALOG(gtk_builder_get_object(builder, "dialog_sign"));
+    
     signButton = GTK_BUTTON(gtk_builder_get_object(builder, "button_sign"));
     signButtonLabel = GTK_LABEL(gtk_builder_get_object(builder, "buttonlabel_sign"));
     
@@ -319,6 +321,7 @@ void platform_startSign(const char *url, const char *hostname, const char *ip,
     signLabel = GTK_WIDGET(gtk_builder_get_object(builder, "sign_label"));
     signScroller = GTK_WIDGET(gtk_builder_get_object(builder, "sign_scroller"));
     signText = GTK_TEXT_VIEW(gtk_builder_get_object(builder, "sign_text"));
+    platform_setMessage(NULL);
     
     // Create a GtkListStore of (displayname, token, filename) tuples
     tokens = gtk_list_store_new(3, G_TYPE_STRING, G_TYPE_POINTER, G_TYPE_STRING);
@@ -348,12 +351,9 @@ void platform_startSign(const char *url, const char *hostname, const char *ip,
 
     box = GTK_BOX(gtk_builder_get_object(builder, "vbox1"));
     gtk_box_pack_end(box, GTK_WIDGET (info_bar), TRUE, FALSE, 2);
-
-    activeDialog = signDialog = GTK_DIALOG(gtk_builder_get_object(builder, "dialog_sign"));
     
     makeDialogTransient(signDialog, parentWindowId);
     
-    platform_setMessage(NULL);
     validateDialog(NULL, NULL);
     
     g_signal_connect(G_OBJECT(signDialog), "map-event",
