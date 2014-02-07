@@ -33,9 +33,6 @@
 /* Initialization */
 void platform_init(int *argc, char ***argv);
 
-/* Random number generation */
-void platform_seedRandom();
-
 /* Pipe I/O */
 typedef void (PlatformPipeFunction) ();
 void platform_setupPipe(PlatformPipeFunction *pipeFunction);
@@ -77,13 +74,6 @@ bool platform_getConfigString(const PLATFORM_CFGPARAMS, char **value);
 void platform_setConfigInteger(PLATFORM_CFGPARAMS, long value);
 void platform_setConfigBool(PLATFORM_CFGPARAMS, bool value);
 void platform_setConfigString(PLATFORM_CFGPARAMS, const char *value);
-
-/* Asynchronous calls / threads */
-typedef void (AsyncCallFunction) (void *);
-void platform_asyncCall(AsyncCallFunction *function, void *param);
-
-/* Network */
-uint32_t platform_lookupTypeARecord(const char *hostname);
 
 /* User interface */
 

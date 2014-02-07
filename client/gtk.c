@@ -723,12 +723,4 @@ void platform_showError(TokenError error) {
     }
 }
 
-void platform_versionExpiredError() {
-    showMessage(GTK_MESSAGE_ERROR, _("This software version has expired, and "
-                "will probably not be accepted on all web sites.\n"
-                "\n"
-                "Please download a newer version (if available), or use "
-                "the officially supported software (Nexus Personal) instead."));
-}
-
 

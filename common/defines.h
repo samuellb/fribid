@@ -40,8 +40,6 @@
 #define IPCVERSION          "10"
 
 #define EMULATED_VERSION    "4.15.0.14"
-#define DNSVERSION          "2"
-#define STATUSDOMAIN        ".status.fribid.se"
 
 #define LIB_PATH            LIBDIR "/" BINNAME
 #define LIBEXEC_PATH        LIBEXECDIR "/" BINNAME

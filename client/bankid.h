@@ -1,6 +1,6 @@
 /*
 
-  Copyright (c) 2009-2011 Samuel Lidén Borell <samuel@kodafritt.se>
+  Copyright (c) 2009-2014 Samuel Lidén Borell <samuel@kodafritt.se>
  
   Permission is hereby granted, free of charge, to any person obtaining a copy
   of this software and associated documentation files (the "Software"), to deal
@@ -32,10 +32,7 @@
 #include "../common/biderror.h"
 #include "../common/bidtypes.h"
 
-void bankid_checkVersionValidity();
-bool bankid_versionHasExpired();
 char *bankid_getVersion();
-
 
 BankIDError bankid_authenticate(Token *token,
                                 const char *challenge, int32_t serverTime,

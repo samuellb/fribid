@@ -1,6 +1,6 @@
 /*
 
-  Copyright (c) 2009-2010 Samuel Lidén Borell <samuel@kodafritt.se>
+  Copyright (c) 2009-2014 Samuel Lidén Borell <samuel@kodafritt.se>
  
   Permission is hereby granted, free of charge, to any person obtaining a copy
   of this software and associated documentation files (the "Software"), to deal
@@ -49,13 +49,6 @@
 #include "platform.h"
 
 struct flock file_lock(short ltype);
-
-void platform_seedRandom() {
-    struct timeval tv;
-    gettimeofday(&tv, NULL);
-    
-    srand(tv.tv_sec ^ tv.tv_usec ^ getpid());
-}
 
 struct PlatformDirIter {
     DIR *dir;
@@ -237,50 +230,6 @@ char *platform_getFilenameForKey(const char *nameAttr) {
   end:
     if (basename) free(basename);
     return filename;
-}
-
-void platform_asyncCall(AsyncCallFunction *function, void *param) {
-    pid_t child = fork();
-    if (child == -1) {
-        // Call the function synchronously instead
-        function(param);
-    } else if (child == 0) {
-        // This is done asynchronously
-        function(param);
-        exit(0);
-    } else {
-        // "Dereference" the process id
-        waitpid(-1, NULL, WNOHANG);
-    }
-}
-
-/**
- * Looks up an A record, and returns it as an 32-bit integer.
- * Useful for API:s that use DNS.
- */
-uint32_t platform_lookupTypeARecord(const char *hostname) {
-    assert(hostname != NULL);
-    
-    const struct addrinfo hints = {
-        .ai_flags = 0,
-        .ai_family = AF_INET,
-        .ai_socktype = SOCK_STREAM,
-    };
-    struct addrinfo *ai;
-    
-    if (getaddrinfo(hostname, NULL, &hints, &ai) != 0) {
-        return 0;
-    }
-    
-    if (ai == NULL) return 0;
-    
-    uint32_t arecord = 0;
-    if (ai->ai_addr && ai->ai_addr->sa_family == AF_INET) {
-        arecord = ntohl(((struct sockaddr_in*)ai->ai_addr)->sin_addr.s_addr);
-    }
-    
-    freeaddrinfo(ai);
-    return arecord;
 }
 
 /**

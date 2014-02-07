@@ -1,6 +1,6 @@
 /*
 
-  Copyright (c) 2009-2011 Samuel Lidén Borell <samuel@kodafritt.se>
+  Copyright (c) 2009-2014 Samuel Lidén Borell <samuel@kodafritt.se>
  
   Permission is hereby granted, free of charge, to any person obtaining a copy
   of this software and associated documentation files (the "Software"), to deal
@@ -38,9 +38,6 @@
 #include "platform.h"
 #include "prefs.h"
 
-#define EXPIRY_RAND (rand() % 65535)
-#define DEFAULT_EXPIRY (RELEASE_TIME + 30*24*3600)
-
 /**
  * Returns the version string. The version string is identical to that of
  * Nexus Personal for Linux in order to be compatible with all servers, which
@@ -67,174 +64,15 @@ static char *getVersionString() {
         "os_version=unknown&"
         "best_before=%2$" PRId64 "&";
     
-    long lexpiry;
-    int64_t expiry;
-    const char *versionToEmulate;
-    bool allocated = false;
+    int64_t expiry = time(NULL) + 29*24*3600;
     
-    if (prefs_bankid_emulatedversion) {
-        /* Manual override */
-        versionToEmulate = prefs_bankid_emulatedversion;
-        expiry = time(NULL) + 30*24*3600;
-    } else {
-        /* Use automatic version from DNS */
-        PlatformConfig *cfg = platform_openConfig(BINNAME, "expiry");
-        
-        if (platform_getConfigInteger(cfg, "expiry", "best-before", &lexpiry)) {
-            expiry = lexpiry;
-        } else {
-            expiry = DEFAULT_EXPIRY;
-        }
-        
-        if (platform_getConfigString(cfg, "expiry", "version-to-emulate", (char**)&versionToEmulate)) {
-            allocated = true;
-        } else {
-            versionToEmulate = EMULATED_VERSION;
-        }
-        
-        platform_freeConfig(cfg);
-    }
+    const char *versionToEmulate = (prefs_bankid_emulatedversion ?
+        prefs_bankid_emulatedversion : /* Manual override */
+        EMULATED_VERSION); /* Recommended version number */
     
-    char *result = rasprintf(template, versionToEmulate, expiry);
-    
-    if (allocated) {
-        free((char*)versionToEmulate);
-    }
-    return result;
+    return rasprintf(template, versionToEmulate, expiry);
 }
 
-/**
- * Checks the validity of the current version and gets the maximum version
- * that we can emulate. This works by sending a DNS A request and parsing
- * the result. The left-most octet is always 127. The remaining octets make
- * up a 24-bit integer, where the octet to the left is the most significant.
- * The highest two bits make up a status code. The following 4, 6, 6 and 6
- * bits make up components of the version, in from the left to the right.
- *
- * @param valid  This variable will receive the status.
- *
- * @return  true if successful, false if not.
- */
-static bool checkValidity(bool *valid, char **versionToEmulate) {
-    uint32_t response = platform_lookupTypeARecord(DNSVERSION STATUSDOMAIN);
-    
-    if (response >> 24 != 127) return false;
-    
-    enum { OK = 1, EXPIRED = 2 } status = (response >> 22) & 0x3;
-    
-    if ((status != OK) && (status != EXPIRED)) return false;
-    
-    *valid = (status == OK);
-    
-    *versionToEmulate = rasprintf("%d.%d.%d.%d",
-        (response >> 18) & 0xF,
-        (response >> 12) & 0x3F,
-        (response >> 6) & 0x3F,
-        response & 0x3F);
-    
-    return true;
-}
-
-
-static void storeExpiryParameters(PlatformConfig *cfg,
-                                  int64_t lastCheck, bool valid,
-                                  const char *emulatedVersion) {
-    if (valid) {
-        platform_setConfigInteger(cfg, "expiry", "best-before",
-                                  lastCheck - EXPIRY_RAND + 30*24*3600);
-    }
-    platform_setConfigBool(cfg, "expiry", "still-valid", valid);
-    platform_setConfigString(cfg, "expiry", "version-to-emulate", emulatedVersion);
-    platform_setConfigString(cfg, "expiry", "checked-with-version", DNSVERSION);
-    
-    if (!platform_saveConfig(cfg)) {
-        fprintf(stderr, BINNAME ": failed to create expiry file.\n");
-    }
-}
-
-/**
- * Checks the validity of the emulated version and stores the status
- * in the configuration file.
- */
-static void versionCheckFunction(void *ignored) {
-    PlatformConfig *cfg = platform_openConfig(BINNAME, "expiry");
-    bool valid;
-    char *versionToEmulate;
-    
-    if (checkValidity(&valid, &versionToEmulate)) {
-        storeExpiryParameters(cfg, time(NULL), valid,
-                              versionToEmulate);
-        free(versionToEmulate);
-    }
-    
-    platform_freeConfig(cfg);
-}
-
-/**
- * This function checks the validity of the emulated version. If the current
- * version needs checking immidiatly, then this function blocks until it has
- * received an answer from the server (see above). If the current version will
- * need checking within 14 days, then the check will be asynchronous.
- */
-void bankid_checkVersionValidity() {
-    if (prefs_bankid_emulatedversion)
-        return;
-    
-    PlatformConfig *cfg = platform_openConfig(BINNAME, "expiry");
-    
-    char *checkedWithVersion = NULL;
-    if (platform_getConfigString(cfg, "expiry", "checked-with-version", &checkedWithVersion) &&
-        strcmp(checkedWithVersion, DNSVERSION) != 0) {
-        // The last check was done with another version, so overwrite the
-        // old configuration with the defaults
-        storeExpiryParameters(cfg, DEFAULT_EXPIRY, true,
-                              EMULATED_VERSION);
-
-    }
-    free(checkedWithVersion);
-
-    long lexpiry;
-    time_t expiry;
-    if (platform_getConfigInteger(cfg, "expiry", "best-before", &lexpiry)) {
-        expiry = lexpiry;
-    } else {
-        expiry = 0;
-    }
-    
-    bool maybeValid;
-    if (!platform_getConfigBool(cfg, "expiry", "still-valid", &maybeValid)) {
-        maybeValid = true;
-    }
-    
-    platform_freeConfig(cfg);
-    
-    // Check the expiry
-    time_t now = time(NULL);
-    if (now >= expiry) {
-        // Expired
-        if (maybeValid) {
-            versionCheckFunction(NULL);
-        }
-    } else if (now >= expiry - 14*24*3600) {
-        // Expires in 14 days
-        platform_asyncCall(versionCheckFunction, NULL);
-    }
-}
-
-bool bankid_versionHasExpired() {
-    if (prefs_bankid_emulatedversion)
-        return false;
-    
-    PlatformConfig *cfg = platform_openConfig(BINNAME, "expiry");
-    
-    bool valid;
-    if (!platform_getConfigBool(cfg, "expiry", "still-valid", &valid)) {
-        valid = true;
-    }
-    
-    platform_freeConfig(cfg);
-    return !valid;
-}
 
 /* Version objects */
 char *bankid_getVersion() {

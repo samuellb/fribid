@@ -158,10 +158,6 @@ void pipeCommand(PipeCommand command, const char *url, const char *hostname,
                 platform_setMessage(decodedMessage);
                 free(decodedMessage);
             }
-            
-            if (bankid_versionHasExpired()) {
-                platform_versionExpiredError();
-            }
 
             while (platform_sign(&token, password, password_maxsize)) {
                 // Set the password (not used by all backends)
@@ -254,10 +250,6 @@ void pipeCommand(PipeCommand command, const char *url, const char *hostname,
                                        input.minPasswordNonDigits,
                                        input.minPasswordDigits);
             
-            if (bankid_versionHasExpired()) {
-                platform_versionExpiredError();
-            }
-            
             for (;;) {
                 error = RUERR_UserCancel;
                 // Ask for a password
@@ -332,12 +324,7 @@ void pipeData() {
 int main(int argc, char **argv) {
     bool ipc = false, error = false;
     
-    platform_seedRandom();
     prefs_load();
-    
-    /* Check whether the current version is still valid */
-    bankid_checkVersionValidity();
-    
     error = secmem_init_pool();
     if (error) {
         fprintf(stderr, BINNAME ": could not initialize secure memory");

@@ -136,20 +136,6 @@ msgid_plural "The password must have at least %d digits"
 msgstr[0] "Lösenordet måste ha minst en siffra"
 msgstr[1] "Lösenordet måste ha minst %d siffror"
 
-#: ../client/gtk.c:676
-msgid ""
-"This software version has expired, and will probably not be accepted on all "
-"web sites.\n"
-"\n"
-"Please download a newer version (if available), or use the officially "
-"supported software (Nexus Personal) instead."
-msgstr ""
-"Denna programvara har gått ut, och kanske inte kommer att accepteras på alla "
-"webbsidor.\n"
-"\n"
-"Du behöver ladda ner en nyare version (om det finns någon) eller, "
-"alternativt, använda den officiella programvaran (Nexus Personal) istället."
-
 #: ../client/gtk/sign.glade:89
 msgid "Text to sign:"
 msgstr "Text att skriva under:"
