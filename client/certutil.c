@@ -432,11 +432,11 @@ char *certutil_getBagAttr(PKCS12_SAFEBAG *bag, ASN1_OBJECT *oid) {
     return str;
 }
 
-void certutil_clearErrorString() {
+void certutil_clearErrorString(void) {
     error_string = NULL;
 }
 
-void certutil_updateErrorString() {
+void certutil_updateErrorString(void) {
     ERR_load_crypto_strings();
 #if ENABLE_PKCS11
     ERR_load_PKCS11_strings();
@@ -445,7 +445,7 @@ void certutil_updateErrorString() {
     fprintf(stderr, BINNAME ": error from OpenSSL or libP11: %s\n", error_string);
 }
 
-char *certutil_getErrorString() {
+char *certutil_getErrorString(void) {
     return error_string;
 }
 

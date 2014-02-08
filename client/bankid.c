@@ -43,7 +43,7 @@
  * Nexus Personal for Linux in order to be compatible with all servers, which
  * may or may not accept unofficial version strings.
  */
-static char *getVersionString() {
+static char *getVersionString(void) {
     static const char template[] =
         "Personal=%1$s&"
         "libai_so=%1$s&"

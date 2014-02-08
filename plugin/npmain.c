@@ -77,7 +77,7 @@ NPError NPP_GetValue(NPP instance, NPPVariable variable, void *value) {
     }
 }
 
-char *NPP_GetMIMEDescription() {
+char *NPP_GetMIMEDescription(void) {
     return MIME_VERSION ":" NO_FILE_EXTENSIONS ":Version;"
            MIME_AUTHENTICATION ":" NO_FILE_EXTENSIONS ":Authentication;"
            MIME_SIGNER ":" NO_FILE_EXTENSIONS ":Signer2;"
@@ -86,15 +86,15 @@ char *NPP_GetMIMEDescription() {
            MIME_OLDSIGNER ":" NO_FILE_EXTENSIONS ":Signer";
 }
 
-const char *NPP_GetPluginVersion() {
+const char *NPP_GetPluginVersion(void) {
     return PACKAGEVERSION;
 }
 
-NPError NPP_Initialize() {
+NPError NPP_Initialize(void) {
     return NPERR_NO_ERROR;
 }
 
-void NPP_Shutdown() {
+void NPP_Shutdown(void) {
 }
 
 

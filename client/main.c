@@ -308,7 +308,7 @@ void pipeCommand(PipeCommand command, const char *url, const char *hostname,
  * This happens when one of the Javascript methods of an
  * plugin object is called.
  */
-void pipeData() {
+void pipeData(void) {
     PipeCommand command = pipe_readCommand(stdin);
     char *url = pipe_readString(stdin);
     char *hostname = pipe_readString(stdin);

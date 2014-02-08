@@ -89,7 +89,7 @@ void platform_init(int *argc, char ***argv) {
     gtk_init(argc, argv);
 }
 
-void platform_leaveMainloop() {
+void platform_leaveMainloop(void) {
     gtk_main_quit();
 }
 
@@ -111,7 +111,7 @@ void platform_setupPipe(PlatformPipeFunction *pipeFunction) {
     g_io_channel_unref(stdinChannel);
 }
 
-void platform_mainloop() {
+void platform_mainloop(void) {
     gtk_main();
 }
 
@@ -184,11 +184,11 @@ static void showMessage(GtkMessageType type, const char *text) {
     gtk_widget_destroy(dialog);
 }
 
-static void hide_message () {
+static void hide_message(void) {
     gtk_widget_hide (GTK_WIDGET (info_bar));
 }
 
-static void show_inline_message (GtkMessageType message_type, const char *message) {
+static void show_inline_message(GtkMessageType message_type, const char *message) {
     gtk_widget_show(GTK_WIDGET (info_bar));
     gtk_info_bar_set_message_type(GTK_INFO_BAR (info_bar),
                                   message_type);
@@ -364,7 +364,7 @@ void platform_startSign(const char *url, const char *hostname, const char *ip,
     signDialogMapped = false;
 }
 
-void platform_endSign() {
+void platform_endSign(void) {
     // Remove all manually added tokens
     GtkTreeModel *model = GTK_TREE_MODEL(tokens);
     GtkTreeIter iter = { .stamp = 0 };
@@ -420,7 +420,7 @@ void platform_setNotifier(BackendNotifier *notifierToUse) {
 /**
  * Add  from the key directories
  */
-void platform_addKeyDirectories() {
+void platform_addKeyDirectories(void) {
     char** paths;
     size_t len;
     
@@ -505,7 +505,7 @@ void platform_removeToken(Token *token) {
 }
 
 
-static void selectExternalFile() {
+static void selectExternalFile(void) {
     TokenError error = TokenError_Success;
     GtkFileChooser *chooser = GTK_FILE_CHOOSER(gtk_file_chooser_dialog_new(
             _("Select external identity file"), GTK_WINDOW(signDialog),
@@ -613,7 +613,7 @@ void platform_setPasswordPolicy(int minLength, int minNonDigits, int minDigits) 
     keygenPasswordMinDigits = minDigits;
 }
 
-void platform_endChoosePassword() {
+void platform_endChoosePassword(void) {
     gtk_widget_destroy(GTK_WIDGET(keygenDialog));
     
 }

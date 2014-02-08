@@ -30,7 +30,7 @@ extern const char *prefs_pkcs11_module;
 #endif
 extern const char *prefs_bankid_emulatedversion;
 
-void prefs_load();
+void prefs_load(void);
 
 #endif
 

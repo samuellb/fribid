@@ -42,7 +42,7 @@
 #   define PIPE_ERROR_STRING ": pipe error (unknown location)\n"
 #endif
 
-static void pipeError() {
+static void pipeError(void) {
     fprintf(stderr, BINNAME PIPE_ERROR_STRING);
 }
 

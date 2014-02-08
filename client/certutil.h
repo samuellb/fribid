@@ -52,9 +52,9 @@ void certutil_freeList(char ***list, size_t *count);
 PKCS7 *certutil_parseP7SignedData(const char *p7data, size_t length);
 char *certutil_makeFilename(X509_NAME *xname);
 char *certutil_getBagAttr(PKCS12_SAFEBAG *bag, ASN1_OBJECT *oid);
-void certutil_clearErrorString();
-void certutil_updateErrorString();
-char *certutil_getErrorString();
+void certutil_clearErrorString(void);
+void certutil_updateErrorString(void);
+char *certutil_getErrorString(void);
 
 #endif
 

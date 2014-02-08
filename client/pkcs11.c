@@ -260,7 +260,7 @@ static const Backend backend_template = {
     .sign = _backend_sign,
 };
 
-Backend *pkcs11_getBackend() {
+Backend *pkcs11_getBackend(void) {
     Backend *backend = malloc(sizeof(Backend));
     memcpy(backend, &backend_template, sizeof(Backend));
     return backend;

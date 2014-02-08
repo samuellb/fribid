@@ -32,7 +32,7 @@
 #include "../common/biderror.h"
 #include "../common/bidtypes.h"
 
-char *bankid_getVersion();
+char *bankid_getVersion(void);
 
 BankIDError bankid_authenticate(Token *token,
                                 const char *challenge, int32_t serverTime,

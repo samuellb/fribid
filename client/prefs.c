@@ -33,7 +33,7 @@ const char *prefs_bankid_emulatedversion = NULL;
 /**
  * Loads the preferences from ~/.config/fribid/config
  */
-void prefs_load() {
+void prefs_load(void) {
     PlatformConfig *cfg = platform_openConfig("fribid", "config");
     if (cfg) {
         char *s;
