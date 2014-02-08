@@ -43,7 +43,7 @@
  * Nexus Personal for Linux in order to be compatible with all servers, which
  * may or may not accept unofficial version strings.
  */
-static char *getVersionString(void) {
+char *bankid_getVersion(void) {
     static const char template[] =
         "Personal=%1$s&"
         "libai_so=%1$s&"
@@ -71,12 +71,6 @@ static char *getVersionString(void) {
         EMULATED_VERSION); /* Recommended version number */
     
     return rasprintf(template, versionToEmulate, expiry);
-}
-
-
-/* Version objects */
-char *bankid_getVersion() {
-    return getVersionString();
 }
 
 /* Authentication and signing objects */

@@ -103,7 +103,6 @@ bool platform_choosePassword(char *password, long password_maxlen);
 
 /* Errors */
 void platform_showError(TokenError error);
-void platform_versionExpiredError();
 
 #endif
 
