@@ -1,6 +1,6 @@
 /*
 
-  Copyright (c) 2009-2011 Samuel Lidén Borell <samuel@kodafritt.se>
+  Copyright (c) 2009-2014 Samuel Lidén Borell <samuel@kodafritt.se>
  
   Permission is hereby granted, free of charge, to any person obtaining a copy
   of this software and associated documentation files (the "Software"), to deal
@@ -31,6 +31,9 @@
 #include <openssl/evp.h>
 
 #include "misc.h"
+
+/* Max size is 20 MB */
+#define MAX_SANE_DATA_SIZE 20*1024*1024
 
 /**
  * Like sprintf, but allocates and returns a string instead of
@@ -63,6 +66,7 @@ char *rasprintf_append(char *str, const char *format, ...) {
     
     size_t oldlen = strlen(str);
     size_t taillen = strlen(tail);
+    if (oldlen > MAX_SANE_DATA_SIZE || taillen > MAX_SANE_DATA_SIZE) goto error;
     
     char *merged = realloc(str, oldlen+taillen+1);
     if (!merged) goto error;
@@ -152,6 +156,8 @@ char *base64_decode(const char *encoded) {
     char *temp = (char*)g_base64_decode(encoded, &length);
     if (!temp) goto error;
     
+    if (length > MAX_SANE_DATA_SIZE) goto error;
+    
     char *result = malloc(length+1);
     if (!result) goto error;
     
@@ -172,8 +178,7 @@ char *base64_decode_binary(const char *encoded, size_t *decodedLength) {
     char *result = (char*)g_base64_decode(encoded, &length);
     *decodedLength = length;
     
-    if (*decodedLength != length) {
-        // Integer overflow
+    if (length > MAX_SANE_DATA_SIZE) {
         free(result);
         return NULL;
     }
@@ -233,3 +238,16 @@ bool is_valid_hostname(const char *hostname) {
 bool is_https_url(const char *url) {
     return !strncmp(url, "https://", 8);
 }
+
+/**
+ * Returns true if the string is at most maxlen bytes,
+ * including the null terminator.
+ */
+bool checkstrlen(const char *s, size_t maxlen) {
+    while (maxlen) {
+        if (!*s) return true;
+        s++; maxlen--;
+    }
+    return false;
+}
+

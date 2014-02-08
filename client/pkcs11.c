@@ -121,9 +121,10 @@ static TokenError _backend_sign(PKCS11Token *token,
                                 const char *message, size_t messagelen,
                                 char **signature, size_t *siglen) {
     
-    assert(message != NULL);
-    assert(signature != NULL);
-    assert(siglen != NULL);
+    if (!message || !signature || !siglen) {
+        assert(false);
+        return TokenError_Unknown;
+    }
     
     if (messagelen >= UINT_MAX) return TokenError_MessageTooLong;
     

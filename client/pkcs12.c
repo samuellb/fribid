@@ -213,6 +213,7 @@ static STACK_OF(X509) *pkcs12_listCerts(PKCS12 *p12) {
  */
 static PKCS12Token *createToken(const Backend *backend, SharedPKCS12 *sharedP12,
                                 X509_NAME *id, void *tag) {
+    if (!sharedP12 || !id) return NULL;
     PKCS12Token *token = calloc(1, sizeof(PKCS12Token));
     if (!token) return NULL;
     token->base.backend = backend;
@@ -240,7 +241,10 @@ static TokenError _backend_addFile(Backend *backend,
     if (!p12) return TokenError_BadFile;
     
     STACK_OF(X509) *certList = pkcs12_listCerts(p12->data);
-    if (!certList) return TokenError_Unknown;
+    if (!certList) {
+        pkcs12_release(p12);
+        return TokenError_Unknown;
+    }
     
     int certCount = sk_X509_num(certList);
     for (int i = 0; i < certCount; i++) {
@@ -310,9 +314,10 @@ static TokenError _backend_sign(PKCS12Token *token,
                                 const char *message, size_t messagelen,
                                 char **signature, size_t *siglen) {
     
-    assert(message != NULL);
-    assert(signature != NULL);
-    assert(siglen != NULL);
+    if (!message || !signature || !siglen) {
+        assert(false);
+        return TokenError_Unknown;
+    }
     
     if (messagelen >= UINT_MAX) return TokenError_MessageTooLong;
     
@@ -506,6 +511,7 @@ TokenError _backend_createRequest(const RegutilInfo *info,
     bool ok = true;
     CertReq *reqs = NULL;
     STACK *x509reqs = sk_new_null();
+    if (!x509reqs) return TokenError_Unknown;
     for (const RegutilPKCS10 *pkcs10 = info->pkcs10; pkcs10 != NULL;
          pkcs10 = pkcs10->next) {
         
@@ -568,6 +574,7 @@ TokenError _backend_createRequest(const RegutilInfo *info,
         
         // Store in list
         CertReq *req = malloc(sizeof(CertReq));
+        if (!req) goto req_error;
         req->pkcs10 = pkcs10;
         req->privkey = privkey;
         req->rsa = rsa;

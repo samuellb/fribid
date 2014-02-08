@@ -128,12 +128,14 @@ IMPLEMENT_ASN1_FUNCTIONS(PKIDATA)
 
 static ASN1_INTEGER *intToAsn1(int i) {
     ASN1_INTEGER *a = ASN1_INTEGER_new();
+    if (!a) abort();
     ASN1_INTEGER_set(a, i);
     return a;
 }
 
 static ASN1_IA5STRING *strToIA5(const char *s) {
     ASN1_IA5STRING *a = ASN1_IA5STRING_new();
+    if (!a) abort();
     ASN1_STRING_set((ASN1_STRING*)a, s, strlen(s));
     return a;
 }
@@ -182,6 +184,7 @@ void request_wrap(STACK *reqs, char **der, size_t *derLength) {
     int num = sk_num(reqs);
     for (int i = 0; i < num; i++) {
         X509_REQ *req = (X509_REQ*)sk_value(reqs, i);
+        if (!req) goto end;
         
         REQ_BODY_PART *reqPart = wrapBodyPartReq(req, 0x01000002+i);
         

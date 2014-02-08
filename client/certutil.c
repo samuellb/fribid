@@ -113,6 +113,8 @@ X509_NAME *certutil_parse_dn(const char *s, bool fullDN) {
     X509_NAME *subject = X509_NAME_new();
     STACK_OF(X509_NAME_ENTRY) *entries = sk_X509_NAME_ENTRY_new_null();
     ASN1_OBJECT *obj = NULL;
+    // check for allocation failures and insane name lengths
+    if (!subject || !entries || !checkstrlen(s, 4096)) goto error;
     
     while (*s != '\0') {
         // Ignore leading whitespace (this includes whitespace after a comma)
@@ -133,6 +135,7 @@ X509_NAME *certutil_parse_dn(const char *s, bool fullDN) {
         
         // Parse attribute name
         char *field = g_strndup(s, nameLength);
+        if (!field) goto error;
         int nid;
         bool ok = get_non_rfc2256(field, &nid, &obj);
         g_free(field);
@@ -157,9 +160,10 @@ X509_NAME *certutil_parse_dn(const char *s, bool fullDN) {
     
     // Add the attributes to the subject name in reverse order
     int num = sk_X509_NAME_ENTRY_num(entries);
-    for (int i = num; i >= 0; i--) {
+    for (int i = num; i-- > 0; ) {
         X509_NAME_ENTRY *entry = sk_X509_NAME_ENTRY_value(entries, i);
-        X509_NAME_add_entry(subject, entry, -1, 0);
+        if (!entry) goto error;
+        if (!X509_NAME_add_entry(subject, entry, -1, 0)) goto error;
         X509_NAME_ENTRY_free(entry);
     }
     sk_X509_NAME_ENTRY_free(entries);
@@ -183,6 +187,7 @@ char *certutil_derEncode(X509 *cert) {
     char *base64 = NULL;
     int len;
     
+    if (!cert) return NULL;
     len = i2d_X509(cert, &der);
     if (!der) return NULL;
     base64 = base64_encode((const char*)der, len);
@@ -312,7 +317,11 @@ X509 *certutil_findCert(const STACK_OF(X509) *certList,
     int num = sk_X509_num(certList);
     for (int i = 0; i < num; i++) {
         X509 *cert = sk_X509_value(certList, i);
-        if (!certutil_compareX509Names(X509_get_subject_name(cert), name, orderMightDiffer) &&
+        if (!cert) continue;
+        X509_NAME *certname = X509_get_subject_name(cert);
+        if (!certname) continue;
+        
+        if (!certutil_compareX509Names(certname, name, orderMightDiffer) &&
             certutil_hasKeyUsage(cert, keyUsage)) {
             return cert;
         }
@@ -326,6 +335,8 @@ X509 *certutil_findCert(const STACK_OF(X509) *certList,
  * to a zero integer.
  */
 bool certutil_addToList(char ***list, size_t *count, X509 *cert) {
+    
+    if (*count >= 100) return false; // insane length for a chain
     
     char *certDer = certutil_derEncode(cert);
     if (!certDer) goto error;
@@ -357,6 +368,9 @@ void certutil_freeList(char ***list, size_t *count) {
 
 
 PKCS7 *certutil_parseP7SignedData(const char *p7data, size_t length) {
+    // If the PKCS7 data is bigger than 100 kB then something is really wrong
+    if (!p7data || length > 100*1024) return NULL;
+    
     // Parse data
     const unsigned char *temp = (const unsigned char*)p7data;
     PKCS7 *p7 = d2i_PKCS7(NULL, &temp, length);
@@ -393,12 +407,12 @@ char *certutil_getBagAttr(PKCS12_SAFEBAG *bag, ASN1_OBJECT *oid) {
     // Find the attribute
     ASN1_TYPE *at = NULL;
     
-    if (!bag->attrib) return NULL;
+    if (!bag->attrib || !oid) return NULL;
     
     int numattr = sk_X509_ATTRIBUTE_num(bag->attrib);
     for (int i = 0; i < numattr; i++) {
         X509_ATTRIBUTE *xattr = sk_X509_ATTRIBUTE_value(bag->attrib, i);
-        if (xattr->object && !OBJ_cmp(xattr->object, oid)) {
+        if (xattr && xattr->object && !OBJ_cmp(xattr->object, oid)) {
             // Match
             at = sk_ASN1_TYPE_value(xattr->value.set, 0);
             break;
@@ -409,6 +423,7 @@ char *certutil_getBagAttr(PKCS12_SAFEBAG *bag, ASN1_OBJECT *oid) {
     
     // Copy the value to a string
     int len = at->value.printablestring->length;
+    if (len < 0 || len > 100*1024) return NULL;
     char *str = malloc(len+1);
     if (str) {
         memcpy(str, at->value.printablestring->data, len);
