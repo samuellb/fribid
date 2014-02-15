@@ -178,7 +178,12 @@ void pipeCommand(PipeCommand command, const char *url, const char *hostname,
                 
                 if (error == BIDERR_OK) break;
                 
-                platform_showError(token_getLastError(token));
+                // An error occurred
+                const TokenError tokenError = token_getLastError(token);
+                platform_showError(tokenError);
+                if (tokenError == TokenError_BadPassword || tokenError == TokenError_BadPin) {
+                    platform_focusPassword(); // also removes focus from the Sign button
+                }
                 error = BIDERR_UserCancel;
             }
 

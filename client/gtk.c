@@ -699,6 +699,9 @@ bool platform_choosePassword(char *password, long password_maxlen) {
     }
 }
 
+void platform_focusPassword() {
+    gtk_widget_grab_focus(GTK_WIDGET(passwordEntry));
+}
 
 void platform_showError(TokenError error) {
     assert(error != TokenError_Success);

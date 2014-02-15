@@ -90,6 +90,7 @@ void platform_startSign(const char *url, const char *hostname, const char *ip,
 void platform_endSign(void);
 void platform_setNotifier(BackendNotifier *notifier);
 void platform_setMessage(const char *message);
+void platform_focusPassword();
 void platform_addKeyDirectories(void);
 void platform_addToken(Token *token);
 void platform_removeToken(Token *token);
