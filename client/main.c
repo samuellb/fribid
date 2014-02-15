@@ -300,6 +300,11 @@ void pipeCommand(PipeCommand command, const char *url, const char *hostname,
             platform_leaveMainloop();
             break;
         }
+        default: {
+            fprintf(stderr, BINNAME ": invalid command from pipe\n");
+            platform_leaveMainloop();
+            break;
+        }
     }
 }
 
