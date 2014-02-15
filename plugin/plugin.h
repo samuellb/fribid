@@ -98,7 +98,6 @@ bool sign_setParam(Plugin *plugin, const char *name, const char *value);
 int sign_performAction(Plugin *plugin, const char *action);
 int sign_performAction_Authenticate(Plugin *plugin);
 int sign_performAction_Sign(Plugin *plugin);
-// TODO more functions...
 
 void regutil_setParam(Plugin *plugin, const char *name, const char *value);
 void regutil_initRequest(Plugin *plugin, const char *type);

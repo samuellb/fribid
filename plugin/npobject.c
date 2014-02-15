@@ -173,8 +173,6 @@ static bool objInvokeSafe(PluginObject *this, const char *name,
                 return convertStringZToVariant(value, result);
             } else if (IS_CALL_2("StoreCertificates", STRING, STRING)) {
                 // Store a certificate chain
-                // TODO check string lengths
-                
                 const NPString *type_nps = &NPVARIANT_TO_STRING(args[0]);
                 bool type_is_p7c = (type_nps->utf8length == 3 &&
                                     !strncmp(type_nps->utf8characters, "p7c", 3));
@@ -192,7 +190,6 @@ static bool objInvokeSafe(PluginObject *this, const char *name,
                 return ok;
             } else if (IS_CALL_0("GetLastError")) {
                 // Get last error
-                // TODO fix code duplication!
                 INT32_TO_NPVARIANT((int32_t)this->plugin->lastError, *result);
                 return true;
             }
