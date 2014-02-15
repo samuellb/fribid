@@ -291,6 +291,9 @@ static void selectDefaultToken(GtkWidget *ignored1, gpointer *ignored2) {
         if (newest) {
             gtk_tree_model_iter_nth_child(model, &iter, NULL, newest_index);
             gtk_combo_box_set_active_iter(tokenCombo, &iter);
+            
+            // Now give the password box focus
+            gtk_widget_grab_focus(GTK_WIDGET(passwordEntry));
         }
     }
 }
