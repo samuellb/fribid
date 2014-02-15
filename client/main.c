@@ -287,9 +287,6 @@ void pipeCommand(PipeCommand command, const char *url, const char *hostname,
             break;
         }
         case PC_StoreCertificates: {
-            // TODO maybe we should only allow the web site that called
-            //      CreateRequest to store certificates?
-            
             char *certs = pipe_readString(stdin);
             
             BankIDError error = bankid_storeCertificates(certs, hostname);
