@@ -513,8 +513,8 @@ static void selectExternalFile(void) {
     GtkFileChooser *chooser = GTK_FILE_CHOOSER(gtk_file_chooser_dialog_new(
             _("Select external identity file"), GTK_WINDOW(signDialog),
             GTK_FILE_CHOOSER_ACTION_OPEN,
-            GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
-            GTK_STOCK_OPEN, GTK_RESPONSE_ACCEPT,
+            _("_Cancel"), GTK_RESPONSE_CANCEL,
+            _("_Open"), GTK_RESPONSE_ACCEPT,
             (char *)NULL));
     activeDialog = GTK_DIALOG(chooser);
     
