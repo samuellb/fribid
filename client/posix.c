@@ -144,7 +144,9 @@ char *platform_currentPath(PlatformDirIter *iter) {
 }
 
 void platform_closeDir(PlatformDirIter *iter) {
-    closedir(iter->dir);
+    if (iter->dir) {
+        closedir(iter->dir);
+    }
     free(iter->path);
     free(iter);
 }
