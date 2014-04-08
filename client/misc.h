@@ -27,7 +27,9 @@
 
 #include <stdbool.h>
 
+#ifndef SIZE_T_MAX
 #define SIZE_T_MAX ((size_t)-1)
+#endif
 
 /**
  * Adds to a size_t and checks for integer overflow
