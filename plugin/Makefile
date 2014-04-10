@@ -21,10 +21,12 @@
 #
 
 CFLAGS ?= -O2 -g
-COMMONCFLAGS=$(CFLAGS) -Wall -Wextra -std=c99 -pedantic -Wno-unused-parameter
-CCFLAGS=$(COMMONCFLAGS) -I../npapi -fPIC -fvisibility=hidden `pkg-config --cflags glib-2.0 x11` -DG_DISABLE_DEPRECATED=1 -DGSEAL_ENABLE -DFRIBID_PLUGIN
-LINKFLAGS=$(CFLAGS) $(LDFLAGS) -Wl,-z,defs,-soname,libfribidplugin.so
-LIBS=-lc `pkg-config --libs glib-2.0`
+PKGCONFIG_CFLAGS=`pkg-config --cflags glib-2.0 x11`
+CCFLAGS:=$(CFLAGS) -Wall -Wextra -std=c99 -pedantic -Wno-unused-parameter -I../npapi -fPIC -fvisibility=hidden $(PKGCONFIG_CFLAGS) -DG_DISABLE_DEPRECATED=1 -DGSEAL_ENABLE -DFRIBID_PLUGIN
+
+LINKFLAGS:=$(CFLAGS) $(LDFLAGS) -Wl,-z,defs,-soname,libfribidplugin.so
+PKGCONFIG_LIBS=`pkg-config --libs glib-2.0`
+LIBS:=-lc $(PKGCONFIG_LIBS)
 
 # Files to be installed
 LIB_PATH=`../configure --internal--get-define=LIB_PATH`

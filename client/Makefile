@@ -21,12 +21,11 @@
 #
 
 CFLAGS ?= -O2 -g
-COMMONCFLAGS=$(CFLAGS) -Wall -Wextra -std=c99 -pedantic -Wno-unused-parameter
-PKG_DEPS=$(if $(WITH_GTK2),'gtk+-2.0 >= 2.18' gdk-2.0) $(if $(WITH_GTK3),gtk+-3.0) glib-2.0 gthread-2.0 $(if $(ENABLE_PKCS11),libp11) libcrypto
-CCFLAGS=$(COMMONCFLAGS) -I../npapi/include `pkg-config --cflags $(PKG_DEPS)` -DGTK_DISABLE_DEPRECATED=1 -DGDK_DISABLE_DEPRECATED=1 -DG_DISABLE_DEPRECATED=1 -DGSEAL_ENABLE -DFRIBID_CLIENT
+PKGCONFIG_CFLAGS=`../configure --internal--get-pc-cflags`
+CCFLAGS:=$(CFLAGS) -Wall -Wextra -std=c99 -pedantic -Wno-unused-parameter -I../npapi/include $(PKGCONFIG_CFLAGS) -DGTK_DISABLE_DEPRECATED=1 -DGDK_DISABLE_DEPRECATED=1 -DG_DISABLE_DEPRECATED=1 -DGSEAL_ENABLE -DFRIBID_CLIENT
 # You may have to add -lpthread after $(LDFLAGS) on OpenBSD
-LINKFLAGS=$(CFLAGS) $(LDFLAGS) -Wl,--as-needed
-LIBS=`pkg-config --libs $(PKG_DEPS)`
+LINKFLAGS:=$(CFLAGS) $(LDFLAGS) -Wl,--as-needed
+LIBS=`../configure --internal--get-pc-libs`
 
 # Files to be installed
 LIBEXEC_PATH=`../configure --internal--get-define=LIBEXEC_PATH`
@@ -34,11 +33,12 @@ SHARE_PATH=`../configure --internal--get-define=SHARE_PATH`
 UI_PATH=`../configure --internal--get-define=UI_PATH`
 SIGNING_EXECUTABLE=`../configure --internal--get-define=SIGNING_EXECUTABLE`
 UI_GTK_XML=`../configure --internal--get-define=UI_GTK_XML`
-ENABLE_PKCS11=$(shell ../configure --internal--get-define=ENABLE_PKCS11|grep 1)
-WITH_GTK2=$(shell ../configure --internal--get-define=WITH_GTK2|grep 1)
-WITH_GTK3=$(shell ../configure --internal--get-define=WITH_GTK3|grep 1)
 
-OBJECTS=backend.o bankid.o certutil.o $(if $(ENABLE_PKCS11),pkcs11.o) pkcs12.o request.o main.o misc.o pipe.o posix.o prefs.o glibconfig.o gtk.o xmldsig.o secmem.o
+# Object files. The != assignment is interpreted by BSD make only, and the second one is interpreted by GNU make only
+# The `...` syntax does not seem to work with dependencis
+EXTRA_OBJECTS!=../configure --internal--list-extra-objects
+EXTRA_OBJECTS?=$(shell ../configure --internal--list-extra-objects)
+OBJECTS:=backend.o bankid.o certutil.o pkcs12.o request.o main.o misc.o pipe.o posix.o prefs.o glibconfig.o gtk.o xmldsig.o secmem.o $(EXTRA_OBJECTS)
 
 all: sign gtk/sign.xml
 
