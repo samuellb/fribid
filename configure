@@ -43,6 +43,7 @@ fi
 libdir=""
 libexecdir=""
 datadir=""
+docdir=""
 localedir=""
 mandir=""
 
@@ -106,6 +107,8 @@ Options:
     --libexecdir=PATH     Sets the directory for internal executables. [LIBDIR]
     --datadir=PATH        Sets the directory for architecture-independent
                           data. [PREFIX/share]
+    --docdir=PATH         Sets the directory for documentation and test
+                          scripts. [DATADIR/doc]
     --localedir=PATH      Sets the directory for translations [DATADIR/locale]
     --mandir=PATH         Sets the directory for man pages. [DATADIR/man]
     --plugin-path=PATH    Sets the NPAPI plugin path [$pluginPaths]
@@ -137,6 +140,9 @@ Options:
         ;;
     --datadir=*)
         datadir=${flag#--datadir=}
+        ;;
+    --docdir=*)
+        docdir=${flag#--docdir=}
         ;;
     --localedir=*)
         localedir=${flag#--localedir=}
@@ -275,6 +281,10 @@ fi
 
 if [ -z "$datadir" ]; then
     datadir="$prefixPath/share"
+fi
+
+if [ -z "$docdir" ]; then
+    docdir="$datadir/doc"
 fi
 
 if [ -z "$localedir" ]; then
@@ -438,6 +448,7 @@ cat <<EOT >"$CONFFILE"
 #define LIBDIR     "$libdir"
 #define LIBEXECDIR "$libexecdir"
 #define DATADIR    "$datadir"
+#define DOCDIR     "$docdir"
 #define LOCALEDIR  "$localedir"
 #define MANDIR     "$mandir"
 

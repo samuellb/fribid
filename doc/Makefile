@@ -1,5 +1,5 @@
 #
-#  Copyright (c) 2010 Samuel Lidén Borell <samuel@kodafritt.se>
+#  Copyright (c) 2010-2014 Samuel Lidén Borell <samuel@kodafritt.se>
 # 
 #  Permission is hereby granted, free of charge, to any person obtaining a copy
 #  of this software and associated documentation files (the "Software"), to deal
@@ -22,6 +22,7 @@
 
 
 MANDIR=`../configure --internal--get-define=MANDIR`
+DOCDIR=`../configure --internal--get-define=DOCDIR`
 
 LANGUAGES=sv
 
@@ -29,18 +30,35 @@ all:
 clean:
 
 install: all
+	# Man page
 	install -d $(DESTDIR)$(MANDIR)/man7
 	gzip -n -c9 fribid.7 > $(DESTDIR)$(MANDIR)/man7/fribid.7.gz
+	# Localization
 	for lang in $(LANGUAGES); do \
 	    install -d $(DESTDIR)$(MANDIR)/$$lang/man7 && \
 	    gzip -n -c9 fribid.$$lang.7 > $(DESTDIR)$(MANDIR)/$$lang/man7/fribid.7.gz || exit 1; \
 	done
+	# Test scripts
+	install -d $(DOCDIR)/fribid
+	install -d $(DOCDIR)/fribid/examples
+	install -m 644 examples/README $(DESTDIR)$(DOCDIR)/fribid/examples/
+	install -m 644 examples/README.sv $(DESTDIR)$(DOCDIR)/fribid/examples/
+	install -m 644 examples/common.sh $(DESTDIR)$(DOCDIR)/fribid/examples/
+	install -m 755 examples/sign.sh $(DESTDIR)$(DOCDIR)/fribid/examples/
+	install -m 755 examples/reqcert.sh $(DESTDIR)$(DOCDIR)/fribid/examples/
 
 uninstall:
 	rm -f $(DESTDIR)$(MANDIR)/man7/fribid.7.gz
 	for lang in $(LANGUAGES); do \
 	    rm -f $(DESTDIR)$(MANDIR)/$$lang/man7/fribid.7.gz || exit 1; \
 	done
+	rm -f $(DESTDIR)$(DOCDIR)/fribid/examples/README
+	rm -f $(DESTDIR)$(DOCDIR)/fribid/examples/README.sv
+	rm -f $(DESTDIR)$(DOCDIR)/fribid/examples/common.sh
+	rm -f $(DESTDIR)$(DOCDIR)/fribid/examples/sign.sh
+	rm -f $(DESTDIR)$(DOCDIR)/fribid/examples/reqcert.sh
+	[ ! -d $(DESTDIR)$(DOCDIR)/fribid/examples ] || rmdir $(DESTDIR)$(DOCDIR)/fribid/examples
+	[ ! -d $(DESTDIR)$(DOCDIR)/fribid ] || rmdir $(DESTDIR)$(DOCDIR)/fribid
 
 .PHONY: all clean install uninstall
 

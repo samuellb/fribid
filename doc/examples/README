@@ -1,0 +1,16 @@
+This directory contains scripts that can be used for testing that FriBID
+works properly. The scripts do not check the validity of certificates
+and can't generate valid certificates, only test certificates. The
+following scripts are available:
+
+
+sign.sh - This script tests signature generation. You need to to have a
+certificate to successfully run this test, but even if you don't have
+any certificate you should still get a certificate selection and
+password entry dialog.
+
+reqcert.sh - This script tests a "certificate request", which is the
+first step of getting a certificate. You should get window where you can
+choose a password, and after running the script you should have a test
+file in "~/cbt". The second step can currently not be tested with these
+scripts.
