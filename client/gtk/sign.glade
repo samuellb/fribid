@@ -344,7 +344,7 @@
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
                     <property name="visibility">False</property>
-                    <property name="invisible_char">•</property>
+                    <property name="activates_default">True</property>
                   </widget>
                   <packing>
                     <property name="left_attach">1</property>
@@ -358,7 +358,7 @@
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
                     <property name="visibility">False</property>
-                    <property name="invisible_char">•</property>
+                    <property name="activates_default">True</property>
                   </widget>
                   <packing>
                     <property name="left_attach">1</property>
@@ -430,6 +430,8 @@
                 <property name="response_id">-5</property>
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
+                <property name="can_default">True</property>
+                <property name="has_default">True</property>
                 <property name="receives_default">True</property>
                 <property name="use_stock">True</property>
               </widget>
