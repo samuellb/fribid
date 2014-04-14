@@ -217,7 +217,7 @@ Options:
     --internal--list-extra-objects)
         [ ! -r "$basedir/common/config.h" ] && exit 1
         [ "x`getconfig ENABLE_PKCS11`" = "x1" ] && echo "pkcs11.o"
-        exit
+        exit 0
         ;;
     --internal--remove-link)
         link="$1"
