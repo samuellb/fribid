@@ -203,7 +203,7 @@ Options:
         ;;
     --internal--get-pc-cflags|--internal--get-pc-libs)
         [ ! -r "$basedir/common/config.h" ] && exit 1
-        gtk2libs=$([ "x`getconfig WITH_GTK2`" = "x1" ] && echo "'gtk+-2.0 >= 2.18' gdk-2.0")
+        gtk2libs=$([ "x`getconfig WITH_GTK2`" = "x1" ] && echo "gtk+-2.0 gdk-2.0")
         gtk3libs=$([ "x`getconfig WITH_GTK3`" = "x1" ] && echo "gtk+-3.0")
         pkcs11libs=$([ "x`getconfig ENABLE_PKCS11`" = "x1" ] && echo "libp11")
         if [ "x$flag" = "x--internal--get-pc-cflags" ]; then
