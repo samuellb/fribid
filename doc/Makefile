@@ -39,8 +39,8 @@ install: all
 	    gzip -n -c9 fribid.$$lang.7 > $(DESTDIR)$(MANDIR)/$$lang/man7/fribid.7.gz || exit 1; \
 	done
 	# Test scripts
-	install -d $(DOCDIR)/fribid
-	install -d $(DOCDIR)/fribid/examples
+	install -d $(DESTDIR)$(DOCDIR)/fribid
+	install -d $(DESTDIR)$(DOCDIR)/fribid/examples
 	install -m 644 examples/README $(DESTDIR)$(DOCDIR)/fribid/examples/
 	install -m 644 examples/README.sv $(DESTDIR)$(DOCDIR)/fribid/examples/
 	install -m 644 examples/common.sh $(DESTDIR)$(DOCDIR)/fribid/examples/
