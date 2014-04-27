@@ -310,6 +310,16 @@ void regutil_setParam(Plugin *plugin, const char *name, const char *value) {
         }
         
         plugin->lastError = BIDERR_OK; // Never return failure
+    } else if (!g_ascii_strcasecmp(name, "rfc2797cmcoid")) {
+        // We always use CMC Oids
+        if (!strcmp(value, "true")) {
+            plugin->lastError = BIDERR_OK;
+        } else {
+            plugin->lastError = RUERR_InvalidParameter;
+        }
+    } else if (!g_ascii_strcasecmp(name, "MaxLen")) {
+        // A low MaxLen does not make anything more secure so ignore it
+        plugin->lastError = BIDERR_OK;
     } else if ((intPtr = getIntParamPointer(plugin, name)) != NULL) {
         // Integer parameters
         errno = 0;
