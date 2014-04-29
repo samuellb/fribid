@@ -1,3 +1,16 @@
+1.0.4 - 2014-04-29
+  * File-based enrollment from Nordea now works. Thanks to Andreas Karlsson
+  * Certificates are now sorted in the sign dialog box.
+  * Fixed window size under recent Firefox version.
+  * The password entry is always focused when a password is required.
+  * Pressing enter in enrollment (password choice) dialog closes it.
+  * Remove "expiry" system. The version to emulate must now be configured
+    from ~/.config/fribid/config instead of the old "expiry" file.
+  * Several bug fixes for BSD. Thanks to Hellqvio.
+  * Cleaned up test scripts and install them under /usr/share/doc/
+  * Daniel Sandman found and fixed a Makefile bug in this release.
+  * More security precautions, code cleanup, etc.
+
 1.0.3 - 2014-01-31
   * Only use IPv4 addresses in the signatures. Fixes problems with some
     web sites, e.g. Skatteverket.
