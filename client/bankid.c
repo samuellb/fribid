@@ -242,7 +242,13 @@ BankIDError bankid_storeCertificates(const char *certs, const char *hostname) {
     
     if (!p7data) return BIDERR_InternalError;
     
-    BankIDError error = backend_storeCertificates(p7data, length, hostname);
+    TokenError storeerror = backend_storeCertificates(p7data, length, hostname);
+    BankIDError error;
+    if (storeerror) {
+        error = BIDERR_InternalError;
+    } else {
+        error = BIDERR_OK;
+    }
     
     free(p7data);
     return error;
