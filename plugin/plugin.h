@@ -96,8 +96,8 @@ char *version_getVersion(Plugin *plugin);
 char *sign_getParam(Plugin *plugin, const char *name);
 bool sign_setParam(Plugin *plugin, const char *name, const char *value);
 int sign_performAction(Plugin *plugin, const char *action);
-int sign_performAction_Authenticate(Plugin *plugin);
-int sign_performAction_Sign(Plugin *plugin);
+BankIDError sign_performAction_Authenticate(Plugin *plugin);
+BankIDError sign_performAction_Sign(Plugin *plugin);
 
 void regutil_setParam(Plugin *plugin, const char *name, const char *value);
 void regutil_initRequest(Plugin *plugin, const char *type);

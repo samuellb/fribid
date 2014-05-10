@@ -50,13 +50,13 @@ typedef struct {
     pid_t child;
 } PipeInfo;
 
-static void openPipesWithArgs(PipeInfo *pipeinfo, const char *argv[]) {
+BankIDError openPipesWithArgs(PipeInfo *pipeinfo, const char *argv[]) {
     int pipeIn[2];
     int pipeOut[2];
     
     if (pipe(pipeIn) == -1 || pipe(pipeOut) == -1) {
         perror(BINNAME ": Failed to create pipe");
-        return;
+        return BIDERR_InternalError;
     }
     
     pipeinfo->child = fork();
@@ -83,17 +83,19 @@ static void openPipesWithArgs(PipeInfo *pipeinfo, const char *argv[]) {
         
         pipeinfo->in = fdopen(pipeIn[PIPE_READ_END], "r");
         pipeinfo->out = fdopen(pipeOut[PIPE_WRITE_END], "w");
+        return BIDERR_OK;
     }
 }
 
-static void openPipes(PipeInfo *pipeinfo, const Plugin *plugin) {
+BankIDError openPipes(PipeInfo *pipeinfo, const Plugin *plugin) {
     char windowId[21]; // This holds a native window id (such as an XID)
     const char *argv[] = {
         mainBinary, ipcOption, windowIdOption, windowId, (char *)NULL,
     };
     
     snprintf(windowId, 21, "%ld", plugin->windowId);
-    openPipesWithArgs(pipeinfo, argv);
+    BankIDError error = openPipesWithArgs(pipeinfo, argv);
+    return error;
 }
 
 static void sendHeader(PipeInfo *pipeinfo, const Plugin *plugin,
@@ -123,7 +125,9 @@ static void closePipes(PipeInfo *pipeinfo) {
 char *version_getVersion(Plugin *plugin) {
     PipeInfo pipeinfo;
     
-    openPipes(&pipeinfo, plugin);
+    if(openPipes(&pipeinfo, plugin) != BIDERR_OK) {
+        return 0;
+    }
     sendHeader(&pipeinfo, plugin, PC_GetVersion);
     pipe_finishCommand(pipeinfo.out);
     
@@ -140,10 +144,12 @@ static void sendSignCommon(PipeInfo *pipeinfo, const Plugin *plugin) {
     pipe_sendOptionalString(pipeinfo->out, plugin->info.auth.subjectFilter);
 }
 
-int sign_performAction_Authenticate(Plugin *plugin) {
+BankIDError sign_performAction_Authenticate(Plugin *plugin) {
     PipeInfo pipeinfo;
     
-    openPipes(&pipeinfo, plugin);
+    if(openPipes(&pipeinfo, plugin) != BIDERR_OK) {
+        return BIDERR_InternalError;
+    }
     sendHeader(&pipeinfo, plugin, PC_Authenticate);
     sendSignCommon(&pipeinfo, plugin);
     
@@ -153,10 +159,12 @@ int sign_performAction_Authenticate(Plugin *plugin) {
     return plugin->lastError;
 }
 
-int sign_performAction_Sign(Plugin *plugin) {
+BankIDError sign_performAction_Sign(Plugin *plugin) {
     PipeInfo pipeinfo;
     
-    openPipes(&pipeinfo, plugin);
+    if(openPipes(&pipeinfo, plugin) != BIDERR_OK) {
+        return BIDERR_InternalError;
+    }
     sendHeader(&pipeinfo, plugin, PC_Sign);
     sendSignCommon(&pipeinfo, plugin);
     
@@ -173,7 +181,9 @@ int sign_performAction_Sign(Plugin *plugin) {
 char *regutil_createRequest(Plugin *plugin) {
     PipeInfo pipeinfo;
     
-    openPipes(&pipeinfo, plugin);
+    if(openPipes(&pipeinfo, plugin) != BIDERR_OK) {
+        return NULL;
+    }
     sendHeader(&pipeinfo, plugin, PC_CreateRequest);
     
     // Send password policy
@@ -214,7 +224,9 @@ char *regutil_createRequest(Plugin *plugin) {
 void regutil_storeCertificates(Plugin *plugin, const char *certs) {
     PipeInfo pipeinfo;
     
-    openPipes(&pipeinfo, plugin);
+    if(openPipes(&pipeinfo, plugin) != BIDERR_OK) {
+        return;
+    }
     sendHeader(&pipeinfo, plugin, PC_StoreCertificates);
     
     pipe_sendOptionalString(pipeinfo.out, certs);
