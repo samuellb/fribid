@@ -50,13 +50,16 @@ typedef struct {
     pid_t child;
 } PipeInfo;
 
-BankIDError openPipesWithArgs(PipeInfo *pipeinfo, const char *argv[]) {
+/**
+ * Executes the given command and sets up read/write pipes.
+ */
+bool openPipesWithArgs(PipeInfo *pipeinfo, const char *argv[]) {
     int pipeIn[2];
     int pipeOut[2];
     
     if (pipe(pipeIn) == -1 || pipe(pipeOut) == -1) {
         perror(BINNAME ": Failed to create pipe");
-        return BIDERR_InternalError;
+        return false;
     }
     
     pipeinfo->child = fork();
@@ -83,21 +86,23 @@ BankIDError openPipesWithArgs(PipeInfo *pipeinfo, const char *argv[]) {
         
         pipeinfo->in = fdopen(pipeIn[PIPE_READ_END], "r");
         pipeinfo->out = fdopen(pipeOut[PIPE_WRITE_END], "w");
-        return BIDERR_OK;
+        return true;
     }
 }
 
-BankIDError openPipes(PipeInfo *pipeinfo, const Plugin *plugin) {
+bool openPipes(PipeInfo *pipeinfo, const Plugin *plugin) {
     char windowId[21]; // This holds a native window id (such as an XID)
     const char *argv[] = {
         mainBinary, ipcOption, windowIdOption, windowId, (char *)NULL,
     };
     
     snprintf(windowId, 21, "%ld", plugin->windowId);
-    BankIDError error = openPipesWithArgs(pipeinfo, argv);
-    return error;
+    return openPipesWithArgs(pipeinfo, argv);
 }
 
+/**
+ * Sends the IPC command number and some common information for all commands.
+ */
 static void sendHeader(PipeInfo *pipeinfo, const Plugin *plugin,
                        PipeCommand command) {
     pipe_sendCommand(pipeinfo->out, command);
@@ -106,6 +111,10 @@ static void sendHeader(PipeInfo *pipeinfo, const Plugin *plugin,
     pipe_sendString(pipeinfo->out, plugin->ip);
 }
 
+/**
+ * Waits for a response code from the other side.
+ * The GLib main loop keeps running while waiting.
+ */
 static BankIDError waitReply(PipeInfo *pipeinfo) {
     pipe_finishCommand(pipeinfo->out);
     
@@ -125,8 +134,8 @@ static void closePipes(PipeInfo *pipeinfo) {
 char *version_getVersion(Plugin *plugin) {
     PipeInfo pipeinfo;
     
-    if(openPipes(&pipeinfo, plugin) != BIDERR_OK) {
-        return 0;
+    if (!openPipes(&pipeinfo, plugin)) {
+        return NULL;
     }
     sendHeader(&pipeinfo, plugin, PC_GetVersion);
     pipe_finishCommand(pipeinfo.out);
@@ -136,7 +145,9 @@ char *version_getVersion(Plugin *plugin) {
     return version;
 }
 
-
+/**
+ * Sends common data for the sign and auth IPC commands.
+ */
 static void sendSignCommon(PipeInfo *pipeinfo, const Plugin *plugin) {
     pipe_sendString(pipeinfo->out, plugin->info.auth.challenge);
     pipe_sendInt(pipeinfo->out, plugin->info.auth.serverTime);
@@ -147,7 +158,7 @@ static void sendSignCommon(PipeInfo *pipeinfo, const Plugin *plugin) {
 BankIDError sign_performAction_Authenticate(Plugin *plugin) {
     PipeInfo pipeinfo;
     
-    if(openPipes(&pipeinfo, plugin) != BIDERR_OK) {
+    if (!openPipes(&pipeinfo, plugin)) {
         return BIDERR_InternalError;
     }
     sendHeader(&pipeinfo, plugin, PC_Authenticate);
@@ -162,7 +173,7 @@ BankIDError sign_performAction_Authenticate(Plugin *plugin) {
 BankIDError sign_performAction_Sign(Plugin *plugin) {
     PipeInfo pipeinfo;
     
-    if(openPipes(&pipeinfo, plugin) != BIDERR_OK) {
+    if (!openPipes(&pipeinfo, plugin)) {
         return BIDERR_InternalError;
     }
     sendHeader(&pipeinfo, plugin, PC_Sign);
@@ -181,7 +192,7 @@ BankIDError sign_performAction_Sign(Plugin *plugin) {
 char *regutil_createRequest(Plugin *plugin) {
     PipeInfo pipeinfo;
     
-    if(openPipes(&pipeinfo, plugin) != BIDERR_OK) {
+    if (!openPipes(&pipeinfo, plugin)) {
         return NULL;
     }
     sendHeader(&pipeinfo, plugin, PC_CreateRequest);
@@ -224,7 +235,7 @@ char *regutil_createRequest(Plugin *plugin) {
 void regutil_storeCertificates(Plugin *plugin, const char *certs) {
     PipeInfo pipeinfo;
     
-    if(openPipes(&pipeinfo, plugin) != BIDERR_OK) {
+    if (!openPipes(&pipeinfo, plugin)) {
         return;
     }
     sendHeader(&pipeinfo, plugin, PC_StoreCertificates);
