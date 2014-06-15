@@ -1,0 +1,34 @@
+This directory contains compatibility code for Google Chrome 35 / Chromium 35
+and later versions. The code consists of a Javascript file that needs to be
+installed into your browser and a server program that must be running when
+you need to use sites using BankID in your browser.
+
+To compile the code type:
+
+    make
+
+A program file called "npcompatsrv" will be created. To start it, type:
+
+    ./npcompatsrv
+
+If FriBID is installed in a standard location then it will be auto-detected
+and the program will say "Server started on port 20048". Otherwise an error
+message will be shown.
+
+The final step is to install fribid_npapi_compat.user.js into your browser.
+For Chrome / Chromium do this:
+
+    1) Click the ≡ button, click Tools --> Extensions.
+    2) Open the npcompatsrv folder in a graphical file manager.
+    3) Drag and drop the fribid_npapi_compat.user.js file to the
+       extensions list in the browser (or the text saying that you
+       don't have any extensions).
+    4) Click "Add".
+    5) Done. "FriBID NPAPI Compatibility" should appear in the list.
+
+
+You should now be able to access web sites that use BankID.
+A yellow warning triangle will appear in the browser when you use npcompatsrv.
+This happens because the server runs on plain HTTP and not HTTPS. Since the
+server runs locally only, this is not any problem.
+
