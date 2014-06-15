@@ -1,6 +1,6 @@
 /*
 
-  Copyright (c) 2004 Samuel Lidén Borell <samuel@kodafritt.se>
+  Copyright (c) 2014 Samuel Lidén Borell <samuel@kodafritt.se>
  
   Permission is hereby granted, free of charge, to any person obtaining a copy
   of this software and associated documentation files (the "Software"), to deal
