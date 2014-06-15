@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name FriBID NPAPI Compatibility
-// @description FriBID compatibility script for pages uing BankID through NPAPI
+// @description FriBID compatibility script for pages using BankID through NPAPI
 // @namespace https://fribid.se/
 // @version 1.0.4
 // @run-at document-start
