@@ -47,38 +47,50 @@
 #define _(string) gettext(string)
 #define translatable(string) (string)
 
-static const char *const errorStrings[] = {
-    // TokenError_Success
-    NULL,
-    // TokenError_Unknown
-    translatable("An unknown error occurred"),
-    // TokenError_NotImplemented
-    translatable("Not implemented yet"),
-    // TokenError_MessageTooLong
-    translatable("Message to sign is too long"),
-    // TokenError_SignatureFailure
-    translatable("Failed to create signature"),
-    
-    // File errors
-    // TokenError_FileNotReadable
-    translatable("The file could not be read"),
-    // TokenError_CantCreateFile
-    translatable("The file could not be saved"),
-    // TokenError_CantWriteToFile
-    translatable("The file could not be written to, even though it could be opened"),
-    // TokenError_BadFile
-    translatable("Invalid file format"),
-    // TokenError_BadPassword,
-    translatable("Incorrect password"),
-    
-    // Smart card errors
-    // TokenError_BadPin
-    translatable("Incorrect PIN"),
-    
-    // Key generation errors
-    //TokenError_NoRandomState,
-    translatable("No random state available (/dev/(u)random must exist)"),
-};
+static const char *getErrorString(TokenError errorCode) {
+    const char *s = NULL;
+    switch (errorCode) {
+        case TokenError_Success:
+            return NULL;
+        case TokenError_Unknown:
+            s = translatable("An unknown error occurred");
+            break;
+        case TokenError_NotImplemented:
+            s = translatable("Not implemented yet");
+            break;
+        case TokenError_MessageTooLong:
+            s = translatable("Message to sign is too long");
+            break;
+        case TokenError_SignatureFailure:
+            s = translatable("Failed to create signature");
+            break;
+        /* File errors */
+        case TokenError_FileNotReadable:
+            s = translatable("The file could not be read");
+            break;
+        case TokenError_CantCreateFile:
+            s = translatable("The file could not be saved");
+            break;
+        case TokenError_CantWriteToFile:
+            s = translatable("The file could not be written to, even though it could be opened");
+            break;
+        case TokenError_BadFile:
+            s = translatable("Invalid file format");
+            break;
+        case TokenError_BadPassword:
+            s = translatable("Incorrect password");
+            break;
+        /* Smart card errors */
+        case TokenError_BadPin:
+            s = translatable("Incorrect PIN");
+            break;
+        /* Key generation errors */
+        case TokenError_NoRandomState:
+            s = translatable("No random state available (/dev/(u)random must exist)");
+            break;
+    }
+    return gettext(s);
+}
 
 
 void platform_init(int *argc, char ***argv) {
@@ -707,7 +719,7 @@ void platform_showError(TokenError error) {
     assert(error != TokenError_Success);
     
     int lastErrno = errno;
-    const char *text = gettext(errorStrings[error]);
+    const char *text = getErrorString(error);
     char *longText;
     
     switch (error) {

@@ -64,7 +64,7 @@ struct PlatformDirIter {
  * @param mode  Either Platform_OpenRead or Platform_OpenCreate
  */
 FILE *platform_openLocked(const char *filename, PlatformOpenMode mode) {
-    static const char *const stdio_modes[] = { "rb", "wb" };
+    static const char stdio_modes[][3] = { "rb", "wb" };
     static const int open_flags[] = { O_RDONLY, O_WRONLY|O_CREAT|O_EXCL };
     static const int lock_flags[] = { F_RDLCK, F_WRLCK };
 

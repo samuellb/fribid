@@ -385,14 +385,18 @@ typedef struct CertReq {
  * Adds a key usage extension to the list of extensions in a request.
  */
 static X509_EXTENSION *makeKeyUsageExt(KeyUsage keyUsage) {
-    static const char *const keyUsages[] = {
-        NULL,                /* Issuing */
-        "nonRepudiation",    /* Signing */
-        "digitalSignature",  /* Authentication (yes, this is correct!) */
-    };
-    
-    return X509V3_EXT_conf_nid(NULL, NULL,
-        NID_key_usage, (char*)keyUsages[keyUsage]);
+    char *ku_str;
+    switch (keyUsage) {
+        case KeyUsage_Signing:
+            ku_str = "nonRepudiation";
+            break;
+        case KeyUsage_Authentication:
+            ku_str = "digitalSignature";
+            break;
+        default:
+            ku_str = NULL;
+    }
+    return X509V3_EXT_conf_nid(NULL, NULL, NID_key_usage, ku_str);
 }
 
 static TokenError saveKeys(const CertReq *reqs, const char *hostname,
@@ -842,22 +846,16 @@ TokenError _backend_storeCertificates(const char *p7data, size_t length,
     return error;
 }
 
-
-/* Backend functions */
-static const Backend backend_template = {
-    .init = _backend_init,
-    .free = _backend_free,
-    .freeToken = _backend_freeToken,
-    .addFile = _backend_addFile,
-    .createRequest = _backend_createRequest,
-    .storeCertificates = _backend_storeCertificates,
-    .getBase64Chain = _backend_getBase64Chain,
-    .sign = _backend_sign,
-};
-
 Backend *pkcs12_getBackend(void) {
-    Backend *backend = malloc(sizeof(Backend));
-    memcpy(backend, &backend_template, sizeof(Backend));
+    Backend *backend = calloc(1, sizeof(Backend));
+    backend->init = _backend_init;
+    backend->free = _backend_free;
+    backend->freeToken = _backend_freeToken;
+    backend->addFile = _backend_addFile;
+    backend->createRequest = _backend_createRequest;
+    backend->storeCertificates = _backend_storeCertificates;
+    backend->getBase64Chain = _backend_getBase64Chain;
+    backend->sign = _backend_sign;
     return backend;
 }
 

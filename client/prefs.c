@@ -25,16 +25,23 @@
 #include "../common/defines.h"
 #include "platform.h"
 
+/* These variables are assigned in prefs_load and read from
+   various places in the client. */
 #if ENABLE_PKCS11
-const char *prefs_pkcs11_module = DEFAULT_PKCS11_MODULE;
+const char *prefs_pkcs11_module;
 #endif
-const char *prefs_bankid_emulatedversion = NULL;
+const char *prefs_bankid_emulatedversion;
 
 /**
  * Loads the preferences from ~/.config/fribid/config
  */
 void prefs_load(void) {
     PlatformConfig *cfg = platform_openConfig("fribid", "config");
+    
+    /* Set defaults */
+    prefs_pkcs11_module = DEFAULT_PKCS11_MODULE;
+    prefs_bankid_emulatedversion = NULL;
+    
     if (cfg) {
         char *s;
         /* Which PKCS#11 module to use */

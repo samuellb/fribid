@@ -41,7 +41,7 @@
 static char *error_string = NULL;
 
 typedef struct {
-    const char *name;
+    const char name[7]; /* length of "STREET" + terminator */
     const int nid;
 } DNAttrInfo;
 

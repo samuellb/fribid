@@ -250,19 +250,15 @@ static void _backend_free(Backend *backend) {
     EVP_cleanup();
 }
 
-/* Backend functions */
-static const Backend backend_template = {
-    .init = _backend_init,
-    .scan = _backend_scan,
-    .free = _backend_free,
-    .freeToken = _backend_freeToken,
-    .getBase64Chain = _backend_getBase64Chain,
-    .sign = _backend_sign,
-};
 
 Backend *pkcs11_getBackend(void) {
-    Backend *backend = malloc(sizeof(Backend));
-    memcpy(backend, &backend_template, sizeof(Backend));
+    Backend *backend = calloc(1, sizeof(Backend));
+    backend->init = _backend_init;
+    backend->free = _backend_free;
+    backend->freeToken = _backend_freeToken;
+    backend->scan = _backend_scan;
+    backend->getBase64Chain = _backend_getBase64Chain;
+    backend->sign = _backend_sign;
     return backend;
 }
 

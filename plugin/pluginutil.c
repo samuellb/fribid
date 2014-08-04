@@ -70,22 +70,28 @@ static bool getProperty(NPP instance, NPObject *obj, const char *name, NPVariant
     return NPN_GetProperty(instance, obj, ident, result);
 }
 
-static char *getWindowProperty(NPP instance, const char *const identifiers[]) {
+/**
+ * Returns a property from the window Javascript object.
+ * The identifiers parameter must point to a sequence of null terminated
+ * strings followed by an extra null terminator. E.g.
+ *    "document\0location\0href\0"
+ */
+static char *getWindowProperty(NPP instance, const char *identifiers) {
     NPObject *obj;
     
     NPN_GetValue(instance, NPNVWindowNPObject, &obj);
     if (!obj) return NULL;
     
-    const char *const *identifier = &identifiers[0];
+    const char *identifier = identifiers;
 
     while (1) {
         NPVariant value;
         
-        bool ok = getProperty(instance, obj, *identifier, &value);
+        bool ok = getProperty(instance, obj, identifier, &value);
         NPN_ReleaseObject(obj);
         if (!ok) return NULL;
         
-        identifier++;
+        identifier += strlen(identifier)+1;
         if (*identifier) {
             // Expecting an object
             if (!NPVARIANT_IS_OBJECT(value)) {
@@ -94,7 +100,7 @@ static char *getWindowProperty(NPP instance, const char *const identifiers[]) {
             }
             obj = NPVARIANT_TO_OBJECT(value);
         } else {
-            // Expecting a string
+            // Reached end. Expecting a string
             if (!NPVARIANT_IS_STRING(value)) {
                 NPN_ReleaseVariantValue(&value);
                 return NULL;
@@ -108,17 +114,11 @@ static char *getWindowProperty(NPP instance, const char *const identifiers[]) {
 }
 
 char *getDocumentURL(NPP instance) {
-    static const char *const identifiers[] = {
-        "document", "location", "href", NULL
-    };
-    return getWindowProperty(instance, identifiers);
+    return getWindowProperty(instance, "document\0location\0href\0");
 }
 
 char *getDocumentHostname(NPP instance) {
-    static const char *const identifiers[] = {
-        "document", "location", "hostname", NULL
-    };
-    return getWindowProperty(instance, identifiers);
+    return getWindowProperty(instance, "document\0location\0hostname\0");
 }
 
 /**
