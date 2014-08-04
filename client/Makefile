@@ -22,10 +22,9 @@
 
 CFLAGS ?= -O2 -g
 PKGCONFIG_CFLAGS=`../configure --internal--get-pc-cflags`
-CCFLAGS:=$(CFLAGS) -Wall -Wextra -std=c99 -pedantic -Wno-unused-parameter -I../npapi/include $(PKGCONFIG_CFLAGS) -DGTK_DISABLE_DEPRECATED=1 -DGDK_DISABLE_DEPRECATED=1 -DG_DISABLE_DEPRECATED=1 -DGSEAL_ENABLE -DFRIBID_CLIENT
-# You may have to add -lpthread after $(LDFLAGS) on OpenBSD
-LINKFLAGS:=$(CFLAGS) $(LDFLAGS) -Wl,--as-needed
-LIBS=`../configure --internal--get-pc-libs`
+CCFLAGS:=$(CFLAGS) -Wall -Wextra -std=c99 -pedantic -Wno-unused-parameter -I../npapi/include $(PKGCONFIG_CFLAGS) -DGTK_DISABLE_DEPRECATED=1 -DGDK_DISABLE_DEPRECATED=1 -DG_DISABLE_DEPRECATED=1 -DGSEAL_ENABLE -DFRIBID_CLIENT -fPIE
+LINKFLAGS:=$(CFLAGS) $(LDFLAGS) -Wl,--as-needed -pie
+LIBS=`../configure --internal--get-pc-libs` -lpthread
 
 # Files to be installed
 LIBEXEC_PATH=`../configure --internal--get-define=LIBEXEC_PATH`
