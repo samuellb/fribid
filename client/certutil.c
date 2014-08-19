@@ -445,6 +445,10 @@ void certutil_updateErrorString(void) {
     fprintf(stderr, BINNAME ": error from OpenSSL or libP11: %s\n", error_string);
 }
 
+void certutil_setErrorString(char *str) {
+    error_string = str;
+}
+
 char *certutil_getErrorString(void) {
     return error_string;
 }

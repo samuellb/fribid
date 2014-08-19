@@ -50,6 +50,18 @@ msgstr "Meddelandet som skulle signeras var för långt"
 msgid "Failed to create signature"
 msgstr "Misslyckades med att skapa signatur"
 
+#: ../client/gtk.c:68
+msgid "Domain name mismatch"
+msgstr "Domännamnet stämmer inte överrens"
+
+#: ../client/gtk.c:71
+msgid "The certificates didn't match"
+msgstr "Certifikaten matchar inte"
+
+#: ../client/gtk.c:74
+msgid "Failed to store received certificates"
+msgstr "Misslyckades med att lagra mottagna certifikat"
+
 #: ../client/gtk.c:58
 msgid "The file could not be read"
 msgstr "Det gick inte att öppna filen"

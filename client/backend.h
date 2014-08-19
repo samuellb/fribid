@@ -58,6 +58,9 @@ typedef enum  {
     TokenError_NotImplemented,
     TokenError_MessageTooLong,
     TokenError_SignatureFailure,
+    TokenError_HostnameMismatch,
+    TokenError_NoCertsMatched,
+    TokenError_FailedToStoreCerts,
     // File errors
     TokenError_FileNotReadable,
     TokenError_CantCreateFile,

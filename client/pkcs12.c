@@ -651,6 +651,7 @@ static TokenError storeCertificates(STACK_OF(X509) *certs,
     FILE *newFile = NULL;
     char *tempname = NULL;
     bool modified = false;
+    bool hostname_mismatch = false;
     
     // Attempt to create new file first
     // (to avoid race conditions)
@@ -695,7 +696,12 @@ static TokenError storeCertificates(STACK_OF(X509) *certs,
             bool equal = (origin && strcmp(origin, hostname) == 0);
             free(origin);
             ASN1_OBJECT_free(objOwningHost);
-            if (!equal) continue;
+            if (!equal) {
+                char *str = rasprintf("file=%s, request=%s", origin, hostname);
+                certutil_setErrorString(str);
+                hostname_mismatch = true;
+                continue;
+            }
             
             // Extract cert from bag
             X509 *cert = PKCS12_certbag2x509(bag);
@@ -795,12 +801,18 @@ static TokenError storeCertificates(STACK_OF(X509) *certs,
     if (!p12) {
         fprintf(stderr, BINNAME ": failed to open or parse file to store "
                 "certs in %s\n", filename);
+        error = TokenError_FailedToStoreCerts;
+    } else if (!modified && hostname_mismatch) {
+        fprintf(stderr, BINNAME ": hostname mismatch with %s\n", hostname);
+        error = TokenError_HostnameMismatch;
     } else if (!modified) {
         fprintf(stderr, BINNAME ": no certs matched the key file %s\n",
                 filename);
+        error = TokenError_NoCertsMatched;
     } else if (error) {
         fprintf(stderr, BINNAME ": failed to store certificates in %s\n",
                 filename);
+        error = TokenError_FailedToStoreCerts;
     }
     
     return error;

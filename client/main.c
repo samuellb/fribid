@@ -294,7 +294,13 @@ void pipeCommand(PipeCommand command, const char *url, const char *hostname,
         case PC_StoreCertificates: {
             char *certs = pipe_readString(stdin);
             
-            BankIDError error = bankid_storeCertificates(certs, hostname);
+            TokenError tokenError;
+            BankIDError error = bankid_storeCertificates(certs, hostname,
+                                                         &tokenError);
+            if (error != BIDERR_OK) {
+                /* TODO should perhaps dump the certificate data to a file? */
+                platform_showError(tokenError);
+            }
             
             pipe_sendInt(stdout, error);
             pipe_flush(stdout);

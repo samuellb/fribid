@@ -64,6 +64,15 @@ static const char *getErrorString(TokenError errorCode) {
         case TokenError_SignatureFailure:
             s = translatable("Failed to create signature");
             break;
+        case TokenError_HostnameMismatch:
+            s = translatable("Domain name mismatch");
+            break;
+        case TokenError_NoCertsMatched:
+            s = translatable("The certificates didn't match");
+            break;
+        case TokenError_FailedToStoreCerts:
+            s = translatable("Failed to store received certificates");
+            break;
         /* File errors */
         case TokenError_FileNotReadable:
             s = translatable("The file could not be read");
@@ -192,6 +201,9 @@ static void showMessage(GtkMessageType type, const char *text) {
     GtkWidget *dialog = gtk_message_dialog_new(
         GTK_WINDOW(activeDialog), GTK_DIALOG_DESTROY_WITH_PARENT,
         type, GTK_BUTTONS_CLOSE, "%s", text);
+    if (!activeDialog) {
+        gtk_window_set_title(GTK_WINDOW(dialog), "FriBID");
+    }
     gtk_dialog_run(GTK_DIALOG(dialog));
     gtk_widget_destroy(dialog);
 }

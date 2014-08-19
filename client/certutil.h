@@ -54,6 +54,7 @@ char *certutil_makeFilename(X509_NAME *xname);
 char *certutil_getBagAttr(PKCS12_SAFEBAG *bag, ASN1_OBJECT *oid);
 void certutil_clearErrorString(void);
 void certutil_updateErrorString(void);
+void certutil_setErrorString(char *str);
 char *certutil_getErrorString(void);
 
 #endif
