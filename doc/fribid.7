@@ -18,7 +18,7 @@
 .\"  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 .\"  THE SOFTWARE.
 
-.TH fribid 7 "2012-04-06" "" "FriBID"
+.TH fribid 7 "2014-08-20" "" "FriBID"
 
 .SH NAME
 fribid \- a web browser plugin for BankID
@@ -51,7 +51,7 @@ and
 .SH CONFIGURATION
 FriBID loads the configuration file
 .B ~/.config/fribid/config
-if it exists. Below is an example. The first option controls which PKCS#11 module to use for smartcard support (or for other cryptographic tokens). The default is to use OpenSC's PKCS#11 module. The second option sets the software version that FriBID should pretend to be. The default is 4.15.0.14, since FriBID doesn't support some features in the more recent versions yet.
+if it exists. Below is an example. The first option controls which PKCS#11 module to use for smartcard support (or for other cryptographic tokens). The default is to use OpenSC's PKCS#11 module. The second option sets the software version that FriBID should pretend to be. The default is 4.15.0.14, since FriBID doesn't support some features in the more recent versions yet. The last option is for troubleshooting and enables dumping of retreived certificates to files in ~/cbt/ when an error occurs. It is disabled by default.
 
 .IP
 [pkcs11]
@@ -63,6 +63,11 @@ module=/path/to/pkcs11/module
 [expiry]
 .br
 version-to-emulate=4.19.0.11351
+
+.br
+[debug]
+.br
+dump=true
 
 .SH USING FRIBID
 FriBID will start automatically when you visit a web page that uses BankID for the log in system or to sign information. You can check that FriBID works on this page:

@@ -48,6 +48,7 @@ void *guaranteed_memset(void *v, int c, size_t n);
 char *base64_encode(const char *data, const int length);
 char *base64_decode(const char *encoded);
 char *base64_decode_binary(const char *encoded, size_t *decodedLength);
+char *base64_add_linebreaks(const char *encoded);
 bool is_canonical_base64(const char *encoded);
 char *sha_base64(const char *str);
 

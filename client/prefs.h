@@ -25,10 +25,13 @@
 #ifndef PREFS_H
 #define PREFS_H
 
+#include <stdbool.h>
+
 #ifdef ENABLE_PKCS11
 extern const char *prefs_pkcs11_module;
 #endif
 extern const char *prefs_bankid_emulatedversion;
+extern bool prefs_debug_dump;
 
 void prefs_load(void);
 

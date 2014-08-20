@@ -18,7 +18,7 @@
 .\"  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 .\"  THE SOFTWARE.
 
-.TH fribid 7 "2012-04-06" "" "FriBID"
+.TH fribid 7 "2014-08-20" "" "FriBID"
 
 .SH NAMN
 fribid \- en webbläsarplugin för BankID
@@ -52,7 +52,7 @@ och
 .SH INSTÄLLNINGAR
 FriBID läser in konfigurationsfilen
 .B ~/.config/fribid/config
-om den finns. Här nedan är ett exempel. Den första inställningen styr vilken PKCS#11-modul som ska användas för smartkortsstöd (eller för andra kryptografiska enheter). Standardvalet är att använda OpenSCs PKCS#11-modul. Den andra inställningen styr vilken version som FriBID ska låtsas vara. Standardvalet är 4.15.0.14, eftersom FriBID inte stöder vissa funktioner i de senare versionerna.
+om den finns. Här nedan är ett exempel. Den första inställningen styr vilken PKCS#11-modul som ska användas för smartkortsstöd (eller för andra kryptografiska enheter). Standardvalet är att använda OpenSCs PKCS#11-modul. Den andra inställningen styr vilken version som FriBID ska låtsas vara. Standardvalet är 4.15.0.14, eftersom FriBID inte stöder vissa funktioner i de senare versionerna. Den sista inställningen används för felsökning och styr om hämtade certifikat ska dumpas till filer i ~/cbt/ ifall ett fel uppstår. Den är inaktiverad som standard.
 
 .IP
 [pkcs11]
@@ -64,6 +64,11 @@ module=/sökväg/till/pkcs11-modul
 [expiry]
 .br
 version-to-emulate=4.19.0.11351
+
+.br
+[debug]
+.br
+dump=true
 
 .SH ATT ANVÄNDA FRIBID
 FriBID startas automatiskt när du besöker en webbsida som använder BankID för inloggning eller signering. Du kan testa att FriBID fungerar på denna sida:

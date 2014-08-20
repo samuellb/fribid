@@ -31,6 +31,7 @@
 #include "../common/pipe.h"
 #include "backend.h"
 #include "bankid.h"
+#include "certutil.h"
 #include "platform.h"
 #include "prefs.h"
 #include "misc.h"
@@ -298,7 +299,9 @@ void pipeCommand(PipeCommand command, const char *url, const char *hostname,
             BankIDError error = bankid_storeCertificates(certs, hostname,
                                                          &tokenError);
             if (error != BIDERR_OK) {
-                /* TODO should perhaps dump the certificate data to a file? */
+                if (prefs_debug_dump) {
+                    certutil_dumpCertsP7(certs);
+                }
                 platform_showError(tokenError);
             }
             

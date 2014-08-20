@@ -386,6 +386,35 @@ PKCS7 *certutil_parseP7SignedData(const char *p7data, size_t length) {
 }
 
 /**
+ * Dumps the given base64 encoded PKCS#7 certificate container
+ * into a PEM encoded PKCS#7 file in the ~/cbt directory.
+ */
+int certutil_dumpCertsP7(const char *b64pkcs7) {
+    char *dumpname = platform_getDumpFilename("storecerts-", ".pem");
+    fprintf(stderr, BINNAME ": dumping certificates to \"%s\"\n",
+            dumpname);
+    
+    int ok = 0;
+    FILE *df = fopen(dumpname, "wb");
+    if (df) {
+        static char pem_template[] =
+            "-----BEGIN PKCS7-----\n"
+            "%s"
+            "-----END PKCS7-----\n";
+        char *lines = base64_add_linebreaks(b64pkcs7);
+        
+        ok = (fprintf(df, pem_template, lines) > 0) &
+             (fclose(df) >= 0);
+        free(lines);
+    }
+    if (!ok) {
+        fprintf(stderr, BINNAME ": failed to write dump\n");
+    }
+    free(dumpname);
+    return ok;
+}
+
+/**
  * Makes a filename for a certificate.
  */
 char *certutil_makeFilename(X509_NAME *xname) {

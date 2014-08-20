@@ -50,6 +50,7 @@ X509 *certutil_findCert(const STACK_OF(X509) *certList,
 bool certutil_addToList(char ***list, size_t *count, X509 *cert);
 void certutil_freeList(char ***list, size_t *count);
 PKCS7 *certutil_parseP7SignedData(const char *p7data, size_t length);
+int certutil_dumpCertsP7(const char *b64pkcs7);
 char *certutil_makeFilename(X509_NAME *xname);
 char *certutil_getBagAttr(PKCS12_SAFEBAG *bag, ASN1_OBJECT *oid);
 void certutil_clearErrorString(void);

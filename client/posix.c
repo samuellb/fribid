@@ -235,6 +235,33 @@ char *platform_getFilenameForKey(const char *nameAttr) {
 }
 
 /**
+ * Generates a filename for dump file for debugging.
+ * The filename will have this format: ~/cbt/prefix123456-123456suffix
+ */
+char *platform_getDumpFilename(const char *prefix, const char *suffix) {
+    char *basename = platform_filterFilename(prefix);
+    char *filename = NULL;
+    
+    if (!basename || !*basename) goto end;
+    
+    // Get key store path
+    size_t numPaths;
+    char **paths;
+    platform_keyDirs(&paths, &numPaths);
+    
+    // Create directory
+    if (mkdir(paths[0], 0700) != 0 && errno != EEXIST) goto end;
+    
+    // Merge
+    filename = rasprintf("%s/%s%d-%d%s", paths[0], basename,
+                         time(NULL), rand(), suffix);
+    
+  end:
+    if (basename) free(basename);
+    return filename;
+}
+
+/**
  * Returns a flock struct used as an argument to fcntl to
  * lock a file.
  */

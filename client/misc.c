@@ -150,6 +150,27 @@ char *base64_encode(const char *data, int length) {
     return base64;
 }
 
+char *base64_add_linebreaks(const char *encoded) {
+    size_t datalen;
+    char *data = base64_decode_binary(encoded, &datalen);
+    if (!data) return NULL;
+    
+    size_t enclen = (datalen/3+1)*4 + 4;
+    size_t alloclen = enclen + enclen/72 + 1+5;
+    char *ret = malloc(alloclen);
+    gchar *out = (gchar*)ret;
+    
+    gint tmp1 = 0, tmp2 = 0;
+    size_t bytesout = g_base64_encode_step((guchar*)data, datalen, true,
+                                           out, &tmp1, &tmp2);
+    out += bytesout;
+    bytesout += g_base64_encode_close(true, out, &tmp1, &tmp2);
+    ret[bytesout] = '\0';
+    
+    free(data);
+    return ret;
+}
+
 char *base64_decode(const char *encoded) {
     gsize length;
 
