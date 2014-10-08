@@ -40,7 +40,9 @@ void prefs_load(void) {
     PlatformConfig *cfg = platform_openConfig("fribid", "config");
     
     /* Set defaults */
+#if ENABLE_PKCS11
     prefs_pkcs11_module = DEFAULT_PKCS11_MODULE;
+#endif
     prefs_bankid_emulatedversion = NULL;
     prefs_debug_dump = false;
     
