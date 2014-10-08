@@ -694,7 +694,6 @@ static TokenError storeCertificates(STACK_OF(X509) *certs,
             
             char *origin = certutil_getBagAttr(bag, objOwningHost);
             bool equal = (origin && strcmp(origin, hostname) == 0);
-            free(origin);
             ASN1_OBJECT_free(objOwningHost);
             if (!equal) {
                 char *str = rasprintf("file=%s, request=%s", origin, hostname);
@@ -702,7 +701,8 @@ static TokenError storeCertificates(STACK_OF(X509) *certs,
                 hostname_mismatch = true;
                 continue;
             }
-            
+            free(origin);
+
             // Extract cert from bag
             X509 *cert = PKCS12_certbag2x509(bag);
             if (!cert) {
