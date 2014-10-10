@@ -699,6 +699,7 @@ static TokenError storeCertificates(STACK_OF(X509) *certs,
                 char *str = rasprintf("file=%s, request=%s", origin, hostname);
                 certutil_setErrorString(str);
                 hostname_mismatch = true;
+                free(origin);
                 continue;
             }
             free(origin);
