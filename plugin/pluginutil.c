@@ -14,7 +14,10 @@
 
 #include "pluginutil.h"
 
-static char *strndup(const char *source, size_t maxLength) {
+/**
+ * Implementation of strndup in case the system doesn't have that.
+ */
+static char *f_strndup(const char *source, size_t maxLength) {
     size_t i;
     for (i = 0;; i++) {
         if ((i >= maxLength) || (source[i] == '\0')) break;
@@ -31,7 +34,7 @@ static char *strndup(const char *source, size_t maxLength) {
  * Creates a new null terminated string from an NPVariant string.
  */
 char *variantToStringZ(const NPVariant *variant) {
-    return strndup(NPVARIANT_TO_STRING(*variant).utf8characters, NPVARIANT_TO_STRING(*variant).utf8length);
+    return f_strndup(NPVARIANT_TO_STRING(*variant).utf8characters, NPVARIANT_TO_STRING(*variant).utf8length);
 }
 
 // Re-allocates a string with NPN_MemAlloc instead of malloc
@@ -105,8 +108,8 @@ static char *getWindowProperty(NPP instance, const char *identifiers) {
                 NPN_ReleaseVariantValue(&value);
                 return NULL;
             }
-            char *url = strndup(NPVARIANT_TO_STRING(value).utf8characters,
-                                NPVARIANT_TO_STRING(value).utf8length);
+            char *url = f_strndup(NPVARIANT_TO_STRING(value).utf8characters,
+                                  NPVARIANT_TO_STRING(value).utf8length);
             NPN_ReleaseVariantValue(&value);
             return url;
         }
