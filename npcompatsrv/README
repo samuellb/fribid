@@ -15,7 +15,7 @@ If FriBID is installed in a standard location then it will be auto-detected
 and the program will say "Server started on port 20048". Otherwise an error
 message will be shown.
 
-The final step is to install fribid_npapi_compat.user.js into your browser.
+Then install fribid_npapi_compat.user.js into your browser.
 For Chrome / Chromium do this:
 
     1) Click the ≡ button, click Tools --> Extensions.
@@ -26,6 +26,10 @@ For Chrome / Chromium do this:
     4) Click "Add".
     5) Done. "FriBID NPAPI Compatibility" should appear in the list.
 
+If you use Chrome/Chromium 38 or a later version you also need to run
+your browser with the follwing command:
+
+  chromium --allow-running-insecure-content
 
 You should now be able to access web sites that use BankID.
 A yellow warning triangle will appear in the browser when you use npcompatsrv.

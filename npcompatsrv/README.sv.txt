@@ -15,7 +15,7 @@ Om FriBID är installerat i en av standardkatalogerna så hittas det automatiskt
 och programmet kommer att säga "Server started on port 20048". Annars skrivs
 ett felmeddelande ut.
 
-Det sista steget är att installera fribid_npapi_compat.user.js i webbläsaren.
+Installera sedan fribid_npapi_compat.user.js i webbläsaren.
 För Chrome / Chromium gör du så här:
 
     1) Tryck på ≡ knappen, och Tools --> Extensions.
@@ -26,10 +26,13 @@ För Chrome / Chromium gör du så här:
     4) Tryck på "Add".
     5) Klart. Nu ska "FriBID NPAPI Compatibility" dyka upp i listan.
 
+Om du använder Chrome/Chromium 38 eller en senare version så måste du köra
+din webbläsare med följande kommando:
 
-När du har följt stegen ovan så ska det gå att använda webbsidor med
-BankID-inloggning. Det kommer dock att synas en gul varningstriangel
-i webbläsaren när du använder npcompatsrv. Detta händer eftersom servern kör
-HTTP och inte HTTPS. Men eftersom servern endast kör lokalt så är detta inget
-problem.
+  chromium --allow-running-insecure-content
+
+Nu kan du använda webbsidor med BankID-inloggning. Det kommer dock att synas
+en gul varningstriangel i webbläsaren när du använder npcompatsrv. Detta
+händer eftersom servern kör HTTP och inte HTTPS. Men eftersom servern endast
+kör lokalt så är detta inget problem.
 
