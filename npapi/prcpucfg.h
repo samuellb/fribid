@@ -240,7 +240,7 @@
 #define PR_BYTES_PER_WORD_LOG2  3
 #define PR_BYTES_PER_DWORD_LOG2 3
 
-#elif defined(__x86_64__)
+#elif defined(__x86_64__) || defined(__aarch64__)
 
 #define IS_LITTLE_ENDIAN 1
 #undef  IS_BIG_ENDIAN
